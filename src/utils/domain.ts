@@ -15,7 +15,10 @@ export const normalizeDomainOrToken = (domainOrToken: string): string => {
 
   if (domainName.includes('.')) {
     return eip137Namehash(domainName);
-  } else if (domainName.replace('0x', '').match(/^[a-fA-F0-9]+$/)) {
+  } else if (
+    domainName.startsWith('0x') &&
+    domainName.replace('0x', '').match(/^[a-fA-F0-9]+$/)
+  ) {
     return normalizeToken(domainName);
   }
 
