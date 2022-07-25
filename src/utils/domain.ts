@@ -1,5 +1,6 @@
 import { Domain } from '../models';
 import { IsZilDomain } from '../services/Resolution';
+import { ETHAddressRegex } from './ethersUtils';
 import { eip137Namehash, znsNamehash } from './namehash';
 
 const normalizeToken = (token: string): string => {
@@ -15,7 +16,7 @@ export const normalizeDomainOrToken = (domainOrToken: string): string => {
 
   if (domainName.includes('.')) {
     return eip137Namehash(domainName);
-  } else if (domainName.replace('0x', '').match(/^[a-fA-F0-9]+$/)) {
+  } else if (domainName.match(ETHAddressRegex)) {
     return normalizeToken(domainName);
   }
 

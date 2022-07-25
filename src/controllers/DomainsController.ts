@@ -24,7 +24,7 @@ import {
 } from './dto/Domains';
 import { ConvertArrayQueryParams } from '../middleware/ConvertArrayQueryParams';
 import { In } from 'typeorm';
-import _ from 'lodash';
+import pick from 'lodash/pick';
 import { normalizeDomainName, normalizeDomainOrToken } from '../utils/domain';
 
 @OpenAPI({
@@ -290,7 +290,7 @@ export class DomainsController {
 
       if (domain) {
         const { resolution } = getDomainResolution(domain);
-        const records = query.key ? _.pick(resolution, query.key) : resolution;
+        const records = query.key ? pick(resolution, query.key) : resolution;
         domainsRecords.push({ domain: domainName, records });
       } else {
         domainsRecords.push({ domain: domainName, records: {} });
