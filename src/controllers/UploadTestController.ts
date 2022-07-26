@@ -6,6 +6,7 @@ import { getDomainResolution } from '../services/Resolution';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { fetchTokenMetadata } from './MetaDataController';
 import {
+  getNFTFilenameInCDN,
   getNFTSocialPicture,
   parsePictureRecord,
 } from '../utils/socialPicture';
@@ -54,10 +55,7 @@ export class UploadTestController {
       const socialPic = resolution?.resolution['social.picture.value'];
 
       if (resolution && socialPic) {
-        const { chainId, nftStandard, contractAddress, tokenId } =
-          parsePictureRecord(socialPic);
-        const nftPfpFolder = 'nft-pfp';
-        const fileName = `${nftPfpFolder}/${chainId}_${nftStandard}:${contractAddress}_${tokenId}`;
+        const fileName = getNFTFilenameInCDN(socialPic);
         const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
         const hostname =
           env.CLOUD_STORAGE.API_ENDPOINT_URL ||

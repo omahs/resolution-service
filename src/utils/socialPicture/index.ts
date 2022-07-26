@@ -131,7 +131,7 @@ export const createSocialPictureImage = (
   }
 };
 
-const getNFTFilenameInCDN = (socialPic: string) => {
+export const getNFTFilenameInCDN = (socialPic: string) => {
   const { chainId, nftStandard, contractAddress, tokenId } =
     parsePictureRecord(socialPic);
   const nftPfpFolder = 'nft-pfp';
