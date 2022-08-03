@@ -158,9 +158,6 @@ class TokenMetadata {
   };
 
   @IsString()
-  socialPicture: string;
-
-  @IsString()
   image: string;
 }
 
@@ -205,11 +202,7 @@ export class MetaDataController {
     }
     const resolution = getDomainResolution(domain);
 
-    const { socialPicture, image } = await fetchTokenMetadata(
-      domain,
-      resolution,
-      withOverlay,
-    );
+    const socialPictureValue = resolution.resolution['social.picture.value'];
 
     const description = this.getDomainDescription(
       domain.name,
@@ -219,7 +212,7 @@ export class MetaDataController {
       ipfsContent:
         resolution.resolution['dweb.ipfs.hash'] ||
         resolution.resolution['ipfs.html.value'],
-      verifiedNftPicture: socialPicture !== '',
+      verifiedNftPicture: socialPictureValue !== '',
     });
 
     const metadata: OpenSeaMetadata = {
@@ -229,22 +222,12 @@ export class MetaDataController {
         records: resolution.resolution,
       },
       external_url: `https://unstoppabledomains.com/search?searchTerm=${domain.name}`,
-      image:
-        (withOverlay ? socialPicture : image) ||
-        this.generateDomainImageUrl(domain.name),
+      image: this.generateDomainImageUrl(domain.name),
       image_url: this.generateDomainImageUrl(domain.name),
       attributes: domainAttributes,
     };
 
-    if (
-      !this.isDomainWithCustomImage(domain.name) &&
-      !socialPicture &&
-      !image
-    ) {
-      metadata.image_data = await this.generateImageData(
-        domain.name,
-        resolution.resolution,
-      );
+    if (!this.isDomainWithCustomImage(domain.name) && !socialPictureValue) {
       metadata.background_color = '4C47F7';
     }
 
@@ -277,23 +260,15 @@ export class MetaDataController {
 
     if (domain && resolution) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
-      const pfpImageFromCDN = await getNftPfpImageFromCDN(socialPictureValue);
-      const { socialPicture, image } = pfpImageFromCDN
-        ? { socialPicture: '', image: pfpImageFromCDN } // Temporary hack. Figure out why do we need socialPicture here
-        : await fetchTokenMetadata(domain, resolution, withOverlay);
-
-      const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
-        () => ['', null],
-      );
-      const svgFromImage = simpleSVGTemplate(
-        withOverlay ? socialPicture : `data:${mimeType};base64,${imageData}`,
+      const pfpImageFromCDN = await getNftPfpImageFromCDN(
+        socialPictureValue,
+        withOverlay,
       );
 
       return {
         image_data:
-          socialPicture || imageData
-            ? svgFromImage
-            : await this.generateImageData(name, resolution?.resolution || {}),
+          pfpImageFromCDN ||
+          (await this.generateImageData(name, resolution?.resolution || {})),
       };
     }
 
@@ -324,20 +299,13 @@ export class MetaDataController {
 
     if (domain && resolution) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
-      const pfpImageFromCDN = await getNftPfpImageFromCDN(socialPictureValue);
-      const { socialPicture, image } = pfpImageFromCDN
-        ? { socialPicture: null, image: pfpImageFromCDN } // Temporary hack. Figure out why do we need socialPicture here
-        : await fetchTokenMetadata(domain, resolution, withOverlay, true);
-
-      const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
-        () => ['', null],
+      const pfpImageFromCDN = await getNftPfpImageFromCDN(
+        socialPictureValue,
+        withOverlay,
       );
-      const svgFromImage = imageData
-        ? simpleSVGTemplate(`data:${mimeType};base64,${imageData}`)
-        : '';
 
       return (
-        (withOverlay ? socialPicture : svgFromImage) ||
+        pfpImageFromCDN ||
         (await pathThatSvg(
           await this.generateImageData(name, resolution?.resolution || {}),
         ))
@@ -556,12 +524,9 @@ export class MetaDataController {
   }
 }
 
-// maybe need to move to a helper file
+// maybe move to a helper file
 export async function fetchTokenMetadata(
-  domain: Domain,
   resolution: DomainsResolution,
-  withOverlay: boolean,
-  raw = false,
 ): Promise<TokenMetadata> {
   async function fetchOpenSeaMetadata(
     contractAddress: string,
@@ -656,24 +621,5 @@ export async function fetchTokenMetadata(
     fetchedMetadata = await response.json();
     image = fetchedMetadata?.image;
   }
-  let socialPicture = ''; // Why do we need this? Image should be fetched outside this method.
-  if (validNftPfp && !!image && withOverlay) {
-    const [data, mimeType] = await getNFTSocialPicture(image).catch(() => [
-      '',
-      null,
-    ]);
-
-    if (data) {
-      // adding the overlay
-      socialPicture = createSocialPictureImage(
-        domain,
-        data,
-        mimeType,
-        fetchedMetadata?.background_color || '',
-        raw,
-      );
-    }
-  }
-
-  return { fetchedMetadata, socialPicture, image };
+  return { fetchedMetadata, image }; // TODO: get rid of socialPicture param
 }
