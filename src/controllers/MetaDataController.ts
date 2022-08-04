@@ -8,7 +8,6 @@ import {
 import Moralis from 'moralis/node';
 import { ResponseSchema } from 'routing-controllers-openapi';
 import fetch from 'node-fetch';
-import Domain from '../models/Domain';
 import AnimalDomainHelper, {
   OpenSeaMetadataAttribute,
 } from '../utils/AnimalDomainHelper/AnimalDomainHelper';
@@ -19,10 +18,9 @@ import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 import { env } from '../env';
 import { logger } from '../logger';
 import {
-  getNFTSocialPicture,
-  createSocialPictureImage,
   parsePictureRecord,
   getNftPfpImageFromCDN,
+  toBase64DataURI,
 } from '../utils/socialPicture';
 import punycode from 'punycode';
 import { getDomainResolution } from '../services/Resolution';
@@ -30,7 +28,6 @@ import { PremiumDomains, CustomImageDomains } from '../utils/domainCategories';
 import { DomainsResolution } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
-import { simpleSVGTemplate } from '../utils/socialPicture/svgTemplate';
 import { findDomainByNameOrToken } from '../utils/domain';
 
 const DEFAULT_IMAGE_URL = (name: string) =>
@@ -203,6 +200,15 @@ export class MetaDataController {
     const resolution = getDomainResolution(domain);
 
     const socialPictureValue = resolution.resolution['social.picture.value'];
+    const socialPicture =
+      socialPictureValue &&
+      (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
+
+    // we consider that NFT picture is verified if the picture is present in our CDN cache.
+    // It means it was verified before caching.
+    const isSocialPictureVerified = socialPicture
+      ? socialPicture !== ''
+      : false;
 
     const description = this.getDomainDescription(
       domain.name,
@@ -212,7 +218,7 @@ export class MetaDataController {
       ipfsContent:
         resolution.resolution['dweb.ipfs.hash'] ||
         resolution.resolution['ipfs.html.value'],
-      verifiedNftPicture: socialPictureValue !== '',
+      verifiedNftPicture: isSocialPictureVerified,
     });
 
     const metadata: OpenSeaMetadata = {
@@ -222,12 +228,18 @@ export class MetaDataController {
         records: resolution.resolution,
       },
       external_url: `https://unstoppabledomains.com/search?searchTerm=${domain.name}`,
-      image: this.generateDomainImageUrl(domain.name),
+      image: socialPicture
+        ? toBase64DataURI(socialPicture)
+        : this.generateDomainImageUrl(domain.name),
       image_url: this.generateDomainImageUrl(domain.name),
       attributes: domainAttributes,
     };
 
-    if (!this.isDomainWithCustomImage(domain.name) && !socialPictureValue) {
+    if (!this.isDomainWithCustomImage(domain.name) && !socialPicture) {
+      metadata.image_data = await this.generateImageData(
+        domain.name,
+        resolution.resolution,
+      );
       metadata.background_color = '4C47F7';
     }
 
@@ -260,10 +272,9 @@ export class MetaDataController {
 
     if (domain && resolution) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
-      const pfpImageFromCDN = await getNftPfpImageFromCDN(
-        socialPictureValue,
-        withOverlay,
-      );
+      const pfpImageFromCDN =
+        socialPictureValue &&
+        (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
 
       return {
         image_data:

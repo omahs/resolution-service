@@ -260,7 +260,6 @@ export class EthUpdater {
     domain.setResolution(resolution);
     await domainRepository.save(domain);
     if (key === 'social.picture.value' && !!value) {
-      // temp. await for debugging. TODO: remove await, make it asynchronous
       await cacheSocialPictureInCDN(value, domain, resolution);
     }
   }

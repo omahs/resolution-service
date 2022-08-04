@@ -115,31 +115,21 @@ export const createSocialPictureImage = (
   }
 
   try {
-    return (
-      'data:image/svg+xml;base64,' +
-      btoa(
-        encodeURIComponent(svg).replace(
-          /%([0-9A-F]{2})/g,
-          function (match, p1) {
-            return String.fromCharCode(parseInt(p1, 16));
-          },
-        ),
-      )
-    );
+    return toBase64DataURI(svg);
   } catch (e) {
     console.log(e);
     return '';
   }
 };
 
-export const getNFTFilenameInCDN = (socialPic: string) => {
+export const getNFTFilenameInCDN = (socialPic: string): string => {
   const { chainId, nftStandard, contractAddress, tokenId } =
     parsePictureRecord(socialPic);
   const nftPfpFolder = 'nft-pfp';
   return `${nftPfpFolder}/${chainId}_${nftStandard}:${contractAddress}_${tokenId}.svg`;
 };
 
-export const getNFTFilenameWithOverlayInCDN = (socialPic: string) => {
+export const getNFTFilenameWithOverlayInCDN = (socialPic: string): string => {
   const { chainId, nftStandard, contractAddress, tokenId } =
     parsePictureRecord(socialPic);
   const nftPfpFolder = 'nft-pfp';
@@ -150,7 +140,7 @@ export const cacheSocialPictureInCDN = async (
   socialPic: string,
   domain: Domain,
   resolution: DomainsResolution,
-) => {
+): Promise<void> => {
   const fileName = getNFTFilenameInCDN(socialPic);
   const fileNameWithOverlay = getNFTFilenameWithOverlayInCDN(socialPic);
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
@@ -206,18 +196,17 @@ export const cacheSocialPictureInCDN = async (
 };
 
 /**
- * Returns a social picture URL cached in CDN or null if image is not found in CDN cache.
+ * Returns a social picture data string cached in CDN or null if image is not found in CDN cache.
  */
 export const getNftPfpImageFromCDN = async (
   socialPic: string,
   withOverlay = false,
-) => {
+): Promise<string | null> => {
   const fileName = withOverlay
     ? getNFTFilenameWithOverlayInCDN(socialPic)
     : getNFTFilenameInCDN(socialPic);
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
-  const hostname =
-    env.CLOUD_STORAGE.API_ENDPOINT_URL || 'https://storage.googleapis.com';
+  // const hostname = env.CLOUD_STORAGE.API_ENDPOINT_URL || 'https://storage.googleapis.com';
   const bucket = storage.bucket(bucketName);
 
   const [fileExists] = await bucket.file(fileName).exists();
@@ -227,4 +216,16 @@ export const getNftPfpImageFromCDN = async (
   } else {
     return null;
   }
+};
+
+export const toBase64DataURI = (svg: string): string => {
+  // maybe use Buffer.from(data).toString('base64') instead of btoa(), which is deprecated in nodejs
+  return (
+    'data:image/svg+xml;base64,' +
+    btoa(
+      encodeURIComponent(svg).replace(/%([0-9A-F]{2})/g, function (match, p1) {
+        return String.fromCharCode(parseInt(p1, 16));
+      }),
+    )
+  );
 };
