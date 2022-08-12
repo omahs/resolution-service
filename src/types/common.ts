@@ -61,7 +61,6 @@ export enum Blockchain {
 
 export enum EvmUnstoppableDomainTlds {
   Crypto = 'crypto',
-  Coin = 'coin',
   Wallet = 'wallet',
   Blockchain = 'blockchain',
   Bitcoin = 'bitcoin',
