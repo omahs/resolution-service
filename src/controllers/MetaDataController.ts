@@ -206,9 +206,7 @@ export class MetaDataController {
 
     // we consider that NFT picture is verified if the picture is present in our CDN cache.
     // It means it was verified before caching.
-    const isSocialPictureVerified = socialPicture
-      ? socialPicture !== ''
-      : false;
+    const isSocialPictureVerified = Boolean(socialPicture);
 
     const description = this.getDomainDescription(
       domain.name,
