@@ -21,11 +21,12 @@ import {
   parsePictureRecord,
   getNftPfpImageFromCDN,
   toBase64DataURI,
+  cacheSocialPictureInCDN,
 } from '../utils/socialPicture';
 import punycode from 'punycode';
 import { getDomainResolution } from '../services/Resolution';
 import { PremiumDomains, CustomImageDomains } from '../utils/domainCategories';
-import { DomainsResolution } from '../models';
+import { DomainsResolution, Domain } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
 import { findDomainByNameOrToken } from '../utils/domain';
@@ -289,6 +290,42 @@ export class MetaDataController {
     };
   }
 
+  @Get('/nftpfp-migrate/0xCAFEBABE')
+  @Header('Access-Control-Allow-Origin', '*')
+  async migrateImage(): Promise<string> {
+    const domains = await Domain.createQueryBuilder('domains')
+      .innerJoinAndSelect(
+        'domains.resolutions',
+        'domains_resolution',
+        `domains_resolution.resolution ->> 'social.picture.value' IS NOT NULL`,
+      )
+      .getMany();
+
+    console.log('will process domains: ', domains.length);
+
+    for (let i = 0; i < domains.length; i++) {
+      const domain = domains[i];
+      console.log(`processing domain ${i}`, domain?.name);
+      const resolutions = domain.resolutions;
+      for (const resolution of resolutions) {
+        const socialPictureValue =
+          resolution.resolution['social.picture.value'];
+        try {
+          socialPictureValue &&
+            (await cacheSocialPictureInCDN(
+              socialPictureValue,
+              domain,
+              resolution,
+            ));
+        } catch (e) {
+          console.error(`error processing domain ${i}`, e);
+        }
+      }
+    }
+
+    return 'done';
+  }
+
   @Get('/image-src/:domainOrToken')
   @Header('Access-Control-Allow-Origin', '*')
   @Header('Content-Type', 'image/svg+xml')
@@ -308,10 +345,9 @@ export class MetaDataController {
 
     if (domain && resolution) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
-      const pfpImageFromCDN = await getNftPfpImageFromCDN(
-        socialPictureValue,
-        withOverlay,
-      );
+      const pfpImageFromCDN =
+        socialPictureValue &&
+        (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
 
       return (
         pfpImageFromCDN ||
