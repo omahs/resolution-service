@@ -8,7 +8,6 @@ import {
 import Moralis from 'moralis/node';
 import { ResponseSchema } from 'routing-controllers-openapi';
 import fetch from 'node-fetch';
-import Domain from '../models/Domain';
 import AnimalDomainHelper, {
   OpenSeaMetadataAttribute,
 } from '../utils/AnimalDomainHelper/AnimalDomainHelper';
@@ -19,9 +18,10 @@ import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 import { env } from '../env';
 import { logger } from '../logger';
 import {
-  getNFTSocialPicture,
-  createSocialPictureImage,
   parsePictureRecord,
+  getNftPfpImageFromCDN,
+  toBase64DataURI,
+  cacheSocialPictureInCDN,
 } from '../utils/socialPicture';
 import punycode from 'punycode';
 import { getDomainResolution } from '../services/Resolution';
@@ -29,7 +29,6 @@ import { PremiumDomains, CustomImageDomains } from '../utils/domainCategories';
 import { DomainsResolution } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
-import { simpleSVGTemplate } from '../utils/socialPicture/svgTemplate';
 import { findDomainByNameOrToken } from '../utils/domain';
 
 const DEFAULT_IMAGE_URL = (name: string) =>
@@ -157,9 +156,6 @@ class TokenMetadata {
   };
 
   @IsString()
-  socialPicture: string;
-
-  @IsString()
   image: string;
 }
 
@@ -204,11 +200,14 @@ export class MetaDataController {
     }
     const resolution = getDomainResolution(domain);
 
-    const { socialPicture, image } = await this.fetchTokenMetadata(
-      domain,
-      resolution,
-      withOverlay,
-    );
+    const socialPictureValue = resolution.resolution['social.picture.value'];
+    const socialPicture =
+      socialPictureValue &&
+      (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
+
+    // we consider that NFT picture is verified if the picture is present in our CDN cache.
+    // It means it was verified before caching.
+    const isSocialPictureVerified = Boolean(socialPicture);
 
     const description = this.getDomainDescription(
       domain.name,
@@ -218,7 +217,7 @@ export class MetaDataController {
       ipfsContent:
         resolution.resolution['dweb.ipfs.hash'] ||
         resolution.resolution['ipfs.html.value'],
-      verifiedNftPicture: socialPicture !== '',
+      verifiedNftPicture: isSocialPictureVerified,
     });
 
     const metadata: OpenSeaMetadata = {
@@ -228,18 +227,14 @@ export class MetaDataController {
         records: resolution.resolution,
       },
       external_url: `https://unstoppabledomains.com/search?searchTerm=${domain.name}`,
-      image:
-        (withOverlay ? socialPicture : image) ||
-        this.generateDomainImageUrl(domain.name),
+      image: socialPicture
+        ? toBase64DataURI(socialPicture)
+        : this.generateDomainImageUrl(domain.name),
       image_url: this.generateDomainImageUrl(domain.name),
       attributes: domainAttributes,
     };
 
-    if (
-      !this.isDomainWithCustomImage(domain.name) &&
-      !socialPicture &&
-      !image
-    ) {
+    if (!this.isDomainWithCustomImage(domain.name) && !socialPicture) {
       metadata.image_data = await this.generateImageData(
         domain.name,
         resolution.resolution,
@@ -275,23 +270,15 @@ export class MetaDataController {
     }
 
     if (domain && resolution) {
-      const { socialPicture, image } = await this.fetchTokenMetadata(
-        domain,
-        resolution,
-        withOverlay,
-      );
-      const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
-        () => ['', null],
-      );
-      const svgFromImage = simpleSVGTemplate(
-        withOverlay ? socialPicture : `data:${mimeType};base64,${imageData}`,
-      );
+      const socialPictureValue = resolution.resolution['social.picture.value'];
+      const pfpImageFromCDN =
+        socialPictureValue &&
+        (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
 
       return {
         image_data:
-          socialPicture || imageData
-            ? svgFromImage
-            : await this.generateImageData(name, resolution?.resolution || {}),
+          pfpImageFromCDN ||
+          (await this.generateImageData(name, resolution?.resolution || {})),
       };
     }
 
@@ -321,21 +308,13 @@ export class MetaDataController {
     }
 
     if (domain && resolution) {
-      const { socialPicture, image } = await this.fetchTokenMetadata(
-        domain,
-        resolution,
-        withOverlay,
-        true,
-      );
-      const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
-        () => ['', null],
-      );
-      const svgFromImage = imageData
-        ? simpleSVGTemplate(`data:${mimeType};base64,${imageData}`)
-        : '';
+      const socialPictureValue = resolution.resolution['social.picture.value'];
+      const pfpImageFromCDN =
+        socialPictureValue &&
+        (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
 
       return (
-        (withOverlay ? socialPicture : svgFromImage) ||
+        pfpImageFromCDN ||
         (await pathThatSvg(
           await this.generateImageData(name, resolution?.resolution || {}),
         ))
@@ -345,115 +324,6 @@ export class MetaDataController {
     return await pathThatSvg(
       await this.generateImageData(name, resolution?.resolution || {}),
     );
-  }
-
-  private async fetchTokenMetadata(
-    domain: Domain,
-    resolution: DomainsResolution,
-    withOverlay: boolean,
-    raw = false,
-  ): Promise<TokenMetadata> {
-    let chainId = '';
-    let contractAddress = '';
-    let tokenId = '';
-
-    if (resolution.resolution['social.picture.value']) {
-      try {
-        const parsedPicture = parsePictureRecord(
-          resolution.resolution['social.picture.value'],
-        );
-
-        chainId = parsedPicture.chainId;
-        contractAddress = parsedPicture.contractAddress;
-        tokenId = parsedPicture.tokenId;
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    const options = {
-      chain: getChainName(chainId),
-      address: contractAddress,
-      token_id: tokenId,
-    };
-    let image = '';
-    let fetchedMetadata;
-    let tokenIdMetadata;
-    let validNftPfp = false;
-
-    if (options.address && options.token_id) {
-      try {
-        if (options.chain === 'eth') {
-          const openSea = initOpenSeaSdk();
-          const response = await openSea.api.getAsset({
-            tokenAddress: contractAddress,
-            tokenId: tokenId,
-          });
-          fetchedMetadata = {
-            image: response.imageUrl.endsWith('=s250')
-              ? response.imageUrl.split('=s250')[0]
-              : response.imageUrl,
-            background_color: response.backgroundColor,
-            owner_of: response.owner.address,
-          };
-          image = fetchedMetadata.image;
-        } else {
-          const moralis = await initMoralisSdk();
-          tokenIdMetadata = await moralis.Web3API.token.getTokenIdMetadata(
-            options,
-          );
-        }
-      } catch (error: any) {
-        if (!error.message.includes('No metadata found')) {
-          logger.error(error);
-        }
-      }
-    }
-    const fetchedOwnerAddress =
-      (tokenIdMetadata as any)?.owner_of || fetchedMetadata?.owner_of || '';
-    if (
-      resolution?.ownerAddress &&
-      fetchedOwnerAddress.toLowerCase() ===
-        resolution.ownerAddress.toLowerCase()
-    ) {
-      validNftPfp = true;
-    }
-    if (validNftPfp && tokenIdMetadata?.metadata) {
-      try {
-        fetchedMetadata = JSON.parse(tokenIdMetadata.metadata);
-        image = fetchedMetadata?.image;
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (validNftPfp && !image && !!tokenIdMetadata?.token_uri) {
-      const response = await fetch(tokenIdMetadata.token_uri, {
-        timeout: 5000,
-      });
-      fetchedMetadata = await response.json();
-      image = fetchedMetadata?.image;
-    }
-    let socialPicture = '';
-    if (validNftPfp && !!image && withOverlay) {
-      const [data, mimeType] = await getNFTSocialPicture(image).catch(() => [
-        '',
-        null,
-      ]);
-
-      if (data) {
-        // adding the overlay
-        socialPicture = createSocialPictureImage(
-          domain,
-          data,
-          mimeType,
-          fetchedMetadata?.background_color || '',
-          raw,
-        );
-      }
-    }
-
-    return { fetchedMetadata, socialPicture, image };
   }
 
   private async defaultMetaResponse(
@@ -661,4 +531,104 @@ export class MetaDataController {
 
     return DEFAULT_IMAGE_URL(name);
   }
+}
+
+// maybe move to a helper file
+export async function fetchTokenMetadata(
+  resolution: DomainsResolution,
+): Promise<TokenMetadata> {
+  async function fetchOpenSeaMetadata(
+    contractAddress: string,
+    tokenId: string,
+  ) {
+    const openSea = initOpenSeaSdk();
+    const response = await openSea.api.getAsset({
+      tokenAddress: contractAddress,
+      tokenId: tokenId,
+    });
+    return {
+      image: response.imageUrl.endsWith('=s250')
+        ? response.imageUrl.split('=s250')[0]
+        : response.imageUrl,
+      background_color: response.backgroundColor,
+      owner_of: response.owner.address,
+    };
+  }
+
+  async function fetchMoralisMetadata(options: {
+    chain: SupportedL2Chain | 'eth';
+    address: string;
+    token_id: string;
+  }) {
+    const moralis = await initMoralisSdk();
+    return await moralis.Web3API.token.getTokenIdMetadata(options);
+  }
+
+  let chainId = '';
+  let contractAddress = '';
+  let tokenId = '';
+
+  if (resolution.resolution['social.picture.value']) {
+    try {
+      const parsedPicture = parsePictureRecord(
+        resolution.resolution['social.picture.value'],
+      );
+
+      chainId = parsedPicture.chainId;
+      contractAddress = parsedPicture.contractAddress;
+      tokenId = parsedPicture.tokenId;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const options = {
+    chain: getChainName(chainId),
+    address: contractAddress,
+    token_id: tokenId,
+  };
+  let image = '';
+  let fetchedMetadata;
+  let tokenIdMetadata;
+  let validNftPfp = false;
+
+  if (options.address && options.token_id) {
+    try {
+      if (options.chain === 'eth') {
+        fetchedMetadata = await fetchOpenSeaMetadata(contractAddress, tokenId);
+        image = fetchedMetadata.image;
+      } else {
+        tokenIdMetadata = await fetchMoralisMetadata(options);
+      }
+    } catch (error: any) {
+      if (!error.message.includes('No metadata found')) {
+        logger.error(error);
+      }
+    }
+  }
+  const fetchedOwnerAddress =
+    (tokenIdMetadata as any)?.owner_of || fetchedMetadata?.owner_of || '';
+  if (
+    resolution?.ownerAddress &&
+    fetchedOwnerAddress.toLowerCase() === resolution.ownerAddress.toLowerCase()
+  ) {
+    validNftPfp = true;
+  }
+  if (validNftPfp && tokenIdMetadata?.metadata) {
+    try {
+      fetchedMetadata = JSON.parse(tokenIdMetadata.metadata);
+      image = fetchedMetadata?.image;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  if (validNftPfp && !image && !!tokenIdMetadata?.token_uri) {
+    const response = await fetch(tokenIdMetadata.token_uri, {
+      timeout: 5000,
+    });
+    fetchedMetadata = await response.json();
+    image = fetchedMetadata?.image;
+  }
+  return { fetchedMetadata, image }; // TODO: get rid of socialPicture param
 }

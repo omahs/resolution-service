@@ -1,8 +1,17 @@
 import nodeFetch from 'node-fetch';
-import { Domain } from '../../models';
+import { Domain, DomainsResolution } from '../../models';
 import { createCanvas } from 'canvas';
-import createSVGfromTemplate from './svgTemplate';
+import createSVGfromTemplate, { simpleSVGTemplate } from './svgTemplate';
 import btoa from 'btoa';
+import { env } from '../../env';
+import { Storage } from '@google-cloud/storage';
+import { fetchTokenMetadata } from '../../controllers/MetaDataController';
+import { logger } from '../../logger';
+
+const storageOptions = env.CLOUD_STORAGE.API_ENDPOINT_URL
+  ? { apiEndpoint: env.CLOUD_STORAGE.API_ENDPOINT_URL } // for development using local emulator
+  : {}; // for production
+const storage = new Storage(storageOptions);
 
 export const parsePictureRecord = (avatarRecord: string) => {
   const regex =
@@ -106,19 +115,121 @@ export const createSocialPictureImage = (
   }
 
   try {
-    return (
-      'data:image/svg+xml;base64,' +
-      btoa(
-        encodeURIComponent(svg).replace(
-          /%([0-9A-F]{2})/g,
-          function (match, p1) {
-            return String.fromCharCode(parseInt(p1, 16));
-          },
-        ),
-      )
-    );
+    return toBase64DataURI(svg);
   } catch (e) {
     console.log(e);
     return '';
   }
+};
+
+export const getNFTFilenameInCDN = (
+  socialPic: string,
+  withOverlay = false,
+): string => {
+  const { chainId, nftStandard, contractAddress, tokenId } =
+    parsePictureRecord(socialPic);
+  const nftPfpFolder = 'nft-pfp';
+  const overlayPostfix = withOverlay ? '_overlay' : '';
+  return `${nftPfpFolder}/${chainId}_${nftStandard}:${contractAddress}_${tokenId}${overlayPostfix}.svg`;
+};
+
+export const cacheSocialPictureInCDN = async (
+  socialPic: string,
+  domain: Domain,
+  resolution: DomainsResolution,
+): Promise<void> => {
+  const fileName = getNFTFilenameInCDN(socialPic);
+  const fileNameWithOverlay = getNFTFilenameInCDN(socialPic, true);
+  const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
+  const bucket = storage.bucket(bucketName);
+
+  const [fileExists] = await bucket.file(fileName).exists();
+  const [fileWithOverlayExists] = await bucket
+    .file(fileNameWithOverlay)
+    .exists();
+  if (!fileExists || !fileWithOverlayExists) {
+    const { fetchedMetadata, image } = await fetchTokenMetadata(resolution);
+    const [imageData, mimeType] = await getNFTSocialPicture(image).catch(() => [
+      '',
+      null,
+    ]);
+
+    // upload images to bucket
+    if (imageData) {
+      type ImageFile = { fname: string; data: string };
+      const files: Array<ImageFile> = [];
+
+      if (!fileExists) {
+        const imageDataSVG = simpleSVGTemplate(
+          `data:${mimeType};base64,${imageData}`,
+        );
+        files.push({ fname: fileName, data: imageDataSVG });
+      }
+
+      if (!fileWithOverlayExists) {
+        const withOverlayImageData = createSocialPictureImage(
+          domain,
+          imageData,
+          mimeType,
+          fetchedMetadata?.background_color || '',
+          true,
+        );
+        files.push({ fname: fileNameWithOverlay, data: withOverlayImageData });
+      }
+
+      await Promise.all(
+        files.map(({ fname, data }) => {
+          uploadSVG(fname, data);
+        }),
+      );
+    } else {
+      logger.error(
+        `Failed to generate image data for the domain: ${domain}, token URI: ${socialPic}`,
+      );
+    }
+  }
+
+  async function uploadSVG(fileName: string, imageData: string) {
+    const file = bucket.file(fileName);
+    // cache in the storage
+    const imageBuffer = Buffer.from(imageData);
+    await file.save(imageBuffer, {
+      metadata: {
+        contentType: 'image/svg+xml',
+      },
+    });
+  }
+};
+
+/**
+ * Returns a social picture data string cached in CDN or null if image is not found in CDN cache.
+ */
+export const getNftPfpImageFromCDN = async (
+  socialPic: string,
+  withOverlay = false,
+): Promise<string | null> => {
+  const fileName = getNFTFilenameInCDN(socialPic, withOverlay);
+  const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
+  // const hostname = env.CLOUD_STORAGE.API_ENDPOINT_URL || 'https://storage.googleapis.com';
+  const bucket = storage.bucket(bucketName);
+
+  const [fileExists] = await bucket.file(fileName).exists();
+  if (fileExists) {
+    const contents = await bucket.file(fileName).download();
+    return contents.toString(); // maybe replace this with stream buffer in the future
+  } else {
+    return null;
+  }
+};
+
+export const toBase64DataURI = (svg: string): string => {
+  // maybe use Buffer.from(data).toString('base64') instead of btoa(), which is deprecated in nodejs
+  return (
+    'data:image/svg+xml;base64,' +
+    btoa(
+      encodeURIComponent(svg).replace(/%([0-9A-F]{2})/g, function (match, p1) {
+        return String.fromCharCode(parseInt(p1, 16));
+      }),
+    )
+  );
 };

@@ -23,6 +23,7 @@ import * as ethersUtils from '../../utils/ethersUtils';
 import { Blockchain } from '../../types/common';
 import { EthUpdaterConfig } from '../../env';
 import winston from 'winston';
+import { cacheSocialPictureInCDN } from '../../utils/socialPicture';
 
 export class EthUpdater {
   private unsRegistry: Contract;
@@ -258,6 +259,9 @@ export class EthUpdater {
     resolution.resolution[key] = value;
     domain.setResolution(resolution);
     await domainRepository.save(domain);
+    if (key === 'social.picture.value' && !!value) {
+      await cacheSocialPictureInCDN(value, domain, resolution);
+    }
   }
 
   private async processResolve(
