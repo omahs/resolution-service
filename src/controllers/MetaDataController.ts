@@ -26,7 +26,7 @@ import {
 import punycode from 'punycode';
 import { getDomainResolution } from '../services/Resolution';
 import { PremiumDomains, CustomImageDomains } from '../utils/domainCategories';
-import { DomainsResolution, Domain } from '../models';
+import { DomainsResolution } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
 import { findDomainByNameOrToken } from '../utils/domain';
@@ -288,42 +288,6 @@ export class MetaDataController {
         resolution?.resolution || {},
       ),
     };
-  }
-
-  @Get('/nftpfp-migrate/0xCAFEBABE')
-  @Header('Access-Control-Allow-Origin', '*')
-  async migrateImage(): Promise<string> {
-    const domains = await Domain.createQueryBuilder('domains')
-      .innerJoinAndSelect(
-        'domains.resolutions',
-        'domains_resolution',
-        `domains_resolution.resolution ->> 'social.picture.value' IS NOT NULL`,
-      )
-      .getMany();
-
-    console.log('will process domains: ', domains.length);
-
-    for (let i = 0; i < domains.length; i++) {
-      const domain = domains[i];
-      console.log(`processing domain ${i}`, domain?.name);
-      const resolutions = domain.resolutions;
-      for (const resolution of resolutions) {
-        const socialPictureValue =
-          resolution.resolution['social.picture.value'];
-        try {
-          socialPictureValue &&
-            (await cacheSocialPictureInCDN(
-              socialPictureValue,
-              domain,
-              resolution,
-            ));
-        } catch (e) {
-          console.error(`error processing domain ${i}`, e);
-        }
-      }
-    }
-
-    return 'done';
   }
 
   @Get('/image-src/:domainOrToken')
