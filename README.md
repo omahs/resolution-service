@@ -247,6 +247,33 @@ For checking coverage use `yarn test:coverage`.
 Unit/integration tests use a postgres database that is cleaned before each test.
 By default, the database name is `resolution_service_test`.
 
+### Debugging
+To debug the service the following command could be used:
+```
+yarn start:dev:debug
+```
+
+To debug the tests use:
+```
+yarn test:debug
+```
+
+If you are using [Visual Studio Code](https://docs.microsoft.com/en-us/visualstudio/debugger/attach-to-running-processes-with-the-visual-studio-debugger?view=vs-2022) to debug the code add this to `.vscode/launch.json` launch configuration:
+```
+  "configurations": [
+    ...,
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to resolution service",
+      "protocol": "inspector",
+      "port": 9229,
+      "restart": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}"
+    },
+```
+
 ### Service architecture
 
 ![Architecture chart](doc/ResolutionService.png)
