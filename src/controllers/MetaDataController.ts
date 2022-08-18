@@ -203,7 +203,10 @@ export class MetaDataController {
     const socialPictureValue = resolution.resolution['social.picture.value'];
     const socialPicture =
       socialPictureValue &&
-      (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
+      (await getNftPfpImageFromCDN(
+        socialPictureValue,
+        withOverlay ? domain.name : undefined,
+      ));
 
     // we consider that NFT picture is verified if the picture is present in our CDN cache.
     // It means it was verified before caching.
@@ -273,7 +276,10 @@ export class MetaDataController {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
-        (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
+        (await getNftPfpImageFromCDN(
+          socialPictureValue,
+          withOverlay ? domain.name : undefined,
+        ));
 
       return {
         image_data:
@@ -311,7 +317,10 @@ export class MetaDataController {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
-        (await getNftPfpImageFromCDN(socialPictureValue, withOverlay));
+        (await getNftPfpImageFromCDN(
+          socialPictureValue,
+          withOverlay ? domain.name : undefined,
+        ));
 
       return (
         pfpImageFromCDN ||

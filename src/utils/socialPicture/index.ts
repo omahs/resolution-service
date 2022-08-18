@@ -124,12 +124,13 @@ export const createSocialPictureImage = (
 
 export const getNFTFilenameInCDN = (
   socialPic: string,
-  withOverlay = false,
+  domainToOverlay?: string,
 ): string => {
   const { chainId, nftStandard, contractAddress, tokenId } =
     parsePictureRecord(socialPic);
   const nftPfpFolder = 'nft-pfp';
-  const overlayPostfix = withOverlay ? '_overlay' : '';
+  const isDomainNotEmpty = Boolean(domainToOverlay?.trim());
+  const overlayPostfix = isDomainNotEmpty ? `_o_${domainToOverlay}` : '';
   return `${nftPfpFolder}/${chainId}_${nftStandard}:${contractAddress}_${tokenId}${overlayPostfix}.svg`;
 };
 
@@ -138,8 +139,15 @@ export const cacheSocialPictureInCDN = async (
   domain: Domain,
   resolution: DomainsResolution,
 ): Promise<void> => {
+  if (!isNotEmpty(socialPic)) {
+    logger.warn(
+      'trying to cache NFT picture with empty token URI, domain:',
+      domain?.name,
+    );
+    return;
+  }
   const fileName = getNFTFilenameInCDN(socialPic);
-  const fileNameWithOverlay = getNFTFilenameInCDN(socialPic, true);
+  const fileNameWithOverlay = getNFTFilenameInCDN(socialPic, domain.name);
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
   const bucket = storage.bucket(bucketName);
 
@@ -205,10 +213,13 @@ export const cacheSocialPictureInCDN = async (
  * Returns a social picture data string cached in CDN or null if image is not found in CDN cache.
  */
 export const getNftPfpImageFromCDN = async (
-  socialPic: string,
-  withOverlay = false,
+  socialPicTokenURI: string,
+  withOverlayDomain?: string,
 ): Promise<string | null> => {
-  const fileName = getNFTFilenameInCDN(socialPic, withOverlay);
+  if (!isNotEmpty(socialPicTokenURI)) {
+    return null;
+  }
+  const fileName = getNFTFilenameInCDN(socialPicTokenURI, withOverlayDomain);
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
   // const hostname = env.CLOUD_STORAGE.API_ENDPOINT_URL || 'https://storage.googleapis.com';
   const bucket = storage.bucket(bucketName);
@@ -232,4 +243,8 @@ export const toBase64DataURI = (svg: string): string => {
       }),
     )
   );
+};
+
+const isNotEmpty = (str: string) => {
+  return Boolean(str?.trim());
 };
