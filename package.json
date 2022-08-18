@@ -15,6 +15,7 @@
   },
   "scripts": {
     "test": "dotenv -e local.test.env -- mocha --exit",
+    "test:debug": "dotenv -e local.test.env -- mocha --inspect-brk --exit",
     "test:coverage": "NODE_ENV=test nyc --reporter=text yarn test",
     "test:ci": "NODE_ENV=test nyc --reporter=text yarn test -- --bail --quiet",
     "build": "tsc",
