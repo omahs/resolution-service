@@ -185,6 +185,7 @@ export const cacheSocialPictureInCDN = async (
         files.push({ fname: fileNameWithOverlay, data: withOverlayImageData });
       }
 
+      //TODO: this actually doesn't wait for uploading to finish. Re-do so we wait
       await Promise.all(
         files.map(({ fname, data }) => {
           uploadSVG(fname, data);

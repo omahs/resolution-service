@@ -26,7 +26,7 @@ import {
 import punycode from 'punycode';
 import { getDomainResolution } from '../services/Resolution';
 import { PremiumDomains, CustomImageDomains } from '../utils/domainCategories';
-import { DomainsResolution } from '../models';
+import { Domain, DomainsResolution } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
 import { findDomainByNameOrToken } from '../utils/domain';
@@ -276,9 +276,11 @@ export class MetaDataController {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
-        (await getNftPfpImageFromCDN(
+        (await getOrCacheNowPfpNFT(
           socialPictureValue,
-          withOverlay ? domain.name : undefined,
+          domain,
+          resolution,
+          withOverlay,
         ));
 
       return {
@@ -317,9 +319,11 @@ export class MetaDataController {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
-        (await getNftPfpImageFromCDN(
+        (await getOrCacheNowPfpNFT(
           socialPictureValue,
-          withOverlay ? domain.name : undefined,
+          domain,
+          resolution,
+          withOverlay,
         ));
 
       return (
@@ -640,4 +644,27 @@ export async function fetchTokenMetadata(
     image = fetchedMetadata?.image;
   }
   return { fetchedMetadata, image }; // TODO: get rid of socialPicture param
+}
+
+async function getOrCacheNowPfpNFT(
+  socialPicture: string,
+  domain: Domain,
+  resolution: DomainsResolution,
+  withOverlay: boolean,
+) {
+  const cachedPfpNFT = await getNftPfpImageFromCDN(
+    socialPicture,
+    withOverlay ? domain.name : undefined,
+  );
+  if (!cachedPfpNFT) {
+    await cacheSocialPictureInCDN(socialPicture, domain, resolution);
+    // This is not optimal, should return image instead of 2nd call
+    // TODO: improve PFP NFT fetching after caching in CDN
+    const trulyCachedPFPNFT = await getNftPfpImageFromCDN(
+      socialPicture,
+      withOverlay ? domain.name : undefined,
+    );
+    return trulyCachedPFPNFT;
+  }
+  return cachedPfpNFT;
 }
