@@ -263,6 +263,7 @@ export class MetaDataController {
   async getImage(
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
+    @QueryParam('rasterize') rasterize = false,
   ): Promise<ImageResponse> {
     const domain = await findDomainByNameOrToken(domainOrToken);
     const resolution = domain ? getDomainResolution(domain) : undefined;
@@ -281,6 +282,7 @@ export class MetaDataController {
           domain,
           resolution,
           withOverlay,
+          rasterize
         ));
 
       return {
@@ -304,6 +306,7 @@ export class MetaDataController {
   async getImageSrc(
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
+    @QueryParam('rasterize') rasterize = false,
   ): Promise<string> {
     const domain = await findDomainByNameOrToken(
       domainOrToken.replace('.svg', ''),
@@ -324,6 +327,7 @@ export class MetaDataController {
           domain,
           resolution,
           withOverlay,
+          rasterize
         ));
 
       return (
@@ -651,10 +655,12 @@ async function getOrCacheNowPfpNFT(
   domain: Domain,
   resolution: DomainsResolution,
   withOverlay: boolean,
+  rasterize: boolean
 ) {
   const cachedPfpNFT = await getNftPfpImageFromCDN(
     socialPicture,
     withOverlay ? domain.name : undefined,
+    rasterize
   );
   if (!cachedPfpNFT) {
     await cacheSocialPictureInCDN(socialPicture, domain, resolution);
@@ -663,6 +669,7 @@ async function getOrCacheNowPfpNFT(
     const trulyCachedPFPNFT = await getNftPfpImageFromCDN(
       socialPicture,
       withOverlay ? domain.name : undefined,
+      rasterize
     );
     return trulyCachedPFPNFT;
   }

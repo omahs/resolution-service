@@ -7,6 +7,7 @@ import { env } from '../../env';
 import { Storage } from '@google-cloud/storage';
 import { fetchTokenMetadata } from '../../controllers/MetaDataController';
 import { logger } from '../../logger';
+const { convert } = require ('convert-svg-to-jpeg'); // import statement doesn't work, @types/convert-svg-to-jpeg are not found
 
 const storageOptions = env.CLOUD_STORAGE.API_ENDPOINT_URL
   ? { apiEndpoint: env.CLOUD_STORAGE.API_ENDPOINT_URL } // for development using local emulator
@@ -148,14 +149,16 @@ export const cacheSocialPictureInCDN = async (
   }
   const fileName = getNFTFilenameInCDN(socialPic);
   const fileNameWithOverlay = getNFTFilenameInCDN(socialPic, domain.name);
+  const fileNameJpeg = getNFTFilenameInCDN(socialPic)?.replace('.svg', '.jpg'); // dirty hack, pass param instead
+  const fileNameWithOverlayJpeg = getNFTFilenameInCDN(socialPic, domain.name)?.replace('.svg', '.jpg');
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
   const bucket = storage.bucket(bucketName);
 
   const [fileExists] = await bucket.file(fileName).exists();
-  const [fileWithOverlayExists] = await bucket
-    .file(fileNameWithOverlay)
-    .exists();
-  if (!fileExists || !fileWithOverlayExists) {
+  const [fileWithOverlayExists] = await bucket.file(fileNameWithOverlay).exists();
+  const [fileJpegExists] = await bucket.file(fileNameJpeg).exists();
+  const [fileWithOverlayJpegExists] = await bucket.file(fileNameWithOverlayJpeg).exists();
+  if (!fileExists || !fileWithOverlayExists || fileJpegExists || fileWithOverlayJpegExists) {
     const { fetchedMetadata, image } = await fetchTokenMetadata(resolution);
     const [imageData, mimeType] = await getNFTSocialPicture(image).catch(() => [
       '',
@@ -185,10 +188,31 @@ export const cacheSocialPictureInCDN = async (
         files.push({ fname: fileNameWithOverlay, data: withOverlayImageData });
       }
 
+      if (!fileJpegExists) {
+        const imageDataSVG = simpleSVGTemplate(
+          `data:${mimeType};base64,${imageData}`,
+        );
+        const imageDataJPG = await convert(imageDataSVG); //TODO: increase resolution
+        files.push({ fname: fileNameJpeg, data: imageDataJPG });
+        // conversion of JPEG and PNG to SVG and then back to JPEG is not optimal.
+      }
+
+      if (!fileWithOverlayJpegExists) {
+        const withOverlayImageData = createSocialPictureImage(
+          domain,
+          imageData,
+          mimeType,
+          fetchedMetadata?.background_color || '',
+          true,
+        );
+        const withOverlayImageDataJpeg = await convert(withOverlayImageData); //TODO: increase resolution
+        files.push({ fname: fileNameWithOverlayJpeg, data: withOverlayImageDataJpeg });
+      }
+
       // @TODO: this actually doesn't wait for uploading to finish. Re-do so we wait
       // temporarity replaced Promise.all() with seqential execution instead of parallel
       for (const file of files) {
-        await uploadSVG(file.fname, file.data);
+        await uploadPicture(file.fname, file.data);
       }
     } else {
       logger.error(
@@ -197,13 +221,14 @@ export const cacheSocialPictureInCDN = async (
     }
   }
 
-  async function uploadSVG(fileName: string, imageData: string) {
+  async function uploadPicture(fileName: string, imageData: string) {
     const file = bucket.file(fileName);
     // cache in the storage
     const imageBuffer = Buffer.from(imageData);
+    const contentType = fileName?.endsWith('.jpg') ? 'image/jpeg' : 'image/svg+xml';
     await file.save(imageBuffer, {
       metadata: {
-        contentType: 'image/svg+xml',
+        contentType: contentType,
       },
     });
   }
@@ -215,11 +240,13 @@ export const cacheSocialPictureInCDN = async (
 export const getNftPfpImageFromCDN = async (
   socialPicTokenURI: string,
   withOverlayDomain?: string,
+  rasterized?: boolean
 ): Promise<string | null> => {
   if (!isNotEmpty(socialPicTokenURI)) {
     return null;
   }
-  const fileName = getNFTFilenameInCDN(socialPicTokenURI, withOverlayDomain);
+  const aFileName = getNFTFilenameInCDN(socialPicTokenURI, withOverlayDomain);
+  const fileName = rasterized ? aFileName.replace('.svg', '.jpg') : aFileName;
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
   // const hostname = env.CLOUD_STORAGE.API_ENDPOINT_URL || 'https://storage.googleapis.com';
   const bucket = storage.bucket(bucketName);
