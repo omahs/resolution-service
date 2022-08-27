@@ -234,6 +234,11 @@ export const cacheSocialPictureInCDN = async (
   }
 };
 
+function getNFTPictureFname(socialPicTokenURI: string, withOverlayDomain?: string, rasterized?: boolean) {
+  const aFileName = getNFTFilenameInCDN(socialPicTokenURI, withOverlayDomain);
+  return rasterized ? aFileName.replace('.svg', '.jpg') : aFileName;
+}
+
 /**
  * Returns a social picture data string cached in CDN or null if image is not found in CDN cache.
  */
@@ -245,10 +250,8 @@ export const getNftPfpImageFromCDN = async (
   if (!isNotEmpty(socialPicTokenURI)) {
     return null;
   }
-  const aFileName = getNFTFilenameInCDN(socialPicTokenURI, withOverlayDomain);
-  const fileName = rasterized ? aFileName.replace('.svg', '.jpg') : aFileName;
+  const fileName = getNFTPictureFname(socialPicTokenURI, withOverlayDomain, rasterized);
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
-  // const hostname = env.CLOUD_STORAGE.API_ENDPOINT_URL || 'https://storage.googleapis.com';
   const bucket = storage.bucket(bucketName);
 
   const [fileExists] = await bucket.file(fileName).exists();
@@ -258,6 +261,23 @@ export const getNftPfpImageFromCDN = async (
   } else {
     return null;
   }
+};
+
+export const getNftPfpImagePathFromCDN = async (
+  socialPicTokenURI: string,
+  withOverlayDomain?: string,
+  rasterized?: boolean
+): Promise<string | null> => {
+  if (!isNotEmpty(socialPicTokenURI)) {
+    return null;
+  }
+  const fileName = getNFTPictureFname(socialPicTokenURI, withOverlayDomain, rasterized);
+  const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
+  const bucket = storage.bucket(bucketName);
+
+  const [fileExists] = await bucket.file(fileName).exists();
+  const hostname = env.CLOUD_STORAGE.API_ENDPOINT_URL || 'https://storage.googleapis.com';
+  return fileExists ? `${hostname}/${bucketName}/${fileName}` : null;
 };
 
 export const toBase64DataURI = (svg: string): string => {

@@ -1,9 +1,10 @@
-import {
+ import {
   Controller,
   Get,
   Header,
   Param,
   QueryParam,
+  Res,
 } from 'routing-controllers';
 import Moralis from 'moralis/node';
 import { ResponseSchema } from 'routing-controllers-openapi';
@@ -20,6 +21,7 @@ import { logger } from '../logger';
 import {
   parsePictureRecord,
   getNftPfpImageFromCDN,
+  getNftPfpImagePathFromCDN,
   toBase64DataURI,
   cacheSocialPictureInCDN,
 } from '../utils/socialPicture';
@@ -307,6 +309,7 @@ export class MetaDataController {
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
     @QueryParam('rasterize') rasterize = false,
+    @Res() response: any
   ): Promise<string> {
     const domain = await findDomainByNameOrToken(
       domainOrToken.replace('.svg', ''),
@@ -320,9 +323,9 @@ export class MetaDataController {
 
     if (domain && resolution) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
-      const pfpImageFromCDN =
+      const pfpImageFromCDNPath =
         socialPictureValue &&
-        (await getOrCacheNowPfpNFT(
+        (await getOrCacheNowPfpNFTPath(
           socialPictureValue,
           domain,
           resolution,
@@ -330,12 +333,20 @@ export class MetaDataController {
           rasterize
         ));
 
-      return (
-        pfpImageFromCDN ||
+      if (pfpImageFromCDNPath) {
+        response.redirect(pfpImageFromCDNPath);
+        return response
+      }
+
+      // return default placeholder
+      // TODO: convert default placeholder to JPG if needed
+      const res = (
         (await pathThatSvg(
           await this.generateImageData(name, resolution?.resolution || {}),
         ))
       );
+      response.send(res);
+      return response;
     }
 
     return await pathThatSvg(
@@ -649,15 +660,15 @@ export async function fetchTokenMetadata(
   }
   return { fetchedMetadata, image }; // TODO: get rid of socialPicture param
 }
-
-async function getOrCacheNowPfpNFT(
+async function getOrCacheImage(
   socialPicture: string,
   domain: Domain,
   resolution: DomainsResolution,
   withOverlay: boolean,
-  rasterize: boolean
+  rasterize: boolean,
+  fetchImageCallBack: (socialPicture: string, withOverlay?: string, rasterize?: boolean) => Promise<string | null>
 ) {
-  const cachedPfpNFT = await getNftPfpImageFromCDN(
+  const cachedPfpNFT = await fetchImageCallBack(
     socialPicture,
     withOverlay ? domain.name : undefined,
     rasterize
@@ -666,7 +677,7 @@ async function getOrCacheNowPfpNFT(
     await cacheSocialPictureInCDN(socialPicture, domain, resolution);
     // This is not optimal, should return image instead of 2nd call
     // TODO: improve PFP NFT fetching after caching in CDN
-    const trulyCachedPFPNFT = await getNftPfpImageFromCDN(
+    const trulyCachedPFPNFT = await fetchImageCallBack(
       socialPicture,
       withOverlay ? domain.name : undefined,
       rasterize
@@ -674,4 +685,38 @@ async function getOrCacheNowPfpNFT(
     return trulyCachedPFPNFT;
   }
   return cachedPfpNFT;
+}
+
+async function getOrCacheNowPfpNFT(
+  socialPicture: string,
+  domain: Domain,
+  resolution: DomainsResolution,
+  withOverlay: boolean,
+  rasterize: boolean
+) {
+  return getOrCacheImage(
+    socialPicture, 
+    domain,
+    resolution,
+    withOverlay,
+    rasterize,
+    getNftPfpImageFromCDN
+  )
+}
+
+async function getOrCacheNowPfpNFTPath(
+  socialPicture: string,
+  domain: Domain,
+  resolution: DomainsResolution,
+  withOverlay: boolean,
+  rasterize: boolean
+) {
+  return getOrCacheImage(
+    socialPicture, 
+    domain,
+    resolution,
+    withOverlay,
+    rasterize,
+    getNftPfpImagePathFromCDN
+  )
 }
