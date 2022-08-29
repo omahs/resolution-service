@@ -295,3 +295,11 @@ export const toBase64DataURI = (svg: string): string => {
 const isNotEmpty = (str: string) => {
   return Boolean(str?.trim());
 };
+
+export type PfpNftParams = {
+  socialPicture: string,
+  domain: Domain,
+  resolution: DomainsResolution,
+  withOverlay: boolean,
+  rasterize: boolean
+}

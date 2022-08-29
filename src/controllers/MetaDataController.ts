@@ -24,6 +24,7 @@ import {
   getNftPfpImagePathFromCDN,
   toBase64DataURI,
   cacheSocialPictureInCDN,
+  PfpNftParams,
 } from '../utils/socialPicture';
 import punycode from 'punycode';
 import { getDomainResolution } from '../services/Resolution';
@@ -276,16 +277,16 @@ export class MetaDataController {
     }
 
     if (domain && resolution) {
-      const socialPictureValue = resolution.resolution['social.picture.value'];
+      const socialPicture = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
-        socialPictureValue &&
-        (await getOrCacheNowPfpNFT(
-          socialPictureValue,
+        socialPicture && (
+          await getOrCacheNowPfpNFT({
+          socialPicture,
           domain,
           resolution,
           withOverlay,
           rasterize
-        ));
+        }));
 
       return {
         image_data:
@@ -322,15 +323,17 @@ export class MetaDataController {
     }
 
     if (domain && resolution) {
-      const socialPictureValue = resolution.resolution['social.picture.value'];
+      const socialPicture = resolution.resolution['social.picture.value'];
       const pfpImageFromCDNPath =
-        socialPictureValue &&
+      socialPicture &&
         (await getOrCacheNowPfpNFTPath(
-          socialPictureValue,
-          domain,
-          resolution,
-          withOverlay,
-          rasterize
+          {
+            socialPicture,
+            domain,
+            resolution,
+            withOverlay,
+            rasterize
+          }
         ));
 
       if (pfpImageFromCDNPath) {
@@ -661,13 +664,10 @@ export async function fetchTokenMetadata(
   return { fetchedMetadata, image }; // TODO: get rid of socialPicture param
 }
 async function getOrCacheImage(
-  socialPicture: string,
-  domain: Domain,
-  resolution: DomainsResolution,
-  withOverlay: boolean,
-  rasterize: boolean,
+  nftParams: PfpNftParams,
   fetchImageCallBack: (socialPicture: string, withOverlay?: string, rasterize?: boolean) => Promise<string | null>
 ) {
+  const {socialPicture, domain, resolution, withOverlay, rasterize} = nftParams;
   const cachedPfpNFT = await fetchImageCallBack(
     socialPicture,
     withOverlay ? domain.name : undefined,
@@ -687,36 +687,13 @@ async function getOrCacheImage(
   return cachedPfpNFT;
 }
 
-async function getOrCacheNowPfpNFT(
-  socialPicture: string,
-  domain: Domain,
-  resolution: DomainsResolution,
-  withOverlay: boolean,
-  rasterize: boolean
-) {
+async function getOrCacheNowPfpNFT(nftParams: PfpNftParams) {
   return getOrCacheImage(
-    socialPicture, 
-    domain,
-    resolution,
-    withOverlay,
-    rasterize,
+    nftParams,
     getNftPfpImageFromCDN
   )
 }
 
-async function getOrCacheNowPfpNFTPath(
-  socialPicture: string,
-  domain: Domain,
-  resolution: DomainsResolution,
-  withOverlay: boolean,
-  rasterize: boolean
-) {
-  return getOrCacheImage(
-    socialPicture, 
-    domain,
-    resolution,
-    withOverlay,
-    rasterize,
-    getNftPfpImagePathFromCDN
-  )
+async function getOrCacheNowPfpNFTPath(nftParams: PfpNftParams) {
+  return getOrCacheImage(nftParams, getNftPfpImagePathFromCDN);
 }
