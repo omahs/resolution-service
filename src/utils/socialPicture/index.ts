@@ -156,7 +156,7 @@ export const cacheSocialPictureInCDN = async (
   const bucket = storage.bucket(bucketName);
 
   const { chainId, nftStandard, contractAddress, tokenId } = parsePictureRecord(socialPic);
-  const filePrefix = '${chainId}_${nftStandard}:${contractAddress}_${tokenId}';
+  const filePrefix = `${chainId}_${nftStandard}:${contractAddress}_${tokenId}`;
 
   const [files] = await bucket.getFiles({
     prefix: filePrefix
