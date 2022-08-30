@@ -219,11 +219,9 @@ export const cacheSocialPictureInCDN = async (
         files.push({ fname: fileNameWithOverlayJpeg, data: withOverlayImageDataJpeg });
       }
 
-      // @TODO: this actually doesn't wait for uploading to finish. Re-do so we wait
-      // temporarity replaced Promise.all() with seqential execution instead of parallel
-      for (const file of files) {
-        await uploadPicture(file.fname, file.data);
-      }
+      await Promise.all(
+        files.map((file) =>  uploadPicture(file.fname, file.data))
+      )
     } else {
       logger.error(
         `Failed to generate image data for the domain: ${domain}, token URI: ${socialPic}`,
