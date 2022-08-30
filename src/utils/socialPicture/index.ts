@@ -177,7 +177,7 @@ export const cacheSocialPictureInCDN = async (
 
     // upload images to bucket
     if (imageData) {
-      type ImageFile = { fname: string; data: string };
+      type ImageFile = { fname: string; data: string, shouldConvert?: boolean };
       const files: Array<ImageFile> = [];
 
       if (!fileExists) {
@@ -198,16 +198,16 @@ export const cacheSocialPictureInCDN = async (
         files.push({ fname: fileNameWithOverlay, data: withOverlayImageData });
       }
 
-      if (!fileJpegExists) {
+      if (!fileJpegExists) { 
+        // could reuse some code?
         const imageDataSVG = simpleSVGTemplate(
           `data:${mimeType};base64,${imageData}`,
         );
-        const imageDataJPG = await convert(imageDataSVG); //TODO: increase resolution
-        files.push({ fname: fileNameJpeg, data: imageDataJPG });
-        // conversion of JPEG and PNG to SVG and then back to JPEG is not optimal.
+        files.push({ fname: fileNameJpeg, data: imageDataSVG, shouldConvert: true });
       }
 
-      if (!fileWithOverlayJpegExists) {
+      if (!fileWithOverlayJpegExists) { 
+        // could reuse some code?
         const withOverlayImageData = createSocialPictureImage(
           domain,
           imageData,
@@ -215,12 +215,19 @@ export const cacheSocialPictureInCDN = async (
           fetchedMetadata?.background_color || '',
           true,
         );
-        const withOverlayImageDataJpeg = await convert(withOverlayImageData); //TODO: increase resolution
-        files.push({ fname: fileNameWithOverlayJpeg, data: withOverlayImageDataJpeg });
+        files.push({ fname: fileNameWithOverlayJpeg, data: withOverlayImageData, shouldConvert: true });
       }
 
       await Promise.all(
-        files.map((file) =>  uploadPicture(file.fname, file.data))
+        files.map(async ({fname, data, shouldConvert}) => {
+          if (shouldConvert) {
+            // NB: conversion of JPEG and PNG to SVG and then back to JPEG might not be optimal.
+            const dataJPG = await convert(data); // @TODO: increase resolution to 1024x1024
+            return uploadPicture(fname, dataJPG);
+          } else {
+            return uploadPicture(fname, data);
+          }
+        })
       )
     } else {
       logger.error(
