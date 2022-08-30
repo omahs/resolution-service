@@ -154,10 +154,20 @@ export const cacheSocialPictureInCDN = async (
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
   const bucket = storage.bucket(bucketName);
 
-  const [fileExists] = await bucket.file(fileName).exists();
-  const [fileWithOverlayExists] = await bucket.file(fileNameWithOverlay).exists();
-  const [fileJpegExists] = await bucket.file(fileNameJpeg).exists();
-  const [fileWithOverlayJpegExists] = await bucket.file(fileNameWithOverlayJpeg).exists();
+  const { chainId, nftStandard, contractAddress, tokenId } = parsePictureRecord(socialPic);
+  const filePrefix = '${chainId}_${nftStandard}:${contractAddress}_${tokenId}';
+
+  const [files] = await bucket.getFiles({
+    prefix: filePrefix
+  });
+
+  const fileNames = files.map(file => file.name);
+
+  const fileExists = fileNames.indexOf(fileName) >= 0;
+  const fileWithOverlayExists = fileNames.indexOf(fileNameWithOverlay) >= 0;
+  const fileJpegExists = fileNames.indexOf(fileNameJpeg) >= 0;
+  const fileWithOverlayJpegExists = fileNames.indexOf(fileNameWithOverlayJpeg) >= 0;
+
   if (!fileExists || !fileWithOverlayExists || fileJpegExists || fileWithOverlayJpegExists) {
     const { fetchedMetadata, image } = await fetchTokenMetadata(resolution);
     const [imageData, mimeType] = await getNFTSocialPicture(image).catch(() => [
