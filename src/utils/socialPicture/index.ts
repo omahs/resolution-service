@@ -61,7 +61,8 @@ export const getNFTSocialPicture = async (
     return [base64, mimeType];
   }
 
-  const resp = await nodeFetch(makeImageLink(pictureOrUrl), { timeout: 5000 });
+  const NFP_FETCHING_TIMEOUT = 5000; // in ms
+  const resp = await nodeFetch(makeImageLink(pictureOrUrl), { timeout: NFP_FETCHING_TIMEOUT });
   if (!resp.ok) {
     throw new Error('Failed to fetch NFT image');
   }
