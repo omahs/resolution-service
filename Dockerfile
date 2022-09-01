@@ -2,6 +2,7 @@ FROM node:14.16.1-alpine
 RUN apk add --no-cache git gcc make g++ zlib-dev xfce4-dev-tools postgresql-client cairo-dev pango-dev && mkdir /app
 RUN apk add --no-cache  chromium --repository=http://dl-cdn.alpinelinux.org/alpine/v3.10/main
 
+# missing chromium dependency for Puppeteer
 RUN apk add libjpeg-turbo-dev
 
 WORKDIR /app
@@ -13,6 +14,9 @@ RUN yarn install --production=false --no-lockfile
 
 ADD . ./
 RUN yarn build
+
+# added this to fix error: Incorrect hash when fetching from the cache for "wyvern-js"
+RUN yarn cache clean 
 
 # Cleanup development packages
 RUN yarn install --prefer-offline --frozen-lockfile --production --unsafe-perm --ignore-optional
