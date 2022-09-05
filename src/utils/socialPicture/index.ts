@@ -8,6 +8,7 @@ import { Storage } from '@google-cloud/storage';
 import { fetchTokenMetadata } from '../../controllers/MetaDataController';
 import { logger } from '../../logger';
 import { convert } from 'convert-svg-to-jpeg';
+import { Resvg } from '@resvg/resvg-js';
 
 const storageOptions = env.CLOUD_STORAGE.API_ENDPOINT_URL
   ? { apiEndpoint: env.CLOUD_STORAGE.API_ENDPOINT_URL } // for development using local emulator
@@ -152,11 +153,11 @@ export const cacheSocialPictureInCDN = async (
   }
   const fileName = getNFTFilenameInCDN(socialPic);
   const fileNameWithOverlay = getNFTFilenameInCDN(socialPic, domain.name);
-  const fileNameJpeg = getNFTFilenameInCDN(socialPic)?.replace('.svg', '.jpg'); // dirty hack, pass param instead
+  const fileNameJpeg = getNFTFilenameInCDN(socialPic)?.replace('.svg', '.png'); // dirty hack, pass param instead
   const fileNameWithOverlayJpeg = getNFTFilenameInCDN(
     socialPic,
     domain.name,
-  )?.replace('.svg', '.jpg');
+  )?.replace('.svg', '.png');
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
   const bucket = storage.bucket(bucketName);
 
@@ -243,8 +244,13 @@ export const cacheSocialPictureInCDN = async (
         files.map(async ({ fname, data, shouldConvert }) => {
           if (shouldConvert) {
             // NB: conversion of JPEG and PNG to SVG and then back to JPEG might not be optimal.
-            const dataJPG = await convert(data); // @TODO: increase resolution to 1024x1024
-            return uploadPicture(fname, dataJPG);
+            const resvg = new Resvg(data, { fitTo: { mode: 'original' } }); // mode: zoom doesn't work
+            const pngData = resvg.render();
+            const pngBuffer = pngData.asPng();
+
+            const dataPNG = pngBuffer.toString();
+            //const dataJPG = await convert(data); // @TODO: increase resolution to 1024x1024
+            return uploadPicture(fname, dataPNG);
           } else {
             return uploadPicture(fname, data);
           }
@@ -263,6 +269,8 @@ export const cacheSocialPictureInCDN = async (
     const imageBuffer = Buffer.from(imageData);
     const contentType = fileName?.endsWith('.jpg')
       ? 'image/jpeg'
+      : fileName?.endsWith('.png')
+      ? 'image/png'
       : 'image/svg+xml';
     await file.save(imageBuffer, {
       metadata: {
@@ -278,7 +286,7 @@ function getNFTPictureFname(
   rasterized?: boolean,
 ) {
   const aFileName = getNFTFilenameInCDN(socialPicTokenURI, withOverlayDomain);
-  return rasterized ? aFileName.replace('.svg', '.jpg') : aFileName;
+  return rasterized ? aFileName.replace('.svg', '.png') : aFileName;
 }
 
 /**
