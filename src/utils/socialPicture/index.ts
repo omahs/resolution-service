@@ -244,13 +244,13 @@ export const cacheSocialPictureInCDN = async (
         files.map(async ({ fname, data, shouldConvert }) => {
           if (shouldConvert) {
             // NB: conversion of JPEG and PNG to SVG and then back to JPEG might not be optimal.
-            const resvg = new Resvg(data, { fitTo: { mode: 'original' } }); // mode: zoom doesn't work
+            const resvg = new Resvg(data, {
+              fitTo: { mode: 'zoom', value: 1024 },
+            });
             const pngData = resvg.render();
             const pngBuffer = pngData.asPng();
 
-            const dataPNG = pngBuffer.toString();
-            //const dataJPG = await convert(data); // @TODO: increase resolution to 1024x1024
-            return uploadPicture(fname, dataPNG);
+            return uploadPicture(fname, pngBuffer);
           } else {
             return uploadPicture(fname, data);
           }
@@ -263,10 +263,12 @@ export const cacheSocialPictureInCDN = async (
     }
   }
 
-  async function uploadPicture(fileName: string, imageData: string) {
+  async function uploadPicture(fileName: string, imageData: string | Buffer) {
     const file = bucket.file(fileName);
     // cache in the storage
-    const imageBuffer = Buffer.from(imageData);
+    const imageBuffer = Buffer.isBuffer(imageData)
+      ? imageData
+      : Buffer.from(imageData);
     const contentType = fileName?.endsWith('.jpg')
       ? 'image/jpeg'
       : fileName?.endsWith('.png')
