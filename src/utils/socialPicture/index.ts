@@ -62,7 +62,7 @@ export const getNFTSocialPicture = async (
     return [base64, mimeType];
   }
 
-  const NFP_FETCHING_TIMEOUT = 5000; // in ms
+  const NFP_FETCHING_TIMEOUT = 10000; // in ms
   const resp = await nodeFetch(makeImageLink(pictureOrUrl), {
     timeout: NFP_FETCHING_TIMEOUT,
   });
@@ -245,11 +245,10 @@ export const cacheSocialPictureInCDN = async (
           if (shouldConvert) {
             // NB: conversion of JPEG and PNG to SVG and then back to JPEG might not be optimal.
             const resvg = new Resvg(data, {
-              fitTo: { mode: 'zoom', value: 1024 },
-            });
+              fitTo: { mode: 'zoom', value: 2 },
+            }); // zoom.value = 2 - means increase res. twice, eg. 1024x1024
             const pngData = resvg.render();
             const pngBuffer = pngData.asPng();
-
             return uploadPicture(fname, pngBuffer);
           } else {
             return uploadPicture(fname, data);
