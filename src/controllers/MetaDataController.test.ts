@@ -68,7 +68,7 @@ describe('MetaDataController', () => {
       expect(resWithName.image).eq(
         'https://metadata.unstoppabledomains.com/image-src/testdomain.crypto.svg',
       );
-      expect(resWithName.attributes.length).eq(5);
+      expect(resWithName.attributes.length).eq(4);
       const correctAttributes = [
         { trait_type: 'domain', value: 'testdomain.crypto' },
         { trait_type: 'level', value: 2 },
