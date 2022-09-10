@@ -73,10 +73,6 @@ describe('MetaDataController', () => {
         { trait_type: 'domain', value: 'testdomain.crypto' },
         { trait_type: 'level', value: 2 },
         { trait_type: 'length', value: 10 },
-        {
-          trait_type: 'IPFS Content',
-          value: 'QmdyBw5oTgCtTLQ18PbDvPL8iaLoEPhSyzD91q9XmgmAjb',
-        },
         { trait_type: 'type', value: 'standard' },
       ];
       expect(resWithName.attributes).to.have.deep.members(correctAttributes);
@@ -388,12 +384,6 @@ describe('MetaDataController', () => {
             value: 'standard',
           },
         ];
-        if (domain.label === 'india') {
-          correctAttributes.push({
-            trait_type: 'IPFS Content',
-            value: 'QmQq1ydvSmzrZPkr4CJJtetNSb9eSBucqQ4QoNmiRdMHzM',
-          });
-        }
         expect(response.attributes.length).to.eq(correctAttributes.length);
         expect(response.attributes).to.have.deep.members(correctAttributes);
       }
@@ -421,16 +411,6 @@ describe('MetaDataController', () => {
         .send()
         .then((r) => r.body);
 
-      expect(dwebHashResponse.attributes).to.deep.contain({
-        trait_type: 'IPFS Content',
-        value: 'ipfs hash content',
-      });
-
-      expect(htmlValueResponse.attributes).to.deep.contain({
-        trait_type: 'IPFS Content',
-        value: 'ipfs hash content',
-      });
-
       expect(dwebHashResponse.properties).to.deep.equals({
         records: { 'dweb.ipfs.hash': 'ipfs hash content' },
       });
@@ -447,10 +427,6 @@ describe('MetaDataController', () => {
         .get(`/metadata/${domain.name}`)
         .send()
         .then((r) => r.body);
-      expect(response.attributes).to.deep.contain({
-        trait_type: 'IPFS Content',
-        value: 'correct',
-      });
       expect(response.properties).to.deep.eq({
         records: {
           'dweb.ipfs.hash': 'correct',

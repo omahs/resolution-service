@@ -444,9 +444,6 @@ export class MetaDataController {
       },
     ];
 
-    if (meta?.ipfsContent) {
-      attributes.push({ trait_type: 'IPFS Content', value: meta?.ipfsContent });
-    }
     if (meta?.verifiedNftPicture) {
       attributes.push({
         trait_type: 'picture',
