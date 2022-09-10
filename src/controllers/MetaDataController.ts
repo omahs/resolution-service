@@ -217,9 +217,6 @@ export class MetaDataController {
       resolution.resolution,
     );
     const domainAttributes = this.getDomainAttributes(domain.name, {
-      ipfsContent:
-        resolution.resolution['dweb.ipfs.hash'] ||
-        resolution.resolution['ipfs.html.value'],
       verifiedNftPicture: isSocialPictureVerified,
     });
 
@@ -403,7 +400,6 @@ export class MetaDataController {
   private getDomainAttributes(
     name: string,
     meta?: {
-      ipfsContent?: string;
       verifiedNftPicture?: boolean;
     },
   ): OpenSeaMetadataAttribute[] {
@@ -425,7 +421,6 @@ export class MetaDataController {
   private getBasicDomainAttributes(
     name: string,
     meta?: {
-      ipfsContent?: string;
       verifiedNftPicture?: boolean;
     },
   ): OpenSeaMetadataAttribute[] {
