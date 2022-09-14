@@ -34,7 +34,7 @@ env:
   ETHEREUM_RESYNC_FROM: ${{ secrets.RESOLUTION_ETHEREUM_RESYNC_FROM}}
   CLOUD_STORAGE_BUCKET_ID: 'resolution-client-assets'
   DATADOG_APM_ENABLE: 'true'
-  DATADOG_APM_SERVICE_NAME: 'resolution-service-staging'
+  DATADOG_APM_SERVICE_NAME: 'resolution-service-production'
   DATADOG_AGENT_HOSTNAME: '10.128.0.31'
 
 jobs:
