@@ -47,22 +47,18 @@ export const getNumberClub = (domain: Domain): AttributeCategory | null => {
   if (
     !label ||
     getAttributeCharacterSet(domain) !== AttributeCharacterSet.Digit ||
-    label.startsWith('0') ||
     isNaN(+label)
   ) {
     return null;
   }
-  const number = +label;
-  if (number <= 0) {
-    return null;
-  }
-  if (number < 1000) {
+  const length = label.length;
+  if (length === 3) {
     return AttributeCategory['999Club'];
   }
-  if (number <= 10000) {
+  if (length === 4) {
     return AttributeCategory['10kClub'];
   }
-  if (number <= 100000) {
+  if (length === 5) {
     return AttributeCategory['100kClub'];
   }
   return null;

@@ -11,12 +11,17 @@ describe('getNumberClub', () => {
   it('should not return anything', () => {
     const domainNames = [
       'testing.nft',
-      '002.x',
+      '000200000002.x',
       '0.x',
-      '1000000.nft',
-      '0202.nft',
-      '0000.x',
-      '100001.nft',
+      '00.x',
+      '1.x',
+      '02.x',
+      '01.x',
+      '10000000.nft',
+      '32222222.nft',
+      '0000k.x',
+      '10000f1.nft',
+      '0x12333.nft',
     ];
     for (const domainName of domainNames) {
       expect(getNumberClub(new Domain({ name: domainName }))).to.equal(null);
@@ -24,9 +29,10 @@ describe('getNumberClub', () => {
   });
   it('should return 999 club', () => {
     const domainNames = [
-      '1.x',
-      '2.nft',
-      '1.blockchain',
+      '000.x',
+      '001.x',
+      '002.nft',
+      '010.blockchain',
       '202.crypto',
       '102.x',
       '999.nft',
@@ -39,7 +45,20 @@ describe('getNumberClub', () => {
     }
   });
   it('should return 10k club', () => {
-    const domainNames = ['9292.x', '3222.nft', '9999.x', '10000.x'];
+    const domainNames = [
+      '0992.x',
+      '0322.nft',
+      '9999.x',
+      '0999.x',
+      '1000.x',
+      '0001.x',
+      '0000.x',
+      '0101.x',
+      '0111.x',
+      '0100.x',
+      '1000.x',
+      '1001.x',
+    ];
     for (const domainName of domainNames) {
       expect(getNumberClub(new Domain({ name: domainName }))).to.equal(
         AttributeCategory['10kClub'],
@@ -47,7 +66,14 @@ describe('getNumberClub', () => {
     }
   });
   it('should return 100k club', () => {
-    const domainNames = ['99999.x', '100000.nft', '19999.x', '10001.x'];
+    const domainNames = [
+      '99990.x',
+      '10000.nft',
+      '01999.x',
+      '10010.x',
+      '00000.x',
+      '00001.x',
+    ];
     for (const domainName of domainNames) {
       expect(getNumberClub(new Domain({ name: domainName }))).to.equal(
         AttributeCategory['100kClub'],
