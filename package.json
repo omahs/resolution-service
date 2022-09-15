@@ -60,6 +60,7 @@
     "class-validator-jsonschema": "^3.0.1",
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
+    "dd-trace": "^3.3.0",
     "dot-crypto": "https://github.com/unstoppabledomains/dot-crypto.git#10be3194ab50021ec59983b5b7ef81479321a02e",
     "ethers": "^5.1.4",
     "express": "^4.17.1",
