@@ -41,7 +41,8 @@
     "domains:export": "dotenv -e ./local.dev.env --  ts-node src/scripts/exportDomains.ts",
     "domains:check": "dotenv -e ./local.dev.env --  ts-node src/scripts/checkDomainExistence.ts",
     "domains:filter": "ts-node src/scripts/filterDomainsToMint.ts",
-    "domains:prepare": "yarn domains:export && yarn domains:check && yarn domains:filter"
+    "domains:prepare": "yarn domains:export && yarn domains:check && yarn domains:filter",
+    "script": "dotenv -e ./local.dev.env -- ts-node"
   },
   "dependencies": {
     "@bugsnag/js": "^7.9.2",
