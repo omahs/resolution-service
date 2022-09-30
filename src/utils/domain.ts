@@ -1,5 +1,6 @@
 import { Domain } from '../models';
 import { IsZilDomain } from '../services/Resolution';
+import { AllDomainTlds } from '../types/common';
 import { eip137Namehash, znsNamehash } from './namehash';
 
 const normalizeToken = (token: string): string => {
@@ -45,4 +46,22 @@ export const findDomainByNameOrToken = async (
   }
 
   return domain;
+};
+
+export const splitDomain = (
+  domain: string,
+): { label: string; extension: AllDomainTlds } => {
+  const splitted = domain.split('.');
+  const extension = splitted.pop()!;
+
+  const label = splitted.join('.');
+  return { label, extension: extension as AllDomainTlds };
+};
+
+export const belongsToTld = (
+  domain: string,
+  domainSuffix: AllDomainTlds,
+): boolean => {
+  const { extension } = splitDomain(domain);
+  return domainSuffix === extension;
 };

@@ -60,22 +60,35 @@ export enum Blockchain {
 }
 
 export enum EvmUnstoppableDomainTlds {
-  Crypto = 'crypto',
-  Coin = 'coin',
-  Wallet = 'wallet',
-  Blockchain = 'blockchain',
   Bitcoin = 'bitcoin',
-  X = 'x',
-  Number888 = '888',
-  Nft = 'nft',
+  Blockchain = 'blockchain',
+  Coin = 'coin',
+  Crypto = 'crypto',
   Dao = 'dao',
+  Nft = 'nft',
+  Number888 = '888',
+  Wallet = 'wallet',
+  X = 'x',
 }
 
 export enum ZilliqaUnstoppableDomainTlds {
   Zil = 'zil',
 }
 
+export type UnstoppableDomainTld =
+  | EvmUnstoppableDomainTlds
+  | ZilliqaUnstoppableDomainTlds;
+
 export const UnstoppableDomainTlds = {
   ...EvmUnstoppableDomainTlds,
   ...ZilliqaUnstoppableDomainTlds,
 };
+
+// TLDs not issued by Unstoppable Domains
+// We may allow people to manage domains not issued by UD (e.g., ".eth")
+export enum ExternalDomainTld {}
+
+export type AllDomainTlds =
+  | EvmUnstoppableDomainTlds
+  | ZilliqaUnstoppableDomainTlds
+  | ExternalDomainTld;
