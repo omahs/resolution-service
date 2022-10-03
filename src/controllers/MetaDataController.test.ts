@@ -21,6 +21,7 @@ import {
   AttributeType,
   getAttributeCharacterSet,
 } from '../utils/metadata';
+import { toBase64DataURI } from '../utils/socialPicture';
 
 describe('MetaDataController', () => {
   const L1Fixture: LayerTestFixture = new LayerTestFixture();
@@ -98,11 +99,13 @@ describe('MetaDataController', () => {
       };
       expect(resWithName.properties).to.deep.eq(correctProperties);
       expect(resWithName.image_data).eq(
-        DefaultImageData({
-          label: domain.label,
-          tld: domain.extension,
-          fontSize: 24,
-        }),
+        toBase64DataURI(
+          DefaultImageData({
+            label: domain.label,
+            tld: domain.extension,
+            fontSize: 24,
+          }),
+        ),
       );
       expect(resWithName.background_color).eq(BackgroundColor);
     });
