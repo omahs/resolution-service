@@ -70,6 +70,13 @@ MORALIS_APP_ID=apikey				                    # App ID for the Moralis API
 OPENSEA_API_KEY=apikey				                  # key for Opensea's API service
 ```
 
+To use the Postgess database that is running on the host machine from the Docker use *host.docker.internal* address, *kubernetes.docker.internal*. 
+```
+   RESOLUTION_POSTGRES_HOST=example.com  
+```
+Alternatively  ```--network="host"``` parameter could be used while starting docker from command line, then *127.0.0.1* in your docker container will point to your docker host.
+The same applies to GCS file emulator (see [testing image uploads locally](#testing-image-uploads-locally)).
+
 This is the minimum required set of configurations for the service. Additional
 configuration options are listed in
 [Environment configuration options](README.md#environment-configuration-options).
