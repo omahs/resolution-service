@@ -28,6 +28,7 @@ export class ReverseController {
         owner: resolution.ownerAddress,
         resolver: resolution.resolver,
         registry: resolution.registry,
+        reverse: true,
       };
       response.records = resolution.resolution;
     }

@@ -104,6 +104,10 @@ export default class Domain extends Model {
     return /[^\u0000-\u00ff]/.test(this.name);
   }
 
+  get hasReverseResolution(): boolean {
+    return this.reverseResolutions.length > 0;
+  }
+
   static async findAllByNodes(
     nodes: string[],
     repository: Repository<Domain> = this.getRepository(),

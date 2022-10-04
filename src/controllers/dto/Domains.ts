@@ -49,6 +49,9 @@ export class DomainMetadata {
   @IsOptional()
   @IsString()
   registry: string | null = null;
+
+  @IsBoolean()
+  reverse: boolean = false;
 }
 
 export class DomainResponse {
