@@ -41,7 +41,7 @@ export class DomainsController {
     domainName = domainName.toLowerCase();
     const domain = await Domain.findOne({
       where: { name: domainName },
-      relations: ['resolutions'],
+      relations: ['resolutions', 'reverseResolutions'],
     });
     if (domain) {
       const resolution = getDomainResolution(domain);
@@ -53,6 +53,7 @@ export class DomainsController {
         owner: resolution.ownerAddress,
         resolver: resolution.resolver,
         registry: resolution.registry,
+        reverse: domain.hasReverseResolution,
       };
       response.records = resolution.resolution;
       return response;
@@ -65,6 +66,7 @@ export class DomainsController {
         registry: null,
         blockchain: null,
         networkId: null,
+        reverse: false,
       },
       records: {},
     };
@@ -144,6 +146,7 @@ export class DomainsController {
 
     const qb = Domain.createQueryBuilder('domain');
     qb.leftJoinAndSelect('domain.resolutions', 'resolution');
+    qb.leftJoinAndSelect('domain.reverseResolutions', 'reverseResolutions');
     qb.leftJoinAndSelect('domain.parent', 'parent');
     qb.where(`1 = 1`);
     for (const q of where) {
@@ -175,6 +178,7 @@ export class DomainsController {
             owner: resolution.ownerAddress,
             resolver: resolution.resolver,
             registry: resolution.registry,
+            reverse: domain.hasReverseResolution,
           },
           records: resolution.resolution,
         },

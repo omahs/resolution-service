@@ -52,6 +52,7 @@ describe('DomainsController', () => {
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
           blockchain: 'ETH',
           networkId: 1337,
+          reverse: false,
         },
         records: {
           'crypto.ETH.address': '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
@@ -93,6 +94,7 @@ describe('DomainsController', () => {
           registry: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
           blockchain: 'MATIC',
           networkId: 1337,
+          reverse: false,
         },
         records: {
           'crypto.ETH.address': '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
@@ -121,6 +123,7 @@ describe('DomainsController', () => {
           registry: null,
           blockchain: null,
           networkId: null,
+          reverse: false,
         },
         records: {},
       });
@@ -141,6 +144,7 @@ describe('DomainsController', () => {
           registry: null,
           blockchain: null,
           networkId: null,
+          reverse: false,
         },
         records: {},
       });
@@ -172,6 +176,7 @@ describe('DomainsController', () => {
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
           blockchain: 'ETH',
           networkId: 1337,
+          reverse: false,
         },
         records: {
           'crypto.ETH.address': '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
@@ -234,6 +239,7 @@ describe('DomainsController', () => {
           registry: null,
           blockchain: null,
           networkId: null,
+          reverse: false,
         },
         records: {},
       });
@@ -263,6 +269,7 @@ describe('DomainsController', () => {
           registry: '0x9611c53be6d1b32058b2747bdececed7e1216793',
           blockchain: 'ZIL',
           networkId: 333,
+          reverse: false,
         },
         records: {},
       });
@@ -292,6 +299,7 @@ describe('DomainsController', () => {
           registry: '0x9611c53be6d1b32058b2747bdececed7e1216793',
           blockchain: 'ETH',
           networkId: 1337,
+          reverse: false,
         },
         records: {},
       });
@@ -321,6 +329,7 @@ describe('DomainsController', () => {
           registry: '0x9611c53be6d1b32058b2747bdececed7e1216793',
           blockchain: 'MATIC',
           networkId: 1337,
+          reverse: false,
         },
         records: {},
       });
@@ -360,6 +369,7 @@ describe('DomainsController', () => {
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
           blockchain: 'ETH',
           networkId: 1337,
+          reverse: false,
         },
         records: {
           'gundb.username.value':
@@ -409,6 +419,7 @@ describe('DomainsController', () => {
           registry: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
           blockchain: 'MATIC',
           networkId: 1337,
+          reverse: false,
         },
         records: {
           'crypto.ETH.address': '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
@@ -450,6 +461,7 @@ describe('DomainsController', () => {
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
           blockchain: 'ETH',
           networkId: 1337,
+          reverse: false,
         },
         records: {
           'crypto.ETH.address': '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
