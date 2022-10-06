@@ -242,10 +242,11 @@ export class MetaDataController {
     };
 
     if (!this.isDomainWithCustomImage(domain.name) && !socialPicture) {
-      metadata.image_data = await this.generateImageData(
+      const imageDataSvgXml = await this.generateImageData(
         domain.name,
         resolution.resolution,
       );
+      metadata.image_data = toBase64DataURI(imageDataSvgXml);
       metadata.background_color = '4C47F7';
     }
 
@@ -340,7 +341,9 @@ export class MetaDataController {
     const description = name ? this.getDomainDescription(name, {}) : null;
     const attributes = name ? this.getAttributeType(new Domain({ name })) : [];
     const image = name ? this.generateDomainImageUrl(name) : null;
-    const image_data = name ? await this.generateImageData(name, {}) : null;
+    const image_data = name
+      ? toBase64DataURI(await this.generateImageData(name, {}))
+      : null;
     const external_url = name
       ? `https://unstoppabledomains.com/search?searchTerm=${name}`
       : null;
