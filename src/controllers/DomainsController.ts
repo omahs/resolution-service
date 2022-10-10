@@ -113,8 +113,7 @@ export class DomainsController {
       for (let i = 0; i < resolutionKeys.length; i++) {
         const key = Object.keys(query.resolution)[i];
         where.push({
-          query: `"resolution"."resolution"->>'${key}' = :val${i}`,
-          parameters: { [`val${i}`]: query.resolution[key] },
+          query: `"resolution"."resolution"@>'{"${key}":"${query.resolution[key]}"}'::jsonb`,
         });
       }
     }
