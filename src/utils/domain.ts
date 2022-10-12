@@ -37,11 +37,11 @@ export const findDomainByNameOrToken = async (
   const domainName = normalizeDomainName(domainOrToken);
 
   let domain =
-    (await Domain.findByNode(tokenName)) ||
+    (await Domain.findByNode(tokenName, undefined, true)) ||
     (await Domain.findOnChainNoSafe(tokenName));
 
   if (!domain && IsZilDomain(domainName)) {
-    domain = await Domain.findByNode(znsNamehash(domainName));
+    domain = await Domain.findByNode(znsNamehash(domainName), undefined, true);
   }
 
   return domain;

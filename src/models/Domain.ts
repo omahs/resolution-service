@@ -125,11 +125,13 @@ export default class Domain extends Model {
   static async findByNode(
     node?: string,
     repository: Repository<Domain> = this.getRepository(),
+    cache?: boolean,
   ): Promise<Domain | undefined> {
     return node
       ? await repository.findOne({
           where: { node },
           relations: ['resolutions', 'reverseResolutions', 'parent'],
+          cache: cache ? 600000 /* 10 mins */ : undefined,
         })
       : undefined;
   }
