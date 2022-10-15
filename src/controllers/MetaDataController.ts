@@ -292,6 +292,26 @@ export class MetaDataController {
     };
   }
 
+  @Get('/metaimage-src/:domainOrToken')
+  @Header('Access-Control-Allow-Origin', '*')
+  @Header('Content-Type', 'image/svg+xml')
+  async getImageMetaSrc(
+    @Param('domainOrToken') domainOrToken: string,
+  ): Promise<string> {
+    const domain = await findDomainByNameOrToken(
+      domainOrToken.replace('.svg', ''),
+    );
+    const resolution = domain ? getDomainResolution(domain) : undefined;
+    const name = domain ? domain.name : domainOrToken.replace('.svg', '');
+
+    if (!name.includes('.')) {
+      return '';
+    }
+
+    return '<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><text x="20" y="20">Not implemented yet</text></svg>';
+    // @TODO implement
+  }
+
   @Get('/image-src/:domainOrToken')
   @Header('Access-Control-Allow-Origin', '*')
   @Header('Content-Type', 'image/svg+xml')
