@@ -37,6 +37,7 @@ import { Domain, DomainsResolution } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
 import { findDomainByNameOrToken } from '../utils/domain';
+import { metaSVGTemplate } from '../utils/socialPicture/svgTemplate';
 
 const DEFAULT_IMAGE_URL = (name: string) =>
   `https://metadata.unstoppabledomains.com/image-src/${name}.svg` as const;
@@ -308,7 +309,7 @@ export class MetaDataController {
       return '';
     }
 
-    return '<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><text x="20" y="20">Not implemented yet</text></svg>';
+    return metaSVGTemplate('', 'markvital.x', 'image/svg');
     // @TODO implement
   }
 
