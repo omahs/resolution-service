@@ -309,7 +309,7 @@ export class MetaDataController {
       return '';
     }
 
-    return metaSVGTemplate('', 'markvital.x', 'image/svg');
+    return metaSVGTemplate('', name, 'image/svg');
     // @TODO implement
   }
 
