@@ -31,19 +31,19 @@ steps:
       - "--max-instances=50"
       - "--port=3000"
       - "--set-cloudsql-instance=unstoppable-domains-staging:us-central1:ud-staging-resolution"
-      - "--update-secrets=DATADOG_AGENT_HOST:latest"
-      - "--update-secrets=DATADOG_APM_ENABLE:latest"
-      - "--update-secrets=DATADOG_APM_SERVICE_NAME:latest"
-      - "--update-secrets=DD_ENV:latest"
-      - "--update-secrets=ETHEREUM_JSON_RPC_API_URL:latest"
-      - "--update-secrets=MORALIS_API_URL:latest"
-      - "--update-secrets=MORALIS_APP_ID:latest"
-      - "--update-secrets=OPENSEA_API_KEY:latest"
-      - "--update-secrets=POLYGON_RESYNC_FROM:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_DATABASE:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_HOST:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_USERNAME:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD:latest"
+      - "--update-secrets=DATADOG_AGENT_HOST=DATADOG_AGENT_HOST:latest"
+      - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
+      - "--update-secrets=DATADOG_APM_SERVICE_NAME=DATADOG_APM_SERVICE_NAME:latest"
+      - "--update-secrets=DD_ENV=DD_ENV:latest"
+      - "--update-secrets=ETHEREUM_JSON_RPC_API_URL=ETHEREUM_JSON_RPC_API_URL:latest"
+      - "--update-secrets=MORALIS_API_URL=MORALIS_API_URL:latest"
+      - "--update-secrets=MORALIS_APP_ID=MORALIS_APP_ID:latest"
+      - "--update-secrets=OPENSEA_API_KEY=OPENSEA_API_KEY:latest"
+      - "--update-secrets=POLYGON_RESYNC_FROM=POLYGON_RESYNC_FROM:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_DATABASE=RESOLUTION_POSTGRES_DATABASE:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_HOST=RESOLUTION_POSTGRES_HOST:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_USERNAME=RESOLUTION_POSTGRES_USERNAME:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD=RESOLUTION_POSTGRES_PASSWORD:latest"
       - "--update-env-vars=ETHEREUM_CONFIRMATION_BLOCKS=12"
       - "--update-env-vars=ETHEREUM_NETWORK_ID=5"
       - "--update-env-vars=ETHEREUM_RESYNC_FROM=None"
@@ -70,7 +70,7 @@ substitutions:
   _TRIGGER_ID: fe569f0f-3e0b-4f70-975d-af67785b25aa
   _GCR_HOSTNAME: us.gcr.io
   _PLATFORM: managed
-  _SERVICE_NAME: resolution-service-staging
+  _SERVICE_NAME: resolution-service
   _DEPLOY_REGION: us-central1
   _LABELS: gcb-trigger-id=fe569f0f-3e0b-4f70-975d-af67785b25aa
 tags:
