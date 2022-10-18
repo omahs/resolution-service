@@ -1,0 +1,78 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - "--no-cache"
+      - "-t"
+      - "$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+      - .
+      - "-f"
+      - Dockerfile
+    id: Build
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - "$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+    id: Push
+
+  # deploy/update the service
+  #   not setting --service-account in order to use the default service account of the project
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    args:
+      - run
+      - services
+      - update
+      - $_SERVICE_NAME
+      - "--platform=managed"
+      - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+      - "--cpu=1000m"
+      - "--memory=512Mi"
+      - "--min-instances=1"
+      - "--max-instances=50"
+      - "--port=3000"
+      - "--set-cloudsql-instance=unstoppable-domains-staging:us-central1:ud-staging-resolution"
+      - "--update-secrets=DATADOG_AGENT_HOST:latest"
+      - "--update-secrets=DATADOG_APM_ENABLE:latest"
+      - "--update-secrets=DATADOG_APM_SERVICE_NAME:latest"
+      - "--update-secrets=DD_ENV:latest"
+      - "--update-secrets=ETHEREUM_JSON_RPC_API_URL:latest"
+      - "--update-secrets=MORALIS_API_URL:latest"
+      - "--update-secrets=MORALIS_APP_ID:latest"
+      - "--update-secrets=OPENSEA_API_KEY:latest"
+      - "--update-secrets=POLYGON_RESYNC_FROM:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_DATABASE:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_HOST:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_USERNAME:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD:latest"
+      - "--update-env-vars=ETHEREUM_CONFIRMATION_BLOCKS=12"
+      - "--update-env-vars=ETHEREUM_NETWORK_ID=5"
+      - "--update-env-vars=ETHEREUM_RESYNC_FROM=None"
+      - "--update-env-vars=POLYGON_BLOCK_FETCH_LIMIT=None"
+      - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
+      - "--update-env-vars=POLYGON_JSON_RPC_API_URL=https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78"
+      - "--update-env-vars=POLYGON_NETWORK_ID=80001"
+      - "--update-env-vars=RESOLUTION_RUNNING_MODE=API,MIGRATIONS"
+      - "--update-secrets=VIEWBLOCK_API_KEY:latest"
+      - "--update-env-vars=ZNS_NETWORK=testnet"
+      - "--update-secrets=CLOUD_STORAGE_BUCKET_ID:latest"
+      - >-
+        --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID,$_LABELS
+      - "--region=$_DEPLOY_REGION"
+      - "--quiet"
+    id: Deploy API
+    entrypoint: gcloud
+timeout: 1800s
+images:
+  - "$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+options:
+  substitutionOption: ALLOW_LOOSE
+substitutions:
+  _TRIGGER_ID: fe569f0f-3e0b-4f70-975d-af67785b25aa
+  _GCR_HOSTNAME: us.gcr.io
+  _PLATFORM: managed
+  _SERVICE_NAME: resolution-service-staging
+  _DEPLOY_REGION: us-central1
+  _LABELS: gcb-trigger-id=fe569f0f-3e0b-4f70-975d-af67785b25aa
+tags:
+  - gcp-cloud-build-deploy-cloud-run
+  - resolution-service
