@@ -29,6 +29,7 @@ steps:
       - $_SERVICE_NAME
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+      - "--tag=$COMMIT_SHA"
       - "--cpu=1000m"
       - "--memory=512Mi"
       - "--min-instances=1"
@@ -56,7 +57,7 @@ steps:
       - "--update-env-vars=POLYGON_JSON_RPC_API_URL=https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78"
       - "--update-env-vars=POLYGON_NETWORK_ID=80001"
       - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API,MIGRATIONS"
-      - "--update-secrets=VIEWBLOCK_API_KEY:latest"
+      - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
       - "--update-env-vars=ZNS_NETWORK=testnet"
       - "--update-secrets=CLOUD_STORAGE_BUCKET_ID:latest"
       - >-
@@ -103,7 +104,7 @@ steps:
       - "--update-env-vars=POLYGON_JSON_RPC_API_URL=https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78"
       - "--update-env-vars=POLYGON_NETWORK_ID=80001"
       - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
-      - "--update-secrets=VIEWBLOCK_API_KEY:latest"
+      - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
       - "--update-env-vars=ZNS_NETWORK=testnet"
       - "--update-secrets=CLOUD_STORAGE_BUCKET_ID:latest"
       - >-
