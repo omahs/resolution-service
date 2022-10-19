@@ -29,6 +29,7 @@ steps:
       - $_SERVICE_NAME-api
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+      - "--allow-unauthenticated"
       - "--tag=commit-$SHORT_SHA"
       - "--cpu=1000m"
       - "--memory=512Mi"
@@ -65,20 +66,6 @@ steps:
       - "--region=$_DEPLOY_REGION"
       - "--quiet"
     id: Deploy API
-    entrypoint: gcloud
-
-  ########
-  # set api service to allow all traffic
-  ########
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
-    args:
-      - run
-      - services
-      - add-iam-policy-binding
-      - $_SERVICE_NAME-api
-      - "--member=allUsers"
-      - "--role=roles/run.invoker"
-    id: Update API for all traffic
     entrypoint: gcloud
 
   ########
