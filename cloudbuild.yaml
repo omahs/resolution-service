@@ -26,7 +26,7 @@ steps:
       - run
       - services
       - update
-      - $_SERVICE_NAME
+      - $_SERVICE_NAME-api
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
       - "--tag=commit-$SHORT_SHA"
@@ -123,7 +123,7 @@ substitutions:
   _GCR_HOSTNAME: us.gcr.io
   _PLATFORM: managed
   _DEPLOY_REGION: us-central1
-  _SERVICE_NAME: resolution-service-staging
+  _SERVICE_NAME: resolution-staging
 tags:
   - gcp-cloud-build-deploy-cloud-run
   - resolution-service
