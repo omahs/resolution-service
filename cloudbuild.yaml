@@ -35,8 +35,6 @@ steps:
       - "--min-instances=1"
       - "--max-instances=50"
       - "--port=3000"
-      - "--member=allUsers"
-      - "--role=roles/run.invoker"
       - "--set-cloudsql-instances=unstoppable-domains-staging:us-central1:ud-staging-resolution"
       - "--update-secrets=DATADOG_AGENT_HOST=DATADOG_AGENT_HOST:latest"
       - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
@@ -68,6 +66,22 @@ steps:
       - "--quiet"
     id: Deploy API
     entrypoint: gcloud
+
+  ########
+  # set api service to allow all traffic
+  ########
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    args:
+      - run
+      - services
+      - update
+      - add-iam-policy-binding
+      - $_SERVICE_NAME-api
+      - "--member=allUsers"
+      - "--role=roles/run.invoker"
+    id: Update API for all traffic
+    entrypoint: gcloud
+
   ########
   # deploy ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
   ########
