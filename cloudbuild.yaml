@@ -59,7 +59,7 @@ steps:
       - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API,MIGRATIONS"
       - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
       - "--update-env-vars=ZNS_NETWORK=testnet"
-      - "--update-secrets=CLOUD_STORAGE_BUCKET_ID:latest"
+      - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
       - "--region=$_DEPLOY_REGION"
