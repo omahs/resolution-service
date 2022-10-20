@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { normalizeDomainOrToken } from './domain';
+import { UnstoppableDomainTlds } from '../types/common';
+import { belongsToTld, normalizeDomainOrToken, splitDomain } from './domain';
 import { eip137Namehash } from './namehash';
 
 describe('utils/domain', () => {
@@ -30,6 +31,49 @@ describe('utils/domain', () => {
     it('does not normalize gibberish', () => {
       const gibberish = '@@@@@@@@@@@';
       expect(gibberish).to.eq(gibberish);
+    });
+  });
+
+  describe('splitDomain', () => {
+    it('splits properly for all (unstoppable + external) domains', () => {
+      const tests = [
+        {
+          domain: 'foo.crypto',
+          extension: 'crypto',
+          label: 'foo',
+        },
+        {
+          domain: 'foo.bar.crypto',
+          extension: 'crypto',
+          label: 'foo.bar',
+        },
+        {
+          domain: 'bar.zil',
+          extension: 'zil',
+          label: 'bar',
+        },
+      ];
+
+      for (const test of tests) {
+        const { extension, label } = splitDomain(test.domain);
+        expect(extension).to.eq(test.extension);
+        expect(label).to.eq(test.label);
+      }
+    });
+  });
+
+  describe('belongsToTld', () => {
+    it('returns true', () => {
+      expect(belongsToTld('foo.crypto', UnstoppableDomainTlds.Crypto)).to.be
+        .true;
+      expect(belongsToTld('foo.zil', UnstoppableDomainTlds.Zil)).to.be.true;
+    });
+
+    it('returns false', () => {
+      expect(belongsToTld('foo.crypto', UnstoppableDomainTlds.Zil)).to.be.false;
+      expect(belongsToTld('', UnstoppableDomainTlds.Zil)).to.be.false;
+      expect(belongsToTld('', UnstoppableDomainTlds.Crypto)).to.be.false;
+      expect(belongsToTld('foo.zil', UnstoppableDomainTlds.Crypto)).to.be.false;
     });
   });
 });

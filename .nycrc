@@ -1,6 +1,11 @@
 {
+  "all": true,
+  "include": [
+    "src/**"
+  ],
   "exclude": [
-    "*.test.ts",
+    "src/**/*.test.ts",
+    "src/scripts/**",
     "src/database/migrations/*"
   ],
   "check-coverage": true,
@@ -9,5 +14,9 @@
     "functions": [60,80],
     "lines": [60,80],
     "statements": [60,80]
-  }
+  },
+  "lines": 80,
+  "statements": 80,
+  "functions": 80,
+  "branches": 60
 }

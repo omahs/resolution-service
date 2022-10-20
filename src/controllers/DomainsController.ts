@@ -25,7 +25,11 @@ import {
 import { ConvertArrayQueryParams } from '../middleware/ConvertArrayQueryParams';
 import { In } from 'typeorm';
 import pick from 'lodash/pick';
-import { normalizeDomainName, normalizeDomainOrToken } from '../utils/domain';
+import {
+  isSupportedTLD,
+  normalizeDomainName,
+  normalizeDomainOrToken,
+} from '../utils/domain';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
@@ -38,7 +42,27 @@ export class DomainsController {
   async getDomain(
     @Param('domainName') domainName: string,
   ): Promise<DomainResponse> {
+    const emptyResponse = {
+      meta: {
+        domain: domainName,
+        owner: null,
+        resolver: null,
+        registry: null,
+        blockchain: null,
+        networkId: null,
+        reverse: false,
+      },
+      records: {},
+    };
+
     domainName = domainName.toLowerCase();
+
+    const supportedTLD = isSupportedTLD(domainName);
+
+    if (!supportedTLD) {
+      return emptyResponse;
+    }
+
     const domain = await Domain.findOne({
       where: { name: domainName },
       relations: ['resolutions', 'reverseResolutions'],
@@ -113,8 +137,7 @@ export class DomainsController {
       for (let i = 0; i < resolutionKeys.length; i++) {
         const key = Object.keys(query.resolution)[i];
         where.push({
-          query: `"resolution"."resolution"->>'${key}' = :val${i}`,
-          parameters: { [`val${i}`]: query.resolution[key] },
+          query: `"resolution"."resolution"@>'{"${key}":"${query.resolution[key]}"}'::jsonb`,
         });
       }
     }
@@ -171,6 +194,7 @@ export class DomainsController {
       response.data.push({
         id: domain.name,
         attributes: {
+          records: resolution.resolution,
           meta: {
             domain: domain.name,
             blockchain: resolution.blockchain,
@@ -180,7 +204,6 @@ export class DomainsController {
             registry: resolution.registry,
             reverse: domain.hasReverseResolution,
           },
-          records: resolution.resolution,
         },
       });
     }
@@ -193,6 +216,7 @@ export class DomainsController {
       sortDirection: query.sortDirection,
       hasMore,
     };
+
     return response;
   }
 
@@ -221,6 +245,13 @@ export class DomainsController {
   async getDomainsLastTransfer(
     @Params() query: UnsDomainQuery,
   ): Promise<DomainLatestTransferResponse> {
+    const supportedTLD = isSupportedTLD(query.domainName);
+    if (!supportedTLD) {
+      return {
+        data: [],
+      };
+    }
+
     const tokenId = eip137Namehash(query.domainName);
     const domainEvents = await CnsRegistryEvent.createQueryBuilder();
     domainEvents.select();
@@ -277,7 +308,10 @@ export class DomainsController {
   async getDomainsRecords(
     @QueryParams() query: DomainsRecordsQuery,
   ): Promise<DomainsRecordsResponse> {
-    const domainNames = query.domains.map(normalizeDomainName);
+    let domainNames = query.domains.map(normalizeDomainName);
+    domainNames = domainNames.filter((domainName) => {
+      return isSupportedTLD(domainName);
+    });
     const tokens = domainNames.map(normalizeDomainOrToken);
     const domains = await Domain.findAllByNodes(tokens);
     const zilTokens = domainNames

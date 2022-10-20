@@ -1,6 +1,7 @@
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import { env } from './src/env';
 import SnakeNamingStrategy from './src/database/SnakeNamingStrategy';
+import InMemoryCacheProvider from 'typeorm-in-memory-cache';
 
 export = {
   ...env.TYPEORM,
@@ -10,5 +11,10 @@ export = {
   cli: {
     entitiesDir: 'src/models',
     migrationsDir: 'src/database/migrations',
+  },
+  cache: {
+    provider() {
+      return new InMemoryCacheProvider();
+    },
   },
 } as PostgresConnectionOptions;

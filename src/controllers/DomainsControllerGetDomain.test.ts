@@ -150,6 +150,39 @@ describe('DomainsController', () => {
       });
     });
 
+    it('should return non-minted domain when used a coin tld', async () => {
+      await DomainTestHelper.createTestDomain({
+        name: 'test.coin',
+        node: '0x28a4d039972e89b7c656385632d36a87b5d24bb90a0239b308bfda396d2aa8be',
+        ownerAddress: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
+        blockchain: Blockchain.ETH,
+        networkId: 1337,
+        registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+        resolution: {
+          'crypto.ETH.address': '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
+        },
+        resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+      });
+
+      const res = await supertest(api)
+        .get('/domains/test.coin')
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
+
+      expect(res.status).eq(200);
+      expect(res.body).containSubset({
+        meta: {
+          domain: 'test.coin',
+          owner: null,
+          resolver: null,
+          registry: null,
+          blockchain: null,
+          networkId: null,
+        },
+        records: {},
+      });
+    });
+
     it('should return correct domain resolution for domain in lowercase', async () => {
       await DomainTestHelper.createTestDomain({
         name: 'testdomainforcase.crypto',

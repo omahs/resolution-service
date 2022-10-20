@@ -13,7 +13,7 @@ import {
 import { Block } from '@ethersproject/abstract-provider';
 import sinon from 'sinon';
 
-describe('EthUpdater l2 worker', () => {
+describe.skip('EthUpdater l2 worker', () => {
   const L1Fixture: LayerTestFixture = new LayerTestFixture();
   const L2Fixture: LayerTestFixture = new LayerTestFixture();
   let owner: string;

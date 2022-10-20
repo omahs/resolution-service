@@ -7,7 +7,11 @@ import ZilProvider from '../workers/zil/ZilProvider';
 import { env } from '../env';
 import * as ethersUtils from '../utils/ethersUtils';
 import { EthereumProvider, MaticProvider } from '../workers/EthereumProvider';
-import { Blockchain, UnstoppableDomainTlds } from '../types/common';
+import {
+  Blockchain,
+  UnstoppableDomainTlds,
+  UnsupportedTlds,
+} from '../types/common';
 
 class BlockchainStatus {
   @IsBoolean()
@@ -115,6 +119,10 @@ export class StatusController {
 
   @Get('/supported_tlds')
   listSupportedTlds(): { tlds: Array<string> } {
-    return { tlds: Object.values(UnstoppableDomainTlds) };
+    return {
+      tlds: Object.values(UnstoppableDomainTlds).filter(
+        (tld) => !UnsupportedTlds.includes(tld),
+      ),
+    };
   }
 }

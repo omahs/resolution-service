@@ -83,6 +83,7 @@
     "set-interval-async": "^2.0.3",
     "swagger-ui-express": "^4.1.6",
     "typeorm": "0.2.38",
+    "typeorm-in-memory-cache": "^1.0.2",
     "uns": "https://github.com/unstoppabledomains/uns.git#8c82492d2a8308348bfd6e26248c40c13366c9f6",
     "uuid": "^8.3.2",
     "winston": "^3.3.3",

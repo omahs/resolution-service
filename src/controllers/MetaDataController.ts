@@ -11,8 +11,16 @@ import fetch from 'node-fetch';
 import AnimalDomainHelper, {
   OpenSeaMetadataAttribute,
 } from '../utils/AnimalDomainHelper/AnimalDomainHelper';
-import { DefaultImageData } from '../utils/generalImage';
-import { MetadataImageFontSize } from '../types/common';
+import {
+  BackgroundColor,
+  DefaultImageData,
+  DeprecatedBackgroundColor,
+} from '../utils/generalImage';
+import {
+  MetadataImageFontSize,
+  UnstoppableDomainTld,
+  UnstoppableDomainTlds,
+} from '../types/common';
 import { pathThatSvg } from 'path-that-svg';
 import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 import { env } from '../env';
@@ -36,7 +44,7 @@ import {
 import { Domain, DomainsResolution } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
-import { findDomainByNameOrToken } from '../utils/domain';
+import { belongsToTld, findDomainByNameOrToken } from '../utils/domain';
 
 const DEFAULT_IMAGE_URL = (name: string) =>
   `https://metadata.unstoppabledomains.com/image-src/${name}.svg` as const;
@@ -207,7 +215,12 @@ export class MetaDataController {
     }
     const resolution = getDomainResolution(domain);
 
-    const socialPictureValue = resolution.resolution['social.picture.value'];
+    const socialPictureValue = belongsToTld(
+      domain.name,
+      UnstoppableDomainTlds.Coin,
+    )
+      ? ''
+      : resolution.resolution['social.picture.value'];
     const socialPicture =
       socialPictureValue &&
       (await getNftPfpImageFromCDN(
@@ -242,11 +255,17 @@ export class MetaDataController {
     };
 
     if (!this.isDomainWithCustomImage(domain.name) && !socialPicture) {
-      metadata.image_data = await this.generateImageData(
+      const imageDataSvgXml = await this.generateImageData(
         domain.name,
         resolution.resolution,
       );
-      metadata.background_color = '4C47F7';
+      metadata.image_data = toBase64DataURI(imageDataSvgXml);
+      metadata.background_color = belongsToTld(
+        domain.name,
+        UnstoppableDomainTlds.Coin,
+      )
+        ? DeprecatedBackgroundColor
+        : BackgroundColor;
     }
 
     return metadata;
@@ -266,7 +285,11 @@ export class MetaDataController {
       return { image_data: '' };
     }
 
-    if (domain && resolution) {
+    if (
+      domain &&
+      resolution &&
+      !belongsToTld(domain.name, UnstoppableDomainTlds.Coin)
+    ) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
@@ -309,7 +332,11 @@ export class MetaDataController {
       return '';
     }
 
-    if (domain && resolution) {
+    if (
+      domain &&
+      resolution &&
+      !belongsToTld(domain.name, UnstoppableDomainTlds.Coin)
+    ) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
@@ -340,7 +367,9 @@ export class MetaDataController {
     const description = name ? this.getDomainDescription(name, {}) : null;
     const attributes = name ? this.getAttributeType(new Domain({ name })) : [];
     const image = name ? this.generateDomainImageUrl(name) : null;
-    const image_data = name ? await this.generateImageData(name, {}) : null;
+    const image_data = name
+      ? toBase64DataURI(await this.generateImageData(name, {}))
+      : null;
     const external_url = name
       ? `https://unstoppabledomains.com/search?searchTerm=${name}`
       : null;
@@ -376,9 +405,10 @@ export class MetaDataController {
         ipfsDescriptionPart,
       );
     } else if (levels === 2) {
-      return 'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.'.concat(
-        ipfsDescriptionPart,
-      );
+      const description = belongsToTld(name, UnstoppableDomainTlds.Coin)
+        ? '.coin domains are no longer supported by Unstoppable Domains. As a result, records of such domains cannot be updated. Learn more at our blog: https://unstoppabledomains.com/blog/coin. '
+        : 'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.';
+      return description.concat(ipfsDescriptionPart);
     }
 
     return 'BE CAREFUL! This is a subdomain. Even after purchasing this name, the parent domain has the right to revoke ownership of this domain at anytime. Unless the parent is a smart contract specifically designed otherwise.'.concat(
@@ -450,12 +480,18 @@ export class MetaDataController {
     name: string,
     resolution: Record<string, string>,
   ): Promise<string> {
-    if (this.isDomainWithCustomImage(name)) {
-      return '';
-    }
     const splittedName = name.replace(/\.svg/g, '').split('.');
     const extension = splittedName.pop() || '';
     const label = splittedName.join('.');
+
+    // .coin TLD is deprecated, UD does not support record updates anymore
+    if (extension === UnstoppableDomainTlds.Coin) {
+      return this.generateDefaultImageData(label, extension);
+    }
+
+    if (this.isDomainWithCustomImage(name)) {
+      return '';
+    }
 
     const animalImage = await AnimalHelper.getAnimalImageData(name);
     if (animalImage) {
@@ -496,9 +532,13 @@ export class MetaDataController {
       fontSize = 16;
     }
     if (label.length > 30) {
-      label = label.substr(0, 29).concat('...');
+      label = label.substring(0, 29).concat('...');
     }
-    return DefaultImageData({ label, tld, fontSize });
+    return DefaultImageData({
+      label,
+      tld: tld as UnstoppableDomainTld,
+      fontSize,
+    });
   }
 
   private generateDomainImageUrl(name: string): string {

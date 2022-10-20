@@ -21,6 +21,7 @@ export default class DomainsResolution extends Model {
   @IsOptional()
   @Matches(ETHAddressRegex)
   @Column('text', { nullable: true })
+  @Index()
   ownerAddress: string | null = null;
 
   @IsOptional()
