@@ -5,14 +5,22 @@ import Moralis from 'moralis/node';
 import sinon from 'sinon';
 import { DomainTestHelper } from '../utils/testing/DomainTestHelper';
 import { eip137Namehash } from '../utils/namehash';
-import { DefaultImageData, BackgroundColor } from '../utils/generalImage';
+import {
+  DefaultImageData,
+  BackgroundColor,
+  DeprecatedBackgroundColor,
+} from '../utils/generalImage';
 import nock from 'nock';
 import {
   getNSConfig,
   LayerTestFixture,
 } from '../utils/testing/LayerFixturesHelper';
 import { EthereumHelper } from '../utils/testing/EthereumTestsHelper';
-import { Blockchain } from '../types/common';
+import {
+  Blockchain,
+  UnstoppableDomainTld,
+  UnstoppableDomainTlds,
+} from '../types/common';
 import { env } from '../env';
 import Domain from '../models/Domain';
 import {
@@ -102,12 +110,77 @@ describe('MetaDataController', () => {
         toBase64DataURI(
           DefaultImageData({
             label: domain.label,
-            tld: domain.extension,
+            tld: domain.extension as UnstoppableDomainTld,
             fontSize: 24,
           }),
         ),
       );
       expect(resWithName.background_color).eq(BackgroundColor);
+    });
+
+    it.skip('should render a deprecated image placeholder for .coin domain', async () => {
+      const name = 'deprecated.coin';
+      const node = eip137Namehash(name);
+      const { domain } = await DomainTestHelper.createTestDomain({
+        name,
+        node,
+        resolution: {
+          'social.picture.value':
+            '1/erc721:0xbd3531da5cf5857e7cfaa92426877b022e612cf8/395',
+          'ipfs.html.value': 'QmdyBw5oTgCtTLQ18PbDvPL8iaLoEPhSyzD91q9XmgmAjb',
+        },
+      });
+      const resWithName = await supertest(api)
+        .get(`/metadata/${domain.name}`)
+        .send()
+        .then((r) => r.body);
+
+      const resWithToken = await supertest(api)
+        .get(`/metadata/${domain.node}`)
+        .send()
+        .then((r) => r.body);
+
+      expect(resWithName).to.be.deep.equal(resWithToken);
+      expect(resWithName.name).eq(domain.name);
+      expect(resWithName.description).eq(
+        '.coin domains are no longer supported by Unstoppable Domains. As a result, records of such domains cannot be updated. Learn more at our blog: https://unstoppabledomains.com/blog/coin. \nhttps://gateway.pinata.cloud/ipfs/QmdyBw5oTgCtTLQ18PbDvPL8iaLoEPhSyzD91q9XmgmAjb',
+      );
+      expect(resWithName.external_url).eq(
+        `https://unstoppabledomains.com/search?searchTerm=${domain.name}`,
+      );
+      // Forcing a default placeholder image over user-uploaded NFT, specifically for .coin deprecation,
+      // since users cannot update domain records at UD anymore
+      expect(resWithName.image).eq(
+        `https://metadata.unstoppabledomains.com/image-src/${domain.name}.svg`,
+      );
+      const correctAttributes = [
+        { trait_type: DomainAttributeTrait.Level, value: 2 },
+        {
+          trait_type: DomainAttributeTrait.Ending,
+          value: UnstoppableDomainTlds.Coin,
+        },
+        { trait_type: DomainAttributeTrait.Length, value: 10 },
+        {
+          trait_type: DomainAttributeTrait.Type,
+          value: AttributeType.Standard,
+        },
+        {
+          trait_type: DomainAttributeTrait.AttributeCharacterSet,
+          value: AttributeCharacterSet.Letter,
+        },
+      ];
+      expect(resWithName.attributes.length).eq(correctAttributes.length);
+      expect(resWithName.attributes).to.have.deep.members(correctAttributes);
+      expect(resWithName.image_data).eq(
+        toBase64DataURI(
+          DefaultImageData({
+            label: domain.label,
+            tld: domain.extension as UnstoppableDomainTld,
+            fontSize: 24,
+          }),
+        ),
+      );
+      expect(resWithName.background_color).eq(DeprecatedBackgroundColor);
     });
 
     it('should work with animal domain', async () => {
@@ -255,7 +328,7 @@ describe('MetaDataController', () => {
         image_data: toBase64DataURI(
           DefaultImageData({
             label: 'unknown',
-            tld: 'crypto',
+            tld: UnstoppableDomainTlds.Crypto,
             fontSize: 24,
           }),
         ),
@@ -313,7 +386,7 @@ describe('MetaDataController', () => {
         image_data: toBase64DataURI(
           DefaultImageData({
             label: uns.label,
-            tld: uns.tld,
+            tld: uns.tld as UnstoppableDomainTld,
             fontSize: 16,
           }),
         ),
@@ -483,7 +556,7 @@ describe('MetaDataController', () => {
         .then((r) => r.body);
       const defaultImageData = DefaultImageData({
         label: domain.label,
-        tld: domain.extension,
+        tld: domain.extension as UnstoppableDomainTld,
         fontSize: 24,
       });
       expect(res.image_data).to.equal(defaultImageData);
@@ -497,7 +570,7 @@ describe('MetaDataController', () => {
         .then((r) => r.body);
       const defaultImageData = DefaultImageData({
         label: domain.label,
-        tld: domain.extension,
+        tld: domain.extension as UnstoppableDomainTld,
         fontSize: 24,
       });
       expect(res.image_data).to.equal(defaultImageData);
@@ -529,7 +602,7 @@ describe('MetaDataController', () => {
       expect(response).to.deep.eq({
         image_data: DefaultImageData({
           label: 'unknown',
-          tld: 'crypto',
+          tld: UnstoppableDomainTlds.Crypto,
           fontSize: 24,
         }),
       });
@@ -556,7 +629,7 @@ describe('MetaDataController', () => {
       expect(response).to.deep.eq({
         image_data: DefaultImageData({
           label: uns.label,
-          tld: uns.tld,
+          tld: uns.tld as UnstoppableDomainTld,
           fontSize: 16,
         }),
       });
@@ -568,7 +641,7 @@ describe('MetaDataController', () => {
       expect(responseWithName).to.deep.eq({
         image_data: DefaultImageData({
           label: uns.label,
-          tld: uns.tld,
+          tld: uns.tld as UnstoppableDomainTld,
           fontSize: 16,
         }),
       });

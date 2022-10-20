@@ -1,5 +1,10 @@
 import { Domain } from '../models';
 import { IsZilDomain } from '../services/Resolution';
+import {
+  AllDomainTlds,
+  EvmUnstoppableDomainTlds,
+  UnsupportedTlds,
+} from '../types/common';
 import { eip137Namehash, znsNamehash } from './namehash';
 
 const normalizeToken = (token: string): string => {
@@ -36,6 +41,11 @@ export const findDomainByNameOrToken = async (
   const tokenName = normalizeDomainOrToken(domainOrToken);
   const domainName = normalizeDomainName(domainOrToken);
 
+  const supportedTLD = isSupportedTLD(domainOrToken);
+  if (!supportedTLD) {
+    return undefined;
+  }
+
   let domain =
     (await Domain.findByNode(tokenName, undefined, true)) ||
     (await Domain.findOnChainNoSafe(tokenName));
@@ -45,4 +55,27 @@ export const findDomainByNameOrToken = async (
   }
 
   return domain;
+};
+
+export const isSupportedTLD = (domainName: string) => {
+  const tld = getDomainNameTld(domainName);
+  return !UnsupportedTlds.includes(tld as EvmUnstoppableDomainTlds);
+};
+
+export const splitDomain = (
+  domain: string,
+): { label: string; extension: AllDomainTlds } => {
+  const splitted = domain.split('.');
+  const extension = splitted.pop()!;
+
+  const label = splitted.join('.');
+  return { label, extension: extension as AllDomainTlds };
+};
+
+export const belongsToTld = (
+  domain: string,
+  domainSuffix: AllDomainTlds,
+): boolean => {
+  const { extension } = splitDomain(domain);
+  return domainSuffix === extension;
 };

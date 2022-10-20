@@ -284,7 +284,6 @@ describe('StatusController', () => {
     const expectedResponse = {
       tlds: [
         'crypto',
-        'coin',
         'wallet',
         'blockchain',
         'bitcoin',
