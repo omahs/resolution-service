@@ -72,106 +72,106 @@ steps:
     id: Deploy API
     entrypoint: gcloud
 
-  ########
-  # deploy API,MIGRATIONS for /metadata requests
-  # fastly will direct traffic based upon the endpoint
-  ########
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
-    args:
-      - run
-      - services
-      - update
-      - $_SERVICE_NAME-meta
-      - "--platform=managed"
-      - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
-      # need to set via UI for new services
-      #- "--allow-unauthenticated"
-      - "--tag=commit-$SHORT_SHA"
-      - "--cpu=1000m"
-      - "--memory=512Mi"
-      - "--min-instances=0"
-      - "--max-instances=50"
-      - "--port=3000"
-      - "--set-cloudsql-instances=unstoppable-domains-staging:us-central1:ud-staging-resolution"
-      - "--update-secrets=DATADOG_AGENT_HOST=DATADOG_AGENT_HOST:latest"
-      - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
-      - "--update-secrets=DATADOG_APM_SERVICE_NAME=DATADOG_APM_SERVICE_NAME:latest"
-      - "--update-secrets=DD_ENV=DD_ENV:latest"
-      - "--update-secrets=ETHEREUM_JSON_RPC_API_URL=ETHEREUM_JSON_RPC_API_URL:latest"
-      - "--update-secrets=MORALIS_API_URL=MORALIS_API_URL:latest"
-      - "--update-secrets=MORALIS_APP_ID=MORALIS_APP_ID:latest"
-      - "--update-secrets=OPENSEA_API_KEY=OPENSEA_API_KEY:latest"
-      - "--update-secrets=POLYGON_RESYNC_FROM=POLYGON_RESYNC_FROM:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_DATABASE=RESOLUTION_POSTGRES_DATABASE:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_HOST=RESOLUTION_POSTGRES_HOST:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_USERNAME=RESOLUTION_POSTGRES_USERNAME:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD=RESOLUTION_POSTGRES_PASSWORD:latest"
-      - "--update-env-vars=ETHEREUM_CONFIRMATION_BLOCKS=12"
-      - "--update-env-vars=ETHEREUM_NETWORK_ID=5"
-      - "--update-env-vars=ETHEREUM_RESYNC_FROM=None"
-      - "--update-env-vars=POLYGON_BLOCK_FETCH_LIMIT=None"
-      - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
-      - "--update-env-vars=POLYGON_JSON_RPC_API_URL=https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78"
-      - "--update-env-vars=POLYGON_NETWORK_ID=80001"
-      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API,MIGRATIONS"
-      - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
-      - "--update-env-vars=ZNS_NETWORK=testnet"
-      - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
-      - >-
-        --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
-      - "--region=$_DEPLOY_REGION"
-      - "--quiet"
-    id: Deploy API for metadata
-    entrypoint: gcloud
+  # ########
+  # # deploy API,MIGRATIONS for /metadata requests
+  # # fastly will direct traffic based upon the endpoint
+  # ########
+  # - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+  #   args:
+  #     - run
+  #     - services
+  #     - update
+  #     - $_SERVICE_NAME-meta
+  #     - "--platform=managed"
+  #     - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+  #     # need to set via UI for new services
+  #     #- "--allow-unauthenticated"
+  #     - "--tag=commit-$SHORT_SHA"
+  #     - "--cpu=1000m"
+  #     - "--memory=512Mi"
+  #     - "--min-instances=0"
+  #     - "--max-instances=50"
+  #     - "--port=3000"
+  #     - "--set-cloudsql-instances=unstoppable-domains-staging:us-central1:ud-staging-resolution"
+  #     - "--update-secrets=DATADOG_AGENT_HOST=DATADOG_AGENT_HOST:latest"
+  #     - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
+  #     - "--update-secrets=DATADOG_APM_SERVICE_NAME=DATADOG_APM_SERVICE_NAME:latest"
+  #     - "--update-secrets=DD_ENV=DD_ENV:latest"
+  #     - "--update-secrets=ETHEREUM_JSON_RPC_API_URL=ETHEREUM_JSON_RPC_API_URL:latest"
+  #     - "--update-secrets=MORALIS_API_URL=MORALIS_API_URL:latest"
+  #     - "--update-secrets=MORALIS_APP_ID=MORALIS_APP_ID:latest"
+  #     - "--update-secrets=OPENSEA_API_KEY=OPENSEA_API_KEY:latest"
+  #     - "--update-secrets=POLYGON_RESYNC_FROM=POLYGON_RESYNC_FROM:latest"
+  #     - "--update-secrets=RESOLUTION_POSTGRES_DATABASE=RESOLUTION_POSTGRES_DATABASE:latest"
+  #     - "--update-secrets=RESOLUTION_POSTGRES_HOST=RESOLUTION_POSTGRES_HOST:latest"
+  #     - "--update-secrets=RESOLUTION_POSTGRES_USERNAME=RESOLUTION_POSTGRES_USERNAME:latest"
+  #     - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD=RESOLUTION_POSTGRES_PASSWORD:latest"
+  #     - "--update-env-vars=ETHEREUM_CONFIRMATION_BLOCKS=12"
+  #     - "--update-env-vars=ETHEREUM_NETWORK_ID=5"
+  #     - "--update-env-vars=ETHEREUM_RESYNC_FROM=None"
+  #     - "--update-env-vars=POLYGON_BLOCK_FETCH_LIMIT=None"
+  #     - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
+  #     - "--update-env-vars=POLYGON_JSON_RPC_API_URL=https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78"
+  #     - "--update-env-vars=POLYGON_NETWORK_ID=80001"
+  #     - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API,MIGRATIONS"
+  #     - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
+  #     - "--update-env-vars=ZNS_NETWORK=testnet"
+  #     - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
+  #     - >-
+  #       --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
+  #     - "--region=$_DEPLOY_REGION"
+  #     - "--quiet"
+  #   id: Deploy API for metadata
+  #   entrypoint: gcloud
 
-  ########
-  # deploy ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
-  ########
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
-    args:
-      - run
-      - services
-      - update
-      - $_SERVICE_NAME-workers
-      - "--platform=managed"
-      - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
-      - "--tag=commit-$SHORT_SHA"
-      - "--cpu=1000m"
-      - "--memory=512Mi"
-      - "--min-instances=1"
-      - "--max-instances=5"
-      - "--port=3000"
-      - "--set-cloudsql-instances=unstoppable-domains-staging:us-central1:ud-staging-resolution"
-      - "--update-secrets=DATADOG_AGENT_HOST=DATADOG_AGENT_HOST:latest"
-      - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
-      - "--update-secrets=DATADOG_APM_SERVICE_NAME=DATADOG_APM_SERVICE_NAME:latest"
-      - "--update-secrets=DD_ENV=DD_ENV:latest"
-      - "--update-secrets=ETHEREUM_JSON_RPC_API_URL=ETHEREUM_JSON_RPC_API_URL:latest"
-      - "--update-secrets=MORALIS_API_URL=MORALIS_API_URL:latest"
-      - "--update-secrets=MORALIS_APP_ID=MORALIS_APP_ID:latest"
-      - "--update-secrets=OPENSEA_API_KEY=OPENSEA_API_KEY:latest"
-      - "--update-secrets=POLYGON_RESYNC_FROM=POLYGON_RESYNC_FROM:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_DATABASE=RESOLUTION_POSTGRES_DATABASE:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_HOST=RESOLUTION_POSTGRES_HOST:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_USERNAME=RESOLUTION_POSTGRES_USERNAME:latest"
-      - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD=RESOLUTION_POSTGRES_PASSWORD:latest"
-      - "--update-env-vars=ETHEREUM_CONFIRMATION_BLOCKS=12"
-      - "--update-env-vars=ETHEREUM_NETWORK_ID=5"
-      - "--update-env-vars=ETHEREUM_RESYNC_FROM=None"
-      - "--update-env-vars=POLYGON_BLOCK_FETCH_LIMIT=None"
-      - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
-      - "--update-env-vars=POLYGON_JSON_RPC_API_URL=https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78"
-      - "--update-env-vars=POLYGON_NETWORK_ID=80001"
-      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
-      - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
-      - "--update-env-vars=ZNS_NETWORK=testnet"
-      - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
-      - >-
-        --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
-      - "--region=$_DEPLOY_REGION"
-      - "--quiet"
-    id: Deploy ETH ZIL MATIC workers
-    entrypoint: gcloud
+  # ########
+  # # deploy ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
+  # ########
+  # - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+  #   args:
+  #     - run
+  #     - services
+  #     - update
+  #     - $_SERVICE_NAME-workers
+  #     - "--platform=managed"
+  #     - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+  #     - "--tag=commit-$SHORT_SHA"
+  #     - "--cpu=1000m"
+  #     - "--memory=512Mi"
+  #     - "--min-instances=1"
+  #     - "--max-instances=5"
+  #     - "--port=3000"
+  #     - "--set-cloudsql-instances=unstoppable-domains-staging:us-central1:ud-staging-resolution"
+  #     - "--update-secrets=DATADOG_AGENT_HOST=DATADOG_AGENT_HOST:latest"
+  #     - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
+  #     - "--update-secrets=DATADOG_APM_SERVICE_NAME=DATADOG_APM_SERVICE_NAME:latest"
+  #     - "--update-secrets=DD_ENV=DD_ENV:latest"
+  #     - "--update-secrets=ETHEREUM_JSON_RPC_API_URL=ETHEREUM_JSON_RPC_API_URL:latest"
+  #     - "--update-secrets=MORALIS_API_URL=MORALIS_API_URL:latest"
+  #     - "--update-secrets=MORALIS_APP_ID=MORALIS_APP_ID:latest"
+  #     - "--update-secrets=OPENSEA_API_KEY=OPENSEA_API_KEY:latest"
+  #     - "--update-secrets=POLYGON_RESYNC_FROM=POLYGON_RESYNC_FROM:latest"
+  #     - "--update-secrets=RESOLUTION_POSTGRES_DATABASE=RESOLUTION_POSTGRES_DATABASE:latest"
+  #     - "--update-secrets=RESOLUTION_POSTGRES_HOST=RESOLUTION_POSTGRES_HOST:latest"
+  #     - "--update-secrets=RESOLUTION_POSTGRES_USERNAME=RESOLUTION_POSTGRES_USERNAME:latest"
+  #     - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD=RESOLUTION_POSTGRES_PASSWORD:latest"
+  #     - "--update-env-vars=ETHEREUM_CONFIRMATION_BLOCKS=12"
+  #     - "--update-env-vars=ETHEREUM_NETWORK_ID=5"
+  #     - "--update-env-vars=ETHEREUM_RESYNC_FROM=None"
+  #     - "--update-env-vars=POLYGON_BLOCK_FETCH_LIMIT=None"
+  #     - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
+  #     - "--update-env-vars=POLYGON_JSON_RPC_API_URL=https://polygon-mumbai.infura.io/v3/4458cf4d1689497b9a38b1d6bbf05e78"
+  #     - "--update-env-vars=POLYGON_NETWORK_ID=80001"
+  #     - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
+  #     - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
+  #     - "--update-env-vars=ZNS_NETWORK=testnet"
+  #     - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
+  #     - >-
+  #       --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
+  #     - "--region=$_DEPLOY_REGION"
+  #     - "--quiet"
+  #   id: Deploy ETH ZIL MATIC workers
+  #   entrypoint: gcloud
 timeout: 1800s
 images:
   - "$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
