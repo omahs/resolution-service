@@ -22,6 +22,7 @@ import {
   getNftPfpImageFromCDN,
   toBase64DataURI,
   cacheSocialPictureInCDN,
+  getNFTSocialPicture,
 } from '../utils/socialPicture';
 import { getDomainResolution } from '../services/Resolution';
 import {
@@ -309,10 +310,18 @@ export class MetaDataController {
       return '';
     }
 
-    const avatarImage =
-      'data:image/png;base64,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';
-    return metaSVGTemplate(avatarImage, name, 'image/svg');
-    // @TODO implement
+    if (domain && resolution) {
+      const { fetchedMetadata, image } = await fetchTokenMetadata(resolution);
+      const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
+        () => ['', null],
+      );
+      // temporary code to test, @TODO move this to fetching and caching logic
+      const avatarImage = `data:${mimeType};base64,${imageData}`;
+      return metaSVGTemplate(avatarImage, name, 'image/svg');
+    }
+
+    return '';
+    // @TODO implement returning domain that is not found in DB (not purchased)
   }
 
   @Get('/image-src/:domainOrToken')
