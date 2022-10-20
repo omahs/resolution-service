@@ -139,6 +139,7 @@ export const metaSVGTemplate = (
                 src="${image}" />
             </div>
           </foreignObject>
+          <rect id="overlay" x="24" y="24" width="${IMG_SIZE}" height="${IMG_SIZE}" rx="16" fill="rgba(0, 0, 0, 0.16)" />
           <text
             id="domain"
             x="24"
