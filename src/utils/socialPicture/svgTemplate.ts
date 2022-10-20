@@ -99,30 +99,46 @@ export const metaSVGTemplate = (
   const qrBase64 =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFYAAABWCAMAAABiiJHFAAAAS1BMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////+DmQsHAAAAGXRSTlMAEH+vv2Agj29AMJ9QkO//33CwgNCgz1/A3bqZ4QAACdxJREFUeAGdWYu2s6wODAqxICRQlO+8/5OeJmZJuy//bdba7R6CUyR0iBRecMvqL6wBDLhuDx9B8PAoL2ndHXxi8XFdQJF3bygIigfxRLXGxkz81A9l7gD1RTnCB5ClUf87+A36SYuqKWjqYt3yGp2QvmLCXuN6QAKF0/cE5xF9087MTFUhak0/kruDC2kwryDIXB0gXQMMXD3vxCt7EKxy4caj2vhP5iOahOvMjFDkHm+4yuwuJXKQmKORwYP59QKCwUW0KnGwyagObnRR9KoT9hcKalu+9EvaMdoYcsLgYnTZAbgSMMh7dtulFq/bLqIRNBlP8FxlOAL7L+gALWXf0XUcAqdyYNdUVuh//pI9+QLesqn6Rhm+QyJg8IS3LJrE/heyE4E3AKSxycCarJ1EQwJCjtrJ/yfZk4ct4h3gacQBCCHmg/lfyKasWcKYk8yEoy3WpCRmVzJmJylK50BqfyFbrM2ZbJVhVCZbU4GpchVSNUuDi6XMM32RLSYrAaws6NolS+Dk6rkQFfl6xJv4Kp/qudki3+fq6feXn9jD81ry+ILTuTR67IBwjEztMdA5QHd4h7BQ9BsgKFaNQNJbByca17fjKR815lfkjyxesxqU/iT33W3RR7tVd1tNAwEx/7kl3KGDH8y1hwsraxO46HxzEc41UVOrAXCruEWhqBG1mqIRHQPvJrHUa2RYecJGpjO4yv+dvVqNk7EliWSAIZHNIvbN+2auePINCnZXmphdLhjTdxI4iZjViGyzOQuVb9xu72K4kKxhO1IJmN3SkYL6jkxutMhtNQBIHS7EHBTS+hvU9lGydMhwuhCF04h79x345yiUxVDcGK32D3c5NXIj1RN+R+DVXz6LtS68e46Sk63WxtuhxNZS5Y2GdnMvQhv5VzdSUtO30YnTy/zZUiVJ9ZD7rVzt63ztl+outm9chHjYis4wgQ0BsKc+MMQXCe1FcnMAscYQEuUXaQk75uCu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';
   // @TODO: extract QR
-  const fontFamily = 'Helvetica Neue, Helvetica, Arial, sans-serif'; //@TODO add font backup
+  const fontFamily = 'Helvetica Neue, Helvetica, Arial, sans-serif';
   const [domainName, extension] = domain.split('.'); //@TODO implement domain name shortening up to 14px
+  const SIZE = { W: 1200, H: 630 }; // metaimage dimensions
+  const IMG_SIZE = 384; // domain image square diminsion in px
+  const QR_SIZE = 85.62; // QR code square dimension in px
   const MAX_TEXT_WIDTH = 260;
   const MAX_FONT_SIZE = 52;
   const mesuredFontSize = getFontSizeToFit(
     domainName,
     fontFamily,
     MAX_TEXT_WIDTH,
-  ); //@TODO: determine font size using context.measureText()
+  );
   const fontSize =
     mesuredFontSize > MAX_FONT_SIZE ? MAX_FONT_SIZE : mesuredFontSize;
   return ` 
     <svg
-      width="1200"
-      height="630"
-      viewBox="0 0 1200 630"
+      width="${SIZE.W}"
+      height="${SIZE.H}"
+      viewBox="0 0 ${SIZE.W} ${SIZE.H}"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <text x="20" y="20">Not implemented yet</text>
-      <rect id="BG" width="1200" height="630" fill="#f6f0ec" />
+      <rect id="BG" width="${SIZE.W}" height="${SIZE.H}" fill="#f6f0ec" />
       <g id="main">
         <svg id="main" x="384" y="39" width="432" height="552">
+          <defs>
+            <clipPath id="inner-frame">
+              <rect width="${IMG_SIZE}" height="${IMG_SIZE}" rx="16" />
+            </clipPath>
+          </defs>
           <rect id="outer-frame" width="434" height="554" rx="25" fill="#4a3143" />
-          <rect id="inner-frame" x="24" y="24" width="384" height="384" rx="16" />
+          <rect id="inner-frame-backfill" x="24" y="24" width="${IMG_SIZE}" height="${IMG_SIZE}" rx="16" fill="#f6f0ec" />
+          <foreignObject x="24" y="24" width="${IMG_SIZE}" height="${IMG_SIZE}" clip-path="url(#inner-frame)">
+            <div xmlns="http://www.w3.org/1999/xhtml">
+              <img
+                width="${IMG_SIZE}"
+                height="${IMG_SIZE}"
+                style="object-fit: cover;"
+                src="${image}" />
+            </div>
+          </foreignObject>
           <text
             id="domain"
             x="24"
@@ -149,14 +165,8 @@ export const metaSVGTemplate = (
           >
               .${extension}
           </text>
+          <image id="QR" x="312" y="432" width="${QR_SIZE}" height="${QR_SIZE}" href='${qrBase64}' />
         </svg>
-        <image
-          id="avatar"
-          href=""
-          width="512"
-          height="512"
-        />
-        <image id="QR" x="706.5" y="480" width="85.62" height="85.62" href='${qrBase64}' />
         ${logoPath}
       </g>
     </svg>
@@ -164,6 +174,7 @@ export const metaSVGTemplate = (
 };
 
 function getFontSizeToFit(text: string, fontFace: string, maxWidth: number) {
+  //@TODO: improve context.measureText() quality (it looks it varies between diff. browsers and Node.js env)
   const canvas = createCanvas(512, 512);
   const ctx = canvas.getContext('2d');
   if (ctx === null) {
