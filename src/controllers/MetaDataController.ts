@@ -311,19 +311,19 @@ export class MetaDataController {
     }
 
     if (domain && resolution) {
-      const { fetchedMetadata, image } = await fetchTokenMetadata(resolution);
-      const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
-        () => ['', null],
-      );
+      const socialPictureValue = resolution.resolution['social.picture.value'];
 
-      // temporary code to test, @TODO move this to fetching and caching logic
-      const avatarImage = `data:${mimeType};base64,${imageData}`;
-      return metaSVGTemplate(
-        name,
-        true,
-        avatarImage,
-        mimeType ? mimeType : undefined,
-      );
+      //@TODO replace social picture on metaimage. Right now domain overlay version is served
+      const metaImageFromCDN =
+        socialPictureValue &&
+        (await getOrCacheNowPfpNFT(
+          socialPictureValue,
+          domain,
+          resolution,
+          true, //overlay
+        ));
+
+      return metaImageFromCDN || metaSVGTemplate(name, false);
     }
 
     return metaSVGTemplate(name, false); //non existent domain
