@@ -315,13 +315,18 @@ export class MetaDataController {
       const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
         () => ['', null],
       );
+
       // temporary code to test, @TODO move this to fetching and caching logic
       const avatarImage = `data:${mimeType};base64,${imageData}`;
-      return metaSVGTemplate(avatarImage, name, 'image/svg');
+      return metaSVGTemplate(
+        name,
+        true,
+        avatarImage,
+        mimeType ? mimeType : undefined,
+      );
     }
 
-    return '';
-    // @TODO implement returning domain that is not found in DB (not purchased)
+    return metaSVGTemplate(name, false); //non existent domain
   }
 
   @Get('/image-src/:domainOrToken')
