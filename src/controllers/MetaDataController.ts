@@ -276,7 +276,7 @@ export class MetaDataController {
           socialPictureValue,
           domain,
           resolution,
-          withOverlay,
+          withOverlay ? ImageType.WithOverlay : ImageType.Simple,
         ));
 
       return {
@@ -313,14 +313,13 @@ export class MetaDataController {
     if (domain && resolution) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
 
-      //@TODO replace social picture on metaimage. Right now domain overlay version is served
       const metaImageFromCDN =
         socialPictureValue &&
         (await getOrCacheNowPfpNFT(
           socialPictureValue,
           domain,
           resolution,
-          true, //overlay
+          ImageType.MetaImage,
         ));
 
       return metaImageFromCDN || metaSVGTemplate(name, false);
@@ -354,7 +353,7 @@ export class MetaDataController {
           socialPictureValue,
           domain,
           resolution,
-          withOverlay,
+          withOverlay ? ImageType.WithOverlay : ImageType.Simple,
         ));
 
       return (
@@ -652,15 +651,24 @@ export async function fetchTokenMetadata(
   return { fetchedMetadata, image }; // TODO: get rid of socialPicture param
 }
 
+enum ImageType {
+  Simple, // picture only
+  WithOverlay, // picture + domain + logo (square)
+  MetaImage, // picture + domai + QR code (rectangualar, used for meta tags)
+}
+
 async function getOrCacheNowPfpNFT(
   socialPicture: string,
   domain: Domain,
   resolution: DomainsResolution,
-  withOverlay: boolean,
+  imageType: ImageType,
 ) {
   const cachedPfpNFT = await getNftPfpImageFromCDN(
     socialPicture,
-    withOverlay ? domain.name : undefined,
+    imageType === ImageType.WithOverlay || imageType === ImageType.MetaImage
+      ? domain.name
+      : undefined,
+    imageType === ImageType.MetaImage ? true : undefined,
   );
   if (!cachedPfpNFT) {
     await cacheSocialPictureInCDN(socialPicture, domain, resolution);
@@ -668,7 +676,10 @@ async function getOrCacheNowPfpNFT(
     // TODO: improve PFP NFT fetching after caching in CDN
     const trulyCachedPFPNFT = await getNftPfpImageFromCDN(
       socialPicture,
-      withOverlay ? domain.name : undefined,
+      imageType === ImageType.WithOverlay || imageType === ImageType.MetaImage
+        ? domain.name
+        : undefined,
+      imageType === ImageType.MetaImage ? true : undefined,
     );
     return trulyCachedPFPNFT;
   }

@@ -258,11 +258,16 @@ export const cacheSocialPictureInCDN = async (
 export const getNftPfpImageFromCDN = async (
   socialPicTokenURI: string,
   withOverlayDomain?: string,
+  isMeta?: boolean,
 ): Promise<string | null> => {
   if (!isNotEmpty(socialPicTokenURI)) {
     return null;
   }
-  const fileName = getNFTFilenameInCDN(socialPicTokenURI, withOverlayDomain);
+  const fileName = getNFTFilenameInCDN(
+    socialPicTokenURI,
+    withOverlayDomain,
+    isMeta,
+  );
   const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
   // const hostname = env.CLOUD_STORAGE.API_ENDPOINT_URL || 'https://storage.googleapis.com';
   const bucket = storage.bucket(bucketName);
