@@ -380,3 +380,9 @@ Add the following line to *dev.env* configuration and restart the application:
 ```
 PUPPETEER_WS=ws://localhost:3000
 ```
+
+To connect to Browserless SAAS from localhost use the following URL:
+```
+PUPPETEER_WS=wss://chrome.browserless.io?token=76544be7-a2ae-4c6a-8d45-71a8ee183ded
+```
+where *token* is your API key
