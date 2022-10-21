@@ -7,7 +7,7 @@ import { DomainsController } from './controllers/DomainsController';
 import { ReverseController } from './controllers/ReverseController';
 import { StatusController } from './controllers/StatusController';
 import { MetaDataController } from './controllers/MetaDataController';
-import { EnrolmentController } from './controllers/EnrolmentController';
+import { EnrollmentController } from './controllers/EnrollmentController';
 import swaggerUI from 'swagger-ui-express';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import { routingControllersToSpec } from 'routing-controllers-openapi';
@@ -27,7 +27,7 @@ if (
   enabledControllers.push(DomainsController);
   enabledControllers.push(ReverseController);
   enabledControllers.push(StatusController);
-  enabledControllers.push(EnrolmentController);
+  enabledControllers.push(EnrollmentController);
 }
 
 if (

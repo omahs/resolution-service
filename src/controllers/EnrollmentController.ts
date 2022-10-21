@@ -9,14 +9,14 @@ import {
 import 'reflect-metadata';
 import { ApiKey } from '../models';
 import { getConnection } from 'typeorm';
-import { APIKeyEnrolmentParams } from './dto/Enrolment';
+import { APIKeyEnrollmentParams } from './dto/Enrollment';
 import { env } from '../env';
 
 @JsonController()
-export class EnrolmentController {
-  @Post('/enrol')
-  async postEnrol(
-    @Body() params: APIKeyEnrolmentParams,
+export class EnrollmentController {
+  @Post('/enroll')
+  async postEnroll(
+    @Body() params: APIKeyEnrollmentParams,
     @HeaderParam('reseller-app-token') token: string,
   ): Promise<number> {
     const secretResellerAppToken = env.APPLICATION.RESELLER_APP_KEY;

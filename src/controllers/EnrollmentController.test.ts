@@ -4,18 +4,18 @@ import { expect } from 'chai';
 import { env } from '../env';
 import ApiKey from '../models/ApiKey';
 
-describe('EnrolmentController', () => {
-  describe('POST /enrol', () => {
+describe('EnrollmentController', () => {
+  describe('POST /enroll', () => {
     const testKeyName = 'testname';
     const testKey = 'testkey';
 
     it('should check auth', async () => {
-      const enrol = await supertest(api).post('/enrol').send({
+      const enroll = await supertest(api).post('/enroll').send({
         key: testKey,
         name: testKeyName,
       });
-      expect(enrol.statusCode).to.equal(403);
-      expect(enrol.body).to.containSubset({
+      expect(enroll.statusCode).to.equal(403);
+      expect(enroll.body).to.containSubset({
         code: 'ForbiddenError',
         errors: [
           {
@@ -26,15 +26,15 @@ describe('EnrolmentController', () => {
     });
 
     it('should save api key', async () => {
-      const enrol = await supertest(api)
-        .post('/enrol')
+      const enroll = await supertest(api)
+        .post('/enroll')
         .send({
           key: testKey,
           name: testKeyName,
         })
         .set('reseller-app-token', env.APPLICATION.RESELLER_APP_KEY);
 
-      expect(enrol.statusCode).to.equal(200);
+      expect(enroll.statusCode).to.equal(200);
 
       const dbKey = await ApiKey.queryApiKey(testKey);
       expect(dbKey).to.exist;
@@ -47,15 +47,15 @@ describe('EnrolmentController', () => {
         apiKey: testKey,
       }).save();
 
-      const enrol = await supertest(api)
-        .post('/enrol')
+      const enroll = await supertest(api)
+        .post('/enroll')
         .send({
           key: testKey,
           name: 'newtestkey',
         })
         .set('reseller-app-token', env.APPLICATION.RESELLER_APP_KEY);
-      expect(enrol.statusCode).to.equal(400);
-      expect(enrol.body).to.containSubset({
+      expect(enroll.statusCode).to.equal(400);
+      expect(enroll.body).to.containSubset({
         code: 'BadRequestError',
         errors: [
           {
@@ -66,42 +66,42 @@ describe('EnrolmentController', () => {
     });
 
     describe('validations', () => {
-      const cases = [
+      const testCases = [
         {
-          desc: 'should validate empty key',
+          description: 'should validate empty key',
           body: { key: '', name: testKeyName },
           expectedError: { isNotEmpty: 'key should not be empty' },
         },
         {
-          desc: 'should validate non-string key',
+          description: 'should validate non-string key',
           body: { key: 11, name: testKeyName },
           expectedError: { isString: 'key must be a string' },
         },
         {
-          desc: 'should validate empty name',
+          description: 'should validate empty name',
           body: { key: testKey, name: '' },
           expectedError: { isNotEmpty: 'name should not be empty' },
         },
         {
-          desc: 'should validate non-string name',
+          description: 'should validate non-string name',
           body: { key: testKey, name: 11 },
           expectedError: { isString: 'name must be a string' },
         },
       ];
 
-      cases.forEach((c) => {
-        it(c.desc, async () => {
-          const enrol = await supertest(api)
-            .post('/enrol')
-            .send(c.body)
+      testCases.forEach((testCase) => {
+        it(testCase.description, async () => {
+          const enroll = await supertest(api)
+            .post('/enroll')
+            .send(testCase.body)
             .set('reseller-app-token', env.APPLICATION.RESELLER_APP_KEY);
 
-          expect(enrol.statusCode).to.equal(400);
-          expect(enrol.body).to.containSubset({
+          expect(enroll.statusCode).to.equal(400);
+          expect(enroll.body).to.containSubset({
             code: 'BadRequestError',
             errors: [
               {
-                constraints: c.expectedError,
+                constraints: testCase.expectedError,
               },
             ],
           });
