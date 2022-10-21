@@ -10,6 +10,7 @@ import 'reflect-metadata';
 import { ApiKey } from '../models';
 import { getConnection } from 'typeorm';
 import { APIKeyEnrolmentParams } from './dto/Enrolment';
+import { env } from '../env';
 
 @JsonController()
 export class EnrolmentController {
@@ -17,10 +18,10 @@ export class EnrolmentController {
   async postEnrol(
     @Body() params: APIKeyEnrolmentParams,
     @HeaderParam('reseller-app-token') token: string,
-  ): Promise<void> {
-    const secretResellerAppToken = getConfig().RESELLER_APP_TOKEN;
+  ): Promise<number> {
+    const secretResellerAppToken = env.APPLICATION.RESELLER_APP_KEY;
 
-    if (token !== secretResellerAppToken) {
+    if (!secretResellerAppToken || token !== secretResellerAppToken) {
       throw new ForbiddenError('Please provide a valid app token.');
     }
 
@@ -37,5 +38,6 @@ export class EnrolmentController {
       });
       await manager.save(newKey);
     });
+    return 200;
   }
 }
