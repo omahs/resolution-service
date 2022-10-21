@@ -196,6 +196,7 @@ export const env = {
       process.env.DATADOG_APM_SERVICE_NAME || 'resolution-service-staging',
     DATADOG_AGENT_HOSTNAME: process.env.DATADOG_AGENT_HOSTNAME || 'localhost',
     DD_AGENT_HOST: process.env.DD_AGENT_HOST || 'localhost',
+    RESELLER_APP_KEY: process.env.RESELLER_APP_KEY || '',
   },
   TYPEORM: {
     LOGGING: {
