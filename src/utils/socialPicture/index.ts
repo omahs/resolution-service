@@ -8,6 +8,7 @@ import { Storage } from '@google-cloud/storage';
 import { fetchTokenMetadata } from '../../controllers/MetaDataController';
 import { logger } from '../../logger';
 import { convert } from 'convert-svg-to-jpeg';
+import puppeteer from 'puppeteer-core';
 
 const storageOptions = env.CLOUD_STORAGE.API_ENDPOINT_URL
   ? { apiEndpoint: env.CLOUD_STORAGE.API_ENDPOINT_URL } // for development using local emulator
@@ -242,9 +243,36 @@ export const cacheSocialPictureInCDN = async (
       await Promise.all(
         files.map(async ({ fname, data, shouldConvert }) => {
           if (shouldConvert) {
-            // NB: conversion of JPEG and PNG to SVG and then back to JPEG might not be optimal.
-            const dataJPG = await convert(data); // @TODO: increase resolution to 1024x1024
-            return uploadPicture(fname, dataJPG);
+            const puppeteerURL = env.PUPPETEER.WS_URL || 'ws://localhost:3000';
+            const browser = await puppeteer.connect({
+              browserWSEndpoint: puppeteerURL,
+            });
+            const page = await browser.newPage();
+            //@TODO replace hardcoded puppeter endpoint from configuration
+
+            await page.setViewport({ width: 512, height: 512 });
+            // removing all the gaps
+            const html = `<!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="utf-8">
+            <style>
+            * { margin: 0; padding: 0; }
+            html { background-color: white; }
+            </style>
+            </head>
+            <body>${data}</body>
+            </html>`;
+            await page.setContent(html);
+            //const = console.log(await page.content());
+            const imageBuffer = await page.screenshot({
+              type: 'jpeg',
+              encoding: 'binary',
+              fullPage: true,
+            });
+            await browser.close();
+            // increase resolution to 1024x1024
+            return uploadPicture(fname, imageBuffer);
           } else {
             return uploadPicture(fname, data);
           }
@@ -257,10 +285,9 @@ export const cacheSocialPictureInCDN = async (
     }
   }
 
-  async function uploadPicture(fileName: string, imageData: string) {
+  async function uploadPicture(fileName: string, imageBuffer: string | Buffer) {
     const file = bucket.file(fileName);
     // cache in the storage
-    const imageBuffer = Buffer.from(imageData);
     const contentType = fileName?.endsWith('.jpg')
       ? 'image/jpeg'
       : 'image/svg+xml';

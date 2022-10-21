@@ -361,3 +361,22 @@ docker run -d --name fake-gcs-server -p 4443:4443 -v ${PWD}/storage:/data fsouza
 Add the following variable to local dev config:
 ```
 CLOUD_STORAGE_ENDPONT_URL=http://localhost:4443
+```
+
+### Using puppeter to render images locally
+
+We use [Puppeter](https://pptr.dev/) / [Browserless](https://www.browserless.io/) to convert SVG to PNG.
+
+To start puppeter locally use the following command ([docker](https://www.docker.com/products/docker-desktop/) should be installed):
+```
+docker run \
+  --rm \
+  -p 3000:3000 \
+  -e "MAX_CONCURRENT_SESSIONS=10" \
+  browserless/chrome:latest
+```
+
+Add the following line to *dev.env* configuration and restart the application:
+```
+PUPPETEER_WS=ws://localhost:3000
+```

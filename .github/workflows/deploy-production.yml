@@ -33,6 +33,7 @@ env:
   POLYGON_RESYNC_FROM: ${{ secrets.RESOLUTION_POLYGON_RESYNC_FROM}}
   ETHEREUM_RESYNC_FROM: ${{ secrets.RESOLUTION_ETHEREUM_RESYNC_FROM}}
   CLOUD_STORAGE_BUCKET_ID: 'resolution-client-assets'
+  PUPPETEER_WS: ${{ secrets.PUPPETEER_WS }}
 
 jobs:
   build_and_push_container_image:
