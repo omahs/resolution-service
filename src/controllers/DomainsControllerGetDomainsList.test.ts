@@ -726,54 +726,6 @@ describe('DomainsController', () => {
       expect(res.status).eq(200);
     });
 
-    it('filters domains by resolution should be case insensitive', async () => {
-      const walletAddress = '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2';
-      const { domain: testDomain, resolution: resolution } =
-        await DomainTestHelper.createTestDomain({
-          name: 'test.crypto',
-          node: '0xb72f443a17edf4a55f766cf3c83469e6f96494b16823a41a4acb25800f303103',
-          ownerAddress: '0x319c860967aa2CF464dCc24dDd93f099d956932e',
-          registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
-          resolution: {
-            'crypto.ETH.address': walletAddress,
-          },
-        });
-
-      const res = await supertest(api)
-        .get(
-          `/domains?resolution[crypto.ETH.address]=${walletAddress.toUpperCase()}`,
-        )
-        .auth(testApiKey.apiKey, { type: 'bearer' })
-        .send();
-      expect(res.body).to.deep.equal({
-        data: [
-          {
-            id: testDomain.name,
-            attributes: {
-              meta: {
-                domain: testDomain.name,
-                blockchain: resolution.blockchain,
-                networkId: resolution.networkId,
-                owner: resolution.ownerAddress,
-                registry: resolution.registry,
-                resolver: resolution.resolver,
-                reverse: false,
-              },
-              records: resolution.resolution,
-            },
-          },
-        ],
-        meta: {
-          hasMore: false,
-          nextStartingAfter: testDomain.id?.toString(),
-          perPage: 100,
-          sortBy: 'id',
-          sortDirection: 'ASC',
-        },
-      });
-      expect(res.status).eq(200);
-    });
-
     it('filters domains list by resolution', async () => {
       const { domain: testDomainOne, resolution: resolutionOne } =
         await DomainTestHelper.createTestDomain({
