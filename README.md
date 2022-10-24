@@ -53,6 +53,7 @@ variety of platforms and in the cloud.
    `docker build -t resolution-service .`
 3. Setup environment variables\
    Create a file `service.env` that will contain required environment variables:
+   * NOTE: You must remove the comments from the example .env below
 
 ```
 NODE_ENV=production
@@ -235,7 +236,12 @@ MORALIS_APP_ID=apikey
 OPENSEA_API_KEY=apikey
 ```
 
-3. Run the service
+3. Create database
+```
+createdb resolution_service_development
+```
+
+4. Run the service
 
 ```
 yarn start:dev
