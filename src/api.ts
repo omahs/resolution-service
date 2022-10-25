@@ -14,6 +14,8 @@ import Bugsnag from '@bugsnag/js';
 import BugsnagPluginExpress from '@bugsnag/plugin-express';
 import { env } from './env';
 import ErrorHandler from './errors/ErrorHandler';
+import { RoutingControllersOptions } from 'routing-controllers';
+import * as oa from 'openapi3-ts';
 
 const enabledControllers = [];
 
@@ -59,21 +61,36 @@ if (env.APPLICATION.BUGSNAG_API_KEY) {
 const schemas = validationMetadatasToSchemas({
   refPointerPrefix: '#/components/schemas/',
 });
+
+const description =
+  'The Resolution Service provides an API for getting domain data and metadata regardless \
+of the blockchain in which the domain is stored. The service caches blockchain events in a database for easy \
+retrieval without accessing any blockchain APIs. With the Resolution Service API, you can quickly build \
+applications directly communicating with the blockchain to get UD domain data with a single API request.';
+
 const storage = getMetadataArgsStorage();
-const swaggerSpec = routingControllersToSpec(
-  storage,
-  {},
-  {
-    components: {
-      schemas,
-      securitySchemes: {
-        apiKeyAuth: {
-          scheme: 'bearer',
-          type: 'http',
-        },
+const routingControllerOptions: RoutingControllersOptions = {};
+const additionalProperties: Partial<oa.OpenAPIObject> = {
+  info: {
+    title: 'Resolution Service',
+    description: description,
+    version: '1.0.0',
+  },
+  components: {
+    schemas,
+    securitySchemes: {
+      apiKeyAuth: {
+        scheme: 'bearer',
+        type: 'http',
       },
     },
   },
+};
+
+const swaggerSpec = routingControllersToSpec(
+  storage,
+  routingControllerOptions,
+  additionalProperties,
 );
 
 // There's no way to set a custom attribute for a specific parameter in routing-controllers-openapi
