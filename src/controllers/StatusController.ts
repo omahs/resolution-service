@@ -1,4 +1,4 @@
-import { Get, JsonController } from 'routing-controllers';
+import { Get, JsonController, Redirect } from 'routing-controllers';
 import 'reflect-metadata';
 import { ResponseSchema } from 'routing-controllers-openapi';
 import { IsBoolean, IsNumber, ValidateNested } from 'class-validator';
@@ -72,6 +72,12 @@ export class StatusController {
       status.latestNetworkBlock - status.latestMirroredBlock <=
       status.acceptableDelayInBlocks + config.CONFIRMATION_BLOCKS;
     return status;
+  }
+
+  @Get('/')
+  @Redirect('/api-docs')
+  getRoot() {
+    // Redirects to /api-docs
   }
 
   @Get('/status')

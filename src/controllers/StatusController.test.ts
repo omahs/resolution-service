@@ -37,6 +37,14 @@ describe('StatusController', () => {
     sinonSandbox.restore();
   });
 
+  it('should redirect user', async () => {
+    const res = await supertest(api)
+      .get('/')
+      .send()
+      .expect(302)
+      .expect('Location', '/api-docs');
+  });
+
   it('should return appropriate block counts', async () => {
     const expectedStatus = {
       blockchain: {
