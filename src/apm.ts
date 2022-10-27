@@ -2,6 +2,8 @@ import type { TracerOptions } from 'dd-trace';
 import tracer from 'dd-trace';
 import { env } from './env';
 
+console.log('env.Application=' + JSON.stringify(env.APPLICATION));
+
 if (env.APPLICATION.DATADOG_APM_ENABLE === 'true') {
   const options: TracerOptions = {
     //enabled: true,
