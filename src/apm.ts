@@ -3,6 +3,7 @@ import tracer from 'dd-trace';
 import { env } from './env';
 
 console.log('env.Application=' + JSON.stringify(env.APPLICATION));
+console.log('process.env.DD_AGENT_HOST=' + process.env.DD_AGENT_HOST);
 
 if (env.APPLICATION.DATADOG_APM_ENABLE === 'true') {
   const options: TracerOptions = {
