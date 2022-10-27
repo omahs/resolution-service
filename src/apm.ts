@@ -6,6 +6,7 @@ console.log('env.Application=' + JSON.stringify(env.APPLICATION));
 console.log('process.env.DD_AGENT_HOST=' + process.env.DD_AGENT_HOST);
 
 if (env.APPLICATION.DATADOG_APM_ENABLE === 'true') {
+  console.log('inside if statement');
   const options: TracerOptions = {
     //enabled: true,
     logLevel: 'debug',
@@ -18,3 +19,5 @@ if (env.APPLICATION.DATADOG_APM_ENABLE === 'true') {
 
   tracer.init(options);
 }
+
+console.log('after if statement');
