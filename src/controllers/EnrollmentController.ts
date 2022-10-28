@@ -17,9 +17,9 @@ export class EnrollmentController {
   @Post('/enroll')
   async postEnroll(
     @Body() params: APIKeyEnrollmentParams,
-    @HeaderParam('reseller-app-token') token: string,
+    @HeaderParam('app-auth-token') token: string,
   ): Promise<number> {
-    const secretResellerAppToken = env.APPLICATION.RESELLER_APP_KEY;
+    const secretResellerAppToken = env.APPLICATION.APP_AUTH_KEY;
 
     if (!secretResellerAppToken || token !== secretResellerAppToken) {
       throw new ForbiddenError('Please provide a valid app token.');

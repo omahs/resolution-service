@@ -45,7 +45,7 @@ jobs:
       MORALIS_APP_ID: 1
       OPENSEA_API_KEY: 'test'
       CLOUD_STORAGE_BUCKET_ID: 'resolution-client-assets'
-      RESELLER_APP_KEY: 'test-app-key'
+      APP_AUTH_KEY: 'test-app-key'
 
     services:
       postgres:

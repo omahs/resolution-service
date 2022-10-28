@@ -32,7 +32,7 @@ describe('EnrollmentController', () => {
           key: testKey,
           name: testKeyName,
         })
-        .set('reseller-app-token', env.APPLICATION.RESELLER_APP_KEY);
+        .set('app-auth-token', env.APPLICATION.APP_AUTH_KEY);
 
       expect(enroll.statusCode).to.equal(200);
 
@@ -53,7 +53,7 @@ describe('EnrollmentController', () => {
           key: testKey,
           name: 'newtestkey',
         })
-        .set('reseller-app-token', env.APPLICATION.RESELLER_APP_KEY);
+        .set('app-auth-token', env.APPLICATION.APP_AUTH_KEY);
       expect(enroll.statusCode).to.equal(400);
       expect(enroll.body).to.containSubset({
         code: 'BadRequestError',
@@ -94,7 +94,7 @@ describe('EnrollmentController', () => {
           const enroll = await supertest(api)
             .post('/enroll')
             .send(testCase.body)
-            .set('reseller-app-token', env.APPLICATION.RESELLER_APP_KEY);
+            .set('app-auth-token', env.APPLICATION.APP_AUTH_KEY);
 
           expect(enroll.statusCode).to.equal(400);
           expect(enroll.body).to.containSubset({
