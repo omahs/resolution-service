@@ -65,6 +65,7 @@ steps:
       - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
       - "--update-secrets=ZNS_NETWORK=ZNS_NETWORK:latest"
       - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
+      - "--update-secrets=RESOLUTION_APP_AUTH_KEY=RESOLUTION_APP_AUTH_KEY:latest"
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
       - "--region=$_DEPLOY_REGION"
