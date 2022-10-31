@@ -40,6 +40,8 @@ steps:
       - "--min-instances=5"
       - "--max-instances=50"
       - "--port=3000"
+      - "--vpc-connector=$_VPC_SERVERLESS"
+      - "--vpc-egress=all-traffic"
       - "--set-cloudsql-instances=$_RESOLUTION_SERVICE_POSTGRES_HOST"
       - "--update-secrets=DD_AGENT_HOST=DATADOG_AGENT_HOST:latest"
       - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
@@ -93,6 +95,8 @@ steps:
       - "--min-instances=5"
       - "--max-instances=50"
       - "--port=3000"
+      - "--vpc-connector=$_VPC_SERVERLESS"
+      - "--vpc-egress=all-traffic"
       - "--set-cloudsql-instances=$_RESOLUTION_SERVICE_POSTGRES_HOST"
       - "--update-secrets=DD_AGENT_HOST=DATADOG_AGENT_HOST:latest"
       - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
@@ -142,7 +146,9 @@ steps:
   #     - "--min-instances=1"
   #     - "--max-instances=1"
   #     - "--port=3000"
-  # - "--set-cloudsql-instances=$_RESOLUTION_SERVICE_POSTGRES_HOST"
+  # .   - "--vpc-connector=$_VPC_SERVERLESS"
+  #     - "--vpc-egress=all-traffic"
+  #     - "--set-cloudsql-instances=$_RESOLUTION_SERVICE_POSTGRES_HOST"
   #     - "--update-secrets=DD_AGENT_HOST=DATADOG_AGENT_HOST:latest"
   #     - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
   #     - "--update-secrets=DATADOG_APM_SERVICE_NAME=DATADOG_APM_SERVICE_NAME:latest"
@@ -183,7 +189,8 @@ substitutions:
   _PLATFORM: managed
   _DEPLOY_REGION: us-central1
   _SERVICE_NAME: resolution-staging
-  _RESOLUTION_SERVICE_POSTGRES_HOST: TBD
+  _RESOLUTION_SERVICE_POSTGRES_HOST:
+  _VPC_SERVERLESS:
 tags:
   - gcp-cloud-build-deploy-cloud-run
   - resolution-service
