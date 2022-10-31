@@ -1,5 +1,5 @@
-import { Column, Entity, Repository } from 'typeorm';
-import { IsString, IsUUID } from 'class-validator';
+import { Column, Entity, Index, Repository } from 'typeorm';
+import { IsString } from 'class-validator';
 import { Model } from '.';
 import { Attributes } from '../types/common';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,8 +10,8 @@ export default class ApiKey extends Model {
   @Column('text', { unique: true })
   name: string;
 
-  @IsUUID(4)
-  @Column('uuid', { unique: true })
+  @Index()
+  @Column('text', { unique: true })
   apiKey: string;
 
   constructor(attributes?: Attributes<ApiKey>) {
