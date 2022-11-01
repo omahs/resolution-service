@@ -70,6 +70,7 @@ export enum EvmUnstoppableDomainTlds {
   Number888 = '888',
   Wallet = 'wallet',
   X = 'x',
+  Klever = 'klever',
 }
 
 export enum ZilliqaUnstoppableDomainTlds {

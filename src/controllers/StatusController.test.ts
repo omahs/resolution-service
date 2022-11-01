@@ -300,6 +300,7 @@ describe('StatusController', () => {
         'nft',
         'dao',
         'zil',
+        'klever',
       ],
     };
     const response = await supertest(api).get('/supported_tlds').send();
