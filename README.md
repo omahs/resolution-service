@@ -4,7 +4,7 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=unstoppabledomains_resolution_service&metric=security_rating&token=f23a522e7a9ee324e58e27e84651e8c731871d43)](https://sonarcloud.io/summary/new_code?id=unstoppabledomains_resolution_service)
 [![Known Vulnerabilities](https://snyk.io/test/github/unstoppabledomains/resolution-service/badge.svg)](https://snyk.io/test/github/unstoppabledomains/resolution-service)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=unstoppabledomains_resolution_service&metric=coverage&token=f23a522e7a9ee324e58e27e84651e8c731871d43)](https://sonarcloud.io/summary/new_code?id=unstoppabledomains_resolution_service)
-[![Unstoppable Domains Documentation](https://img.shields.io/badge/Documentation-unstoppabledomains.com-blue)](https://docs.unstoppabledomains.com/)
+[![Unstoppable Domains Documentation](https://img.shields.io/badge/Documentation-unstoppabledomains.com-blue)](https://docs.unstoppabledomains.com/developer-toolkit/resolution-integration-methods/resolution-service/overview/)
 [![Get help on Discord](https://img.shields.io/badge/Get%20help%20on-Discord-blueviolet)](https://discord.gg/b6ZVxSZ9Hn)
 
 - [Installation](README.md#installation)
@@ -17,12 +17,9 @@
 - [Development notes](README.md#development-notes)
 
 Resolution service provides an API for getting domain data and metadata
-regardless of that domain's location (whether it is stored in Ethereum, Zilliqa,
-or any other blockchain). The service is used to cache blockchain events in a
-database for easy retrieval without acessing blockchain APIs.
+regardless of that domain's location (whether it is stored in Ethereum, Zilliqa, or any other blockchain). The service caches blockchain events in a database for easy retrieval without accessing blockchain APIs.
 
-The resolution service is provided as a docker image so it can be launched on a
-variety of platforms and in the cloud.
+The resolution service is provided as a docker image so it can be launched on a variety of platforms and in the cloud.
 
 ## Resolution service endpoints
 
@@ -36,14 +33,9 @@ variety of platforms and in the cloud.
 
 - **git** - to clone the repository.
 - **docker** - to run the service. Install docker by following
-  [instructions](https://docs.docker.com/engine/install/) for an appropriate
-  system.
-- **postgres** - to store the data. Postgres can be configured on the same
-  server as the resolution service or on a dedicated database hosting (e.g. AWS
-  RDS, Google Cloud SQL). To install postgres locally, follow these
-  [instructions](https://www.postgresql.org/download). Make sure to configure
-  password authentication for the DB user that will be used by the service.
-  - This guide has been tested with Postgres 11.17, although other versions may work as well.
+  [instructions](https://docs.docker.com/engine/install/) for an appropriate system.
+- **postgres** - to store the data. You can configure Postgres on the same server as the resolution service or a dedicated database hosting (e.g. AWS RDS, Google Cloud SQL). To install postgres locally, follow these [instructions](https://www.postgresql.org/download). Make sure to configure password authentication for the DB user that the service will use.
+  - This guide has been tested with Postgres 11.17, although other versions may also work.
 
 ### Quick start
 
@@ -52,22 +44,22 @@ variety of platforms and in the cloud.
 2. Build the docker container\
    `docker build -t resolution-service .`
 3. Setup environment variables\
-   Create a file `service.env` that will contain required environment variables:
+   Create a file `service.env` that will contain the required environment variables:
 
 ```
 NODE_ENV=production
-RESOLUTION_POSTGRES_HOST=example.com          	# DB host
+RESOLUTION_POSTGRES_HOST=example.com            # DB host
 RESOLUTION_POSTGRES_PORT=5432                   # DB port
-RESOLUTION_POSTGRES_USERNAME=example           	# DB user configured in postgres
-RESOLUTION_POSTGRES_PASSWORD=password          	# DB password configured in postgres
+RESOLUTION_POSTGRES_USERNAME=example            # DB user configured in postgres
+RESOLUTION_POSTGRES_PASSWORD=password           # DB password configured in postgres
 RESOLUTION_POSTGRES_DATABASE=resolution_service # Name of the resolution service database
-ETHEREUM_JSON_RPC_API_URL=https://alchemy.com  	# Address of a JSON RPC provider. This can be a public API (e.g. Alchemy), or a local ethereum node with JSON RPC enabled
-POLYGON_JSON_RPC_API_URL=https://alchemy.com   	# Address of a JSON RPC provider. This can be a public API (e.g. Alchemy), or a local ethereum node with JSON RPC enabled
-VIEWBLOCK_API_KEY=apikey                       	# key for Viewblock API, required for getting data from Zilliqa blockchain
-METADATA_API=apikey				                      # key for Unstoppable Domain's Metadata API
-MORALIS_API_URL=apikey				                  # URL for the Moralis API
-MORALIS_APP_ID=apikey				                    # App ID for the Moralis API
-OPENSEA_API_KEY=apikey				                  # key for Opensea's API service
+ETHEREUM_JSON_RPC_API_URL=https://alchemy.com   # Address of a JSON RPC provider. This can be a public API (e.g. Alchemy), or a local Ethereum node with JSON RPC enabled
+POLYGON_JSON_RPC_API_URL=https://alchemy.com    # Address of a JSON RPC provider. This can be a public API (e.g. Alchemy) or a local Ethereum node with JSON RPC enabled
+VIEWBLOCK_API_KEY=apikey                        # key for Viewblock API, required for getting data from Zilliqa blockchain
+METADATA_API=apikey				             # key for Unstoppable Domain's Metadata API
+MORALIS_API_URL=apikey				          # URL for the Moralis API
+MORALIS_APP_ID=apikey				           # App ID for the Moralis API
+OPENSEA_API_KEY=apikey				          # key for Opensea's API service
 ```
 
 This is the minimum required set of configurations for the service. Additional
@@ -81,13 +73,11 @@ configuration options are listed in
 
 ## Running the service
 
-Once the service is started, it will perform initial synchronization with the
-blockchain networks. It may take more than 24 hours for a full synchronization.
-During the initial synchronization the API may not work reliably. The status of
-synchronization can be checked using the `/status` endpoint. After the
-synchronization is complete, the service API endpoints can be accessed normally.
-Note that the service is stateless, so the container doesn't need any persistent
-storage. All data is stored in the database.
+Once the service is started, it will perform initial synchronization with the blockchain networks. It may take more than 24 hours for full synchronization.
+
+During the initial synchronization, the API may not work reliably. The synchronization status can be checked using the `/status` endpoint. After the synchronization, you can access the service API endpoints normally.
+
+Note that the service is stateless, so the container doesn't need persistent storage. All data is stored in the database.
 
 ### Environment configuration options
 
@@ -130,7 +120,7 @@ storage. All data is stored in the database.
 
 ### Running modes
 
-The service provides several running modes. By default it will run all of them.
+The service provides several running modes. By default, it will run all of them.
 However, the modes that will be used can be selected during startup using the
 RESOLUTION_RUNNING_MODE environment variable. Available running modes:
 
@@ -156,51 +146,41 @@ RESOLUTION_RUNNING_MODE=API,ETH_WORKER
 
 ### API keys
 
-The `/domains` API requires an API key which is simply a version 4 UUID.
-Currently there are no key management functions in the resolution service. All
-API keys must be added manually using the database. To generate a random API key
-run the following query in postgres:
+The `/domains`, `/records`, and `/reverse` endpoints requires an API key, simply a version 4 UUID. Currently, there are no key management functions in the resolution service. All API keys must be added manually using the database. To generate a random API key, run the following query in Postgres:
 
 ```sql
  INSERT INTO api_keys (name, api_key) VALUES ('my API key', md5(clock_timestamp()::text)::uuid);
 ```
 
-> Note: The above example should not be used for production API keys as the key
-> which is based on a predictable value. Production keys should be generated
-> externally.
+> Note: You should not use the above example for production API keys, as the key is based on a predictable value. It would be best if you generated production keys externally.
 
 ## API reference
 
-The full api reference
-[OpenAPI specification](http://resolve.unstoppabledomains.com/api-docs/) By
-default all API endpoints are enabled. Use the `RUNNING_MODE` env variable to
-enable specific sets of endpoints.
+The full api reference [OpenAPI specification](https://resolve.unstoppabledomains.com/api-docs/) By default, all API endpoints are enabled. Use the `RUNNING_MODE` env variable to enable specific sets of endpoints.
 
-| Endpoint                      | Description                                                                                                                                                                                                                                                                                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Service endpoints:**        |                                                                                                                                                                                                                                                                                                                                               |
-| GET /domains                  | Gets the list of domains.                                                                                                                                                                                                                                                                                                                     |
-| GET /domains/:domainName      | Gets the resolution of the specified domain.                                                                                                                                                                                                                                                                                                  |
-| GET /records                  | Gets resolution records for multiple domains requested.<br>- `domains`: required query parameter, accepts an array of UD domains.<br>- `key`: optional query parameter, reflects what resolution record to retrieve across the requested domains.<br>Example: `/records?domains[]=ryan.crypto&domains[]=mvwi.crypto&key=social.picture.value` |
-| GET /status                   | Gets the synchronization status.                                                                                                                                                                                                                                                                                                              |
-| GET /api-docs                 | Returns a swagger documentation page.                                                                                                                                                                                                                                                                                                         |
-| **Metadata endpoints:**       |                                                                                                                                                                                                                                                                                                                                               |
-| GET /metadata/:domainOrToken  | Retrieve erc721 metadata information of the specified domain                                                                                                                                                                                                                                                                                  |
-| GET /image/:domainOrToken     | Retrieve image_data as a svg string                                                                                                                                                                                                                                                                                                           |
-| GET /image-src/:domainOrToken | Retrieve image_data as 'image/svg+xml'                                                                                                                                                                                                                                                                                                        |
+| Endpoint | Description |
+| - | - |
+| **Service endpoints:** |
+| GET /domains | Gets the list of domains. |
+| GET /domains/:domainName | Gets the resolution of the specified domain. |
+| GET /records | Gets resolution records for multiple domains requested. |
+| GET /domains/:domainName/transfers/latest | Gets the transfer history of a domain name. |
+| GET /reverse/:address | Gets the reverse record of a wallet address. |
+| GET /supported_tlds | Gets all the domain endings supported by Unstoppable Domains. |
+| GET /status | Gets the synchronization status. |
+| GET /api-docs | Returns a swagger documentation page. |
+| **Metadata endpoints:** |
+| GET /metadata/:domainOrToken | Retrieve erc721 metadata information of the specified domain |
+| GET /image/:domainOrToken | Retrieve `image_data` as a svg string |
+| GET /image-src/:domainOrToken | Retrieve image_data as `image/svg+xml` |
 
-> Note: The `/domains` and `/records` endpoints require an API key. The key must
-> be provided as `Bearer` authentication header for requests. New keys must be
-> added manually to the database (see [API keys](#api-keys) for more info).
+> Note: The `/domains`, `/records`, and `/reverse` endpoints require an API key. The key must be provided as a `Bearer` authentication header for requests. New keys must be added manually to the database (see [API keys](#api-keys) for more info).
 
 ## Development notes
 
 ### Development pre-requirements
 
-The dev. environment has generally the same pre-requirements as running the
-service normally. So, postgres and docker are also necessary. For convenience
-postgres configuration can be the same as defaults (username - postgres,
-password - secret).
+The dev. environment generally has the same pre-requirements as running the service normally. So, Postgres and Docker are also necessary. For convenience Postgres configuration can be the same as defaults (username - postgres, password - secret).
 
 Additional pre-requirements that are necessary for development:
 
@@ -243,20 +223,15 @@ yarn start:dev
 
 ### Running unit tests
 
-Unit tests can be run using `yarn test`. This command will run the tests with
-ENV variables set in `./local.test.env` file. You should copy
-`./local.test.env.sample` to `./local.test.env` and redefine any env variable in
-yours local environment if needed, for example:
-`export RESOLUTION_POSTGRES_PASSWORD=password`. Testing command will take this
-variable first instead of using variable from `./local.test.env` file.
+Unit tests can be run using `yarn test`. This command will run the tests with ENV variables set in `./local.test.env` file. You should copy `./local.test.env.sample` to `./local.test.env` and redefine any env variable in yours local environment if needed, for example: `export RESOLUTION_POSTGRES_PASSWORD=password`. Testing command will take this variable first instead of using variable from `./local.test.env` file.
 
 For checking coverage use `yarn test:coverage`.
 
-Unit/integration tests use a postgres database that is cleaned before each test.
+Unit/integration tests use a Postgres database that is cleaned before each test.
 By default, the database name is `resolution_service_test`.
 
 ### Debugging
-To debug the service the following command could be used:
+To debug the service, you should use the following command:
 ```
 yarn start:dev:debug
 ```
@@ -266,7 +241,7 @@ To debug the tests use:
 yarn test:debug
 ```
 
-If you are using [Visual Studio Code](https://docs.microsoft.com/en-us/visualstudio/debugger/attach-to-running-processes-with-the-visual-studio-debugger?view=vs-2022) to debug the code add this to `.vscode/launch.json` launch configuration:
+If you are using [Visual Studio Code](https://docs.microsoft.com/en-us/visualstudio/debugger/attach-to-running-processes-with-the-visual-studio-debugger?view=vs-2022) to debug the code, add this to `.vscode/launch.json` launch configuration:
 ```
   "configurations": [
     ...,
@@ -286,12 +261,10 @@ If you are using [Visual Studio Code](https://docs.microsoft.com/en-us/visualstu
 
 ![Architecture chart](doc/ResolutionService.png)
 
-The service currently consists of three main components: API, and three workers.
-The API component is a basic HTTP API that allows reading domain data from the
-database. The OpenAPI specification:
-[OpenAPI specification](http://resolve.unstoppabledomains.com/api-docs/).
+The service currently consists of three main components: API and three workers. The API component is a basic HTTP API that allows the reading of domain data from the database. The OpenAPI specification:
+[OpenAPI specification](https://resolve.unstoppabledomains.com/api-docs/).
 
-Currently there are three workers in the resolution service:
+Currently, there are three workers in the resolution service:
 
 - ETH worker\
   Contains a scheduled job that connects to the Ethereum blockchain using JSON RPC
@@ -308,7 +281,7 @@ Currently there are three workers in the resolution service:
   ZNS (.zil) domains and resolution events. The events are parsed and saved to the
   database.
 
-More workers may be added in the future.
+> Unstoppable Domains may add more workers in the future.
 
 ### Logs and monitoring
 
@@ -317,9 +290,7 @@ The resolution service outputs logs to `stdout` so they are available by
 Cloud Logging). The general log format should be:
 `<timestamp> <log level>: <Component label> - <Log message>`
 
-The resolution service has a configurable logging level. Log messages are at
-consistent levels across the whole service. We use the following guidelines to
-determine logging level:
+The resolution service has a configurable logging level. Log messages are at consistent levels across the whole service. We use the following guidelines to determine the logging level:
 
 | Event              | Component       | description                                                                                                                | log level |
 | ------------------ | --------------- | -------------------------------------------------------------------------------------------------------------------------- | --------- |
@@ -332,30 +303,28 @@ determine logging level:
 | Parsed event       | Workers         | Log any event or transaction parsed by the worker                                                                          | debug     |
 | External API calls | all             | Log external API calls                                                                                                     | debug     |
 
-Additionally, if the appropriate keys are provided in the environment
-configuration, the service will report errors to monitoring tools. The
-resolution service has integrations with [bugsnag](https://www.bugsnag.com/) and
-[newrelic](https://newrelic.com/).
+Additionally, the service will report errors to monitoring tools if the appropriate keys are provided in the environment
+configuration. The resolution service has integrations with [bugsnag](https://www.bugsnag.com/) and [newrelic](https://newrelic.com/).
 
 ### Adding new env vars
 
-1. Add it to Github repository Secrets
+1. Add it to GitHub repository Secrets
    (https://github.com/unstoppabledomains/resolution-service/settings/secrets/actions)
 2. Add it to such files: env.ts, deploy-production.yml, deploy-staging.yml,
    tests.yml, create-yaml.sh
 
 ### Testing image uploads locally
 
-Metadata service will cache NFT PFP images, uploading them to [Google Cloud Storage](https://cloud.google.com/cdn) (GCS) CDN. To test file uploads localy, unofficial [GCS emulator](https://github.com/fsouza/fake-gcs-server) is used.
+Metadata service will cache NFT PFP images, uploading them to [Google Cloud Storage](https://cloud.google.com/cdn) (GCS) CDN. To test file uploads locally, an unofficial [GCS emulator](https://github.com/fsouza/fake-gcs-server) is used.
 
-To use the emulator make sure docker [is installed](https://docs.docker.com/desktop/install/mac-install/). 
+To use the emulator, ensure Docker [is installed](https://docs.docker.com/desktop/install/mac-install/).
 
 Pull the image from Docker Hub
 ```
 docker pull fsouza/fake-gcs-server
 ```
 
-Create the following directory structure for the GSC bucket storage, where `resolution-client-assets` is the name of the bucket.
+Create the following directory structure for the GSC bucket storage, where `resolution-client-assets` is the bucket's name.
 ```
   storage
   |--> resolution-client-assets
@@ -366,6 +335,7 @@ Run docker container with mounted bucket directory:
 docker run -d --name fake-gcs-server -p 4443:4443 -v ${PWD}/storage:/data fsouza/fake-gcs-server -scheme http -public-host localhost:4443
 ```
 
-Add the following variable to local dev config:
+Add the following variable to the local dev config:
 ```
 CLOUD_STORAGE_ENDPONT_URL=http://localhost:4443
+```
