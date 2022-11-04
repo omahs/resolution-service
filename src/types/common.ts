@@ -98,8 +98,3 @@ export type AllDomainTlds =
 export const UnsupportedTlds: Array<
   EvmUnstoppableDomainTlds | ZilliqaUnstoppableDomainTlds
 > = [UnstoppableDomainTlds.Coin, UnstoppableDomainTlds.Unstoppable];
-
-export type WalletAddress = string;
-export const DeadAdresses: Array<WalletAddress> = [
-  '0xdeaddeaddeaddeaddeaddeaddeaddeaddeaddead',
-];
