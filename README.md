@@ -223,6 +223,7 @@ METADATA_API=apikey
 MORALIS_API_URL=apikey
 MORALIS_APP_ID=apikey
 OPENSEA_API_KEY=apikey
+RESOLUTION_APP_AUTH_KEY=apikey
 ```
 
 3. Run the service
