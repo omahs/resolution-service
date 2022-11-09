@@ -16,8 +16,7 @@
   - [API reference](README.md#api-reference)
 - [Development notes](README.md#development-notes)
 
-Resolution service provides an API for getting domain data and metadata
-regardless of that domain's location (whether it is stored in Ethereum, Zilliqa, or any other blockchain). The service caches blockchain events in a database for easy retrieval without accessing blockchain APIs.
+Resolution service provides an API for getting domain data and metadata regardless of that domain's location (whether it is stored in Ethereum, Zilliqa, or any other blockchain). The service caches blockchain events in a database for easy retrieval without accessing blockchain APIs.
 
 The resolution service is provided as a docker image so it can be launched on a variety of platforms and in the cloud.
 
@@ -53,13 +52,14 @@ RESOLUTION_POSTGRES_PORT=5432                   # DB port
 RESOLUTION_POSTGRES_USERNAME=example            # DB user configured in postgres
 RESOLUTION_POSTGRES_PASSWORD=password           # DB password configured in postgres
 RESOLUTION_POSTGRES_DATABASE=resolution_service # Name of the resolution service database
-ETHEREUM_JSON_RPC_API_URL=https://alchemy.com   # Address of a JSON RPC provider. This can be a public API (e.g. Alchemy), or a local Ethereum node with JSON RPC enabled
-POLYGON_JSON_RPC_API_URL=https://alchemy.com    # Address of a JSON RPC provider. This can be a public API (e.g. Alchemy) or a local Ethereum node with JSON RPC enabled
-VIEWBLOCK_API_KEY=apikey                        # key for Viewblock API, required for getting data from Zilliqa blockchain
-METADATA_API=apikey				             # key for Unstoppable Domain's Metadata API
+ETHEREUM_JSON_RPC_API_URL=https://alchemy.com   # Address of a JSON RPC provider. This can be a public API (e.g., Alchemy) or a local Ethereum node with JSON RPC enabled
+POLYGON_JSON_RPC_API_URL=https://alchemy.com    # Address of a JSON RPC provider. This can be a public API (e.g., Alchemy) or a local Ethereum node with JSON RPC enabled
+VIEWBLOCK_API_KEY=apikey                        # Key for Viewblock API, required for getting data from Zilliqa blockchain
+METADATA_API=apikey				             # Key for Unstoppable Domain's Metadata API
 MORALIS_API_URL=apikey				          # URL for the Moralis API
 MORALIS_APP_ID=apikey				           # App ID for the Moralis API
-OPENSEA_API_KEY=apikey				          # key for Opensea's API service
+OPENSEA_API_KEY=apikey				          # Key for Opensea's API service
+RESOLUTION_APP_AUTH_KEY=apikey                  # API key for authenticating internal-only endpoints, e.g., API key enrollment
 ```
 
 This is the minimum required set of configurations for the service. Additional
@@ -146,13 +146,21 @@ RESOLUTION_RUNNING_MODE=API,ETH_WORKER
 
 ### API keys
 
-The `/domains`, `/records`, and `/reverse` endpoints requires an API key, simply a version 4 UUID. Currently, there are no key management functions in the resolution service. All API keys must be added manually using the database. To generate a random API key, run the following query in Postgres:
+The `/domains`, `/records`, and `/reverse` endpoints require an API key for authentication. The resolution service provides a function to enroll API keys for accessing these endpoints.
 
-```sql
- INSERT INTO api_keys (name, api_key) VALUES ('my API key', md5(clock_timestamp()::text)::uuid);
+To enroll a new API key into the resolution service, make a `POST` request to the `/enroll` endpoint with the `RESOLUTION_APP_AUTH_KEY` in the `service.env` file and API key details, like so:
+
+```shell
+curl --location --request POST '/enroll' \
+--header 'app-auth-token: {RESOLUTION_APP_AUTH_KEY}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "name": "{API_KEY_NAME}",
+    "key": "{API_KEY_VALUE}"
+}'
 ```
 
-> Note: You should not use the above example for production API keys, as the key is based on a predictable value. It would be best if you generated production keys externally.
+> Note: The API key enrollment endpoint is only intended for internal use on your server as it requires the value of the `RESOLUTION_APP_AUTH_KEY` variable defined in the `service.env` file for authentication. If the `RESOLUTION_APP_AUTH_KEY` is not defined, the endpoint will not work.
 
 ## API reference
 
@@ -173,6 +181,8 @@ The full api reference [OpenAPI specification](https://resolve.unstoppabledomain
 | GET /metadata/:domainOrToken | Retrieve erc721 metadata information of the specified domain |
 | GET /image/:domainOrToken | Retrieve `image_data` as a svg string |
 | GET /image-src/:domainOrToken | Retrieve image_data as `image/svg+xml` |
+| **Enrollment endpoints:** |
+| POST /enroll | Enroll an API key into the resolution service |
 
 > Note: The `/domains`, `/records`, and `/reverse` endpoints require an API key. The key must be provided as a `Bearer` authentication header for requests. New keys must be added manually to the database (see [API keys](#api-keys) for more info).
 
@@ -213,6 +223,7 @@ METADATA_API=apikey
 MORALIS_API_URL=apikey
 MORALIS_APP_ID=apikey
 OPENSEA_API_KEY=apikey
+RESOLUTION_APP_AUTH_KEY=apikey
 ```
 
 3. Run the service
