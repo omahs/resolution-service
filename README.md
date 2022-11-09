@@ -148,7 +148,7 @@ RESOLUTION_RUNNING_MODE=API,ETH_WORKER
 
 The `/domains`, `/records`, and `/reverse` endpoints require an API key for authentication. The resolution service provides a function to enroll API keys for accessing these endpoints.
 
-To add a new API key to the resolution service, make a `POST` request to the `/enroll` endpoint with the `RESOLUTION_APP_AUTH_KEY` in the `service.env` file and API key details, like so:
+To enroll a new API key into the resolution service, make a `POST` request to the `/enroll` endpoint with the `RESOLUTION_APP_AUTH_KEY` in the `service.env` file and API key details, like so:
 
 ```shell
 curl --location --request POST '/enroll' \
@@ -160,7 +160,7 @@ curl --location --request POST '/enroll' \
 }'
 ```
 
-> Note: The API key enrollment endpoint is only intended for internal use on your server as it requires the value of the `RESOLUTION_APP_AUTH_KEY` defined in the `service.env` file for authentication.
+> Note: The API key enrollment endpoint is only intended for internal use on your server as it requires the value of the `RESOLUTION_APP_AUTH_KEY` variable defined in the `service.env` file for authentication. If the `RESOLUTION_APP_AUTH_KEY` is not defined, the endpoint will not work.
 
 ## API reference
 
