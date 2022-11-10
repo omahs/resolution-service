@@ -29,6 +29,7 @@ import {
   parsePictureRecord,
   getNftPfpImageFromCDN,
   cacheSocialPictureInCDN,
+  checkNftPfpImageExistFromCDN,
 } from '../utils/socialPicture';
 import { getDomainResolution } from '../services/Resolution';
 import {
@@ -216,16 +217,15 @@ export class MetaDataController {
     )
       ? ''
       : resolution.resolution['social.picture.value'];
-    const socialPicture =
-      socialPictureValue &&
-      (await getNftPfpImageFromCDN(
-        socialPictureValue,
-        withOverlay ? domain.name : undefined,
-      ));
 
     // we consider that NFT picture is verified if the picture is present in our CDN cache.
     // It means it was verified before caching.
-    const isSocialPictureVerified = Boolean(socialPicture);
+    const isSocialPictureVerified =
+      Boolean(socialPictureValue) &&
+      (await checkNftPfpImageExistFromCDN(
+        socialPictureValue,
+        withOverlay ? domain.name : undefined,
+      ));
     const description = this.getDomainDescription(
       domain.name,
       resolution.resolution,
@@ -246,7 +246,7 @@ export class MetaDataController {
       attributes: DomainAttributeTrait,
     };
 
-    if (!this.isDomainWithCustomImage(domain.name) && !socialPicture) {
+    if (!this.isDomainWithCustomImage(domain.name) && !socialPictureValue) {
       metadata.background_color = belongsToTld(
         domain.name,
         UnstoppableDomainTlds.Coin,
