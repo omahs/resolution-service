@@ -28,7 +28,6 @@ import { logger } from '../logger';
 import {
   parsePictureRecord,
   getNftPfpImageFromCDN,
-  toBase64DataURI,
   cacheSocialPictureInCDN,
 } from '../utils/socialPicture';
 import { getDomainResolution } from '../services/Resolution';
@@ -137,10 +136,6 @@ class OpenSeaMetadata extends Erc721Metadata {
   @IsString()
   image_url?: string;
 
-  @IsOptional()
-  @IsString()
-  image_data?: string | null;
-
   @IsObject()
   properties: DomainProperties;
 
@@ -231,7 +226,6 @@ export class MetaDataController {
     // we consider that NFT picture is verified if the picture is present in our CDN cache.
     // It means it was verified before caching.
     const isSocialPictureVerified = Boolean(socialPicture);
-
     const description = this.getDomainDescription(
       domain.name,
       resolution.resolution,
@@ -239,7 +233,7 @@ export class MetaDataController {
     const DomainAttributeTrait = this.getAttributeType(domain, {
       verifiedNftPicture: isSocialPictureVerified,
     });
-
+    const imageUrl = this.generateDomainImageUrl(domain.name);
     const metadata: OpenSeaMetadata = {
       name: domain.name,
       description,
@@ -247,19 +241,12 @@ export class MetaDataController {
         records: resolution.resolution,
       },
       external_url: `https://unstoppabledomains.com/search?searchTerm=${domain.name}`,
-      image: socialPicture
-        ? toBase64DataURI(socialPicture)
-        : this.generateDomainImageUrl(domain.name),
-      image_url: this.generateDomainImageUrl(domain.name),
+      image: imageUrl,
+      image_url: imageUrl,
       attributes: DomainAttributeTrait,
     };
 
     if (!this.isDomainWithCustomImage(domain.name) && !socialPicture) {
-      const imageDataSvgXml = await this.generateImageData(
-        domain.name,
-        resolution.resolution,
-      );
-      metadata.image_data = toBase64DataURI(imageDataSvgXml);
       metadata.background_color = belongsToTld(
         domain.name,
         UnstoppableDomainTlds.Coin,
@@ -367,9 +354,6 @@ export class MetaDataController {
     const description = name ? this.getDomainDescription(name, {}) : null;
     const attributes = name ? this.getAttributeType(new Domain({ name })) : [];
     const image = name ? this.generateDomainImageUrl(name) : null;
-    const image_data = name
-      ? toBase64DataURI(await this.generateImageData(name, {}))
-      : null;
     const external_url = name
       ? `https://unstoppabledomains.com/search?searchTerm=${name}`
       : null;
@@ -382,7 +366,6 @@ export class MetaDataController {
       external_url,
       attributes,
       image,
-      image_data,
     };
   }
 

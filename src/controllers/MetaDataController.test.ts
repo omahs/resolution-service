@@ -106,15 +106,6 @@ describe('MetaDataController', () => {
         },
       };
       expect(resWithName.properties).to.deep.eq(correctProperties);
-      expect(resWithName.image_data).eq(
-        toBase64DataURI(
-          DefaultImageData({
-            label: domain.label,
-            tld: domain.extension as UnstoppableDomainTld,
-            fontSize: 24,
-          }),
-        ),
-      );
       expect(resWithName.background_color).eq(BackgroundColor);
     });
 
@@ -325,13 +316,6 @@ describe('MetaDataController', () => {
           'https://unstoppabledomains.com/search?searchTerm=unknown.crypto',
         image:
           'https://metadata.unstoppabledomains.com/image-src/unknown.crypto.svg',
-        image_data: toBase64DataURI(
-          DefaultImageData({
-            label: 'unknown',
-            tld: UnstoppableDomainTlds.Crypto,
-            fontSize: 24,
-          }),
-        ),
         attributes: [
           { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
           { trait_type: DomainAttributeTrait.Level, value: 2 },
@@ -359,7 +343,6 @@ describe('MetaDataController', () => {
         description: null,
         external_url: null,
         image: null,
-        image_data: null,
         attributes: [],
       });
     });
@@ -383,13 +366,6 @@ describe('MetaDataController', () => {
           'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.',
         external_url: `https://unstoppabledomains.com/search?searchTerm=${uns.name}`,
         image: `https://metadata.unstoppabledomains.com/image-src/${uns.name}.svg`,
-        image_data: toBase64DataURI(
-          DefaultImageData({
-            label: uns.label,
-            tld: uns.tld as UnstoppableDomainTld,
-            fontSize: 16,
-          }),
-        ),
         image_url: `https://metadata.unstoppabledomains.com/image-src/${uns.name}.svg`,
         background_color: '4C47F7',
         attributes: [

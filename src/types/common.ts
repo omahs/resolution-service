@@ -70,6 +70,7 @@ export enum EvmUnstoppableDomainTlds {
   Number888 = '888',
   Wallet = 'wallet',
   X = 'x',
+  Klever = 'klever',
 }
 
 export enum ZilliqaUnstoppableDomainTlds {
@@ -97,3 +98,8 @@ export type AllDomainTlds =
 export const UnsupportedTlds: Array<
   EvmUnstoppableDomainTlds | ZilliqaUnstoppableDomainTlds
 > = [UnstoppableDomainTlds.Coin, UnstoppableDomainTlds.Unstoppable];
+
+export type WalletAddress = string;
+export const DeadAdresses: Array<WalletAddress> = [
+  '0xdeaddeaddeaddeaddeaddeaddeaddeaddeaddead',
+];
