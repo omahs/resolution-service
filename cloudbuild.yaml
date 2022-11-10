@@ -175,7 +175,23 @@ steps:
       - "--region=$_DEPLOY_REGION"
       - "--quiet"
     id: Deploy ETH ZIL MATIC workers
-    entrypoint: gcloud
+
+  # ########
+  # # clean up old worker revisions to prevent multiple of them from running
+  # ########
+  - name: bash
+    id: clean up to ensure only 1 worker is running
+    env:
+      - "SHA=$COMMIT_SHA"
+    script: |
+      #!/usr/bin/env bash
+      REVISIONS=`gcloud run revisions list --region=us-central1  --filter="metadata.name ~ resolution-staging-workers AND metadata.labels.commit-sha \!~ ${SHA}" --format="table[no-heading](metadata.name)"`
+      echo "cleaning up old revisions that are not from commit SHA: ${SHA}"
+      echo ${REVISIONS}
+      while IFS= read -r rev; do
+        echo "removing revision ${rev} "
+        gcloud run revisions delete ${rev} --region=us-central1 --quiet
+      done <<< "$REVISIONS"
 timeout: 1800s
 images:
   - "$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
