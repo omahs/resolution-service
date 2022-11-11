@@ -129,6 +129,7 @@ steps:
   # # deploy ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
   # ########
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    entrypoint: gcloud
     args:
       - run
       - services
