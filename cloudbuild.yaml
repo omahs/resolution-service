@@ -191,11 +191,11 @@ steps:
         echo "getting old revisions... this takes some time"
         REVISIONS=`gcloud run revisions list --region=us-central1  --filter="metadata.name ~ resolution-staging-workers AND metadata.labels.commit-sha \!~ ${COMMIT_SHA}" --format="table[no-heading](metadata.name)"`
         echo "cleaning up old revisions that are not from commit SHA: ${COMMIT_SHA}"
-        echo \${REVISIONS}
+        echo $${REVISIONS}
         while IFS= read -r rev; do
-          echo "removing revision \${rev} "
-          gcloud run revisions delete \${rev} --region=us-central1 --quiet
-        done <<< "\$REVISIONS"
+          echo "removing revision $${rev} "
+          gcloud run revisions delete $${rev} --region=us-central1 --quiet
+        done <<< "$$REVISIONS"
 
   # - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
   #   entrypoint: bash
