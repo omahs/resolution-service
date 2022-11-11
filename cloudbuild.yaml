@@ -182,15 +182,15 @@ steps:
   # ########
   - name: "gcr.io/cloud-builders/gcloud"
     entrypoint: "bash"
-    env:
-      - "SHA=$COMMIT_SHA"
+    # env:
+    #   - "SHA=$COMMIT_SHA"
     args:
       - "-c"
       - |
         #!/usr/bin/env bash
         echo "getting old revisions... this takes some time"
         REVISIONS=`gcloud run revisions list --region=us-central1  --filter="metadata.name ~ resolution-staging-workers AND metadata.labels.commit-sha \!~ ${SHA}" --format="table[no-heading](metadata.name)"`
-        echo "cleaning up old revisions that are not from commit SHA: ${SHA}"
+        echo "cleaning up old revisions that are not from commit SHA: ${COMMIT_SHA}"
         echo ${REVISIONS}
         while IFS= read -r rev; do
           echo "removing revision ${rev} "
