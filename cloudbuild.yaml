@@ -187,9 +187,6 @@ steps:
     args:
       - "-c"
       - |
-        echo "enter 1 bash command per line"
-        ls -la
-        gcloud version
         #!/usr/bin/env bash
         echo "getting old revisions... this takes some time"
         REVISIONS=`gcloud run revisions list --region=us-central1  --filter="metadata.name ~ resolution-staging-workers AND metadata.labels.commit-sha \!~ ${SHA}" --format="table[no-heading](metadata.name)"`
