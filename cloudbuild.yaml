@@ -181,6 +181,7 @@ steps:
   # # clean up old worker revisions to prevent multiple of them from running
   # ########
   - name: "gcr.io/cloud-builders/gcloud"
+    id: Clean up unused workers
     entrypoint: "bash"
     # env:
     #   - "SHA=$COMMIT_SHA"
