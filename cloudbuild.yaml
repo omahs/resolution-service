@@ -186,6 +186,7 @@ steps:
       - "SHA=$COMMIT_SHA"
     script: |
       #!/usr/bin/env bash
+      echo "getting old revisions... this takes some time"
       REVISIONS=`gcloud run revisions list --region=us-central1  --filter="metadata.name ~ resolution-staging-workers AND metadata.labels.commit-sha \!~ ${SHA}" --format="table[no-heading](metadata.name)"`
       echo "cleaning up old revisions that are not from commit SHA: ${SHA}"
       echo ${REVISIONS}
