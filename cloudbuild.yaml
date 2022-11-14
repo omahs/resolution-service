@@ -128,51 +128,91 @@ steps:
   # ########
   # # deploy ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
   # ########
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - $_SERVICE_NAME-workers
+      - "--platform=managed"
+      - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
+      - "--tag=commit-$SHORT_SHA"
+      - "--cpu=1000m"
+      - "--memory=512Mi"
+      - "--min-instances=1"
+      - "--max-instances=1"
+      - "--port=3000"
+      #- "--vpc-connector=$_VPC_SERVERLESS"
+      #- "--vpc-egress=all-traffic"
+      - "--no-cpu-throttling"
+      - "--set-cloudsql-instances=$_RESOLUTION_SERVICE_POSTGRES_HOST"
+      - "--update-secrets=DD_AGENT_HOST=DATADOG_AGENT_HOST:latest"
+      - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
+      - "--update-secrets=DATADOG_APM_SERVICE_NAME=DATADOG_APM_SERVICE_NAME:latest"
+      - "--update-secrets=DD_ENV=DD_ENV:latest"
+      - "--update-secrets=ETHEREUM_JSON_RPC_API_URL=ETHEREUM_JSON_RPC_API_URL:latest"
+      - "--update-secrets=MORALIS_API_URL=MORALIS_API_URL:latest"
+      - "--update-secrets=MORALIS_APP_ID=MORALIS_APP_ID:latest"
+      - "--update-secrets=OPENSEA_API_KEY=OPENSEA_API_KEY:latest"
+      - "--update-secrets=POLYGON_RESYNC_FROM=POLYGON_RESYNC_FROM:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_DATABASE=RESOLUTION_POSTGRES_DATABASE:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_HOST=RESOLUTION_POSTGRES_HOST:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_USERNAME=RESOLUTION_POSTGRES_USERNAME:latest"
+      - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD=RESOLUTION_POSTGRES_PASSWORD:latest"
+      - "--update-env-vars=ETHEREUM_CONFIRMATION_BLOCKS=12"
+      - "--update-secrets=ETHEREUM_NETWORK_ID=ETHEREUM_NETWORK_ID:latest"
+      - "--update-env-vars=ETHEREUM_RESYNC_FROM=None"
+      - "--update-env-vars=POLYGON_BLOCK_FETCH_LIMIT=None"
+      - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
+      - "--update-secrets=POLYGON_JSON_RPC_API_URL=POLYGON_JSON_RPC_API_URL:latest"
+      - "--update-secrets=POLYGON_NETWORK_ID=POLYGON_NETWORK_ID:latest"
+      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
+      - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
+      - "--update-secrets=ZNS_NETWORK=ZNS_NETWORK:latest"
+      - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
+      - >-
+        --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
+      - "--region=$_DEPLOY_REGION"
+      - "--quiet"
+    id: Deploy ETH ZIL MATIC workers
+
+  # ########
+  # # clean up old worker revisions to prevent multiple of them from running
+  # ########
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: Clean up unused workers
+    entrypoint: "bash"
+    # env:
+    #   - "SHA=$COMMIT_SHA"
+    args:
+      - "-c"
+      - |
+        #!/usr/bin/env bash
+        echo "getting old revisions... this takes some time"
+        REVISIONS=`gcloud run revisions list --region=us-central1  --filter="metadata.name ~ resolution-staging-workers AND metadata.labels.commit-sha !~ ${COMMIT_SHA}" --format="table[no-heading](metadata.name)"`
+        echo "cleaning up old revisions that are not from commit SHA: ${COMMIT_SHA}"
+        echo $${REVISIONS}
+        while IFS= read -r rev; do
+          echo "removing revision $${rev} "
+          gcloud run revisions delete $${rev} --region=us-central1 --quiet
+        done <<< "$$REVISIONS"
+
   # - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
-  #   args:
-  #     - run
-  #     - services
-  #     - update
-  #     - $_SERVICE_NAME-workers
-  #     - "--platform=managed"
-  #     - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
-  #     - "--tag=commit-$SHORT_SHA"
-  #     - "--cpu=1000m"
-  #     - "--memory=512Mi"
-  #     - "--min-instances=1"
-  #     - "--max-instances=1"
-  #     - "--port=3000"
-  # - "--set-cloudsql-instances=$_RESOLUTION_SERVICE_POSTGRES_HOST"
-  #     - "--update-secrets=DD_AGENT_HOST=DATADOG_AGENT_HOST:latest"
-  #     - "--update-secrets=DATADOG_APM_ENABLE=DATADOG_APM_ENABLE:latest"
-  #     - "--update-secrets=DATADOG_APM_SERVICE_NAME=DATADOG_APM_SERVICE_NAME:latest"
-  #     - "--update-secrets=DD_ENV=DD_ENV:latest"
-  #     - "--update-secrets=ETHEREUM_JSON_RPC_API_URL=ETHEREUM_JSON_RPC_API_URL:latest"
-  #     - "--update-secrets=MORALIS_API_URL=MORALIS_API_URL:latest"
-  #     - "--update-secrets=MORALIS_APP_ID=MORALIS_APP_ID:latest"
-  #     - "--update-secrets=OPENSEA_API_KEY=OPENSEA_API_KEY:latest"
-  #     - "--update-secrets=POLYGON_RESYNC_FROM=POLYGON_RESYNC_FROM:latest"
-  #     - "--update-secrets=RESOLUTION_POSTGRES_DATABASE=RESOLUTION_POSTGRES_DATABASE:latest"
-  #     - "--update-secrets=RESOLUTION_POSTGRES_HOST=RESOLUTION_POSTGRES_HOST:latest"
-  #     - "--update-secrets=RESOLUTION_POSTGRES_USERNAME=RESOLUTION_POSTGRES_USERNAME:latest"
-  #     - "--update-secrets=RESOLUTION_POSTGRES_PASSWORD=RESOLUTION_POSTGRES_PASSWORD:latest"
-  #     - "--update-env-vars=ETHEREUM_CONFIRMATION_BLOCKS=12"
-  #     - "--update-secrets=ETHEREUM_NETWORK_ID=ETHEREUM_NETWORK_ID:latest"
-  #     - "--update-env-vars=ETHEREUM_RESYNC_FROM=None"
-  #     - "--update-env-vars=POLYGON_BLOCK_FETCH_LIMIT=None"
-  #     - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
-  #     - "--update-secrets=POLYGON_JSON_RPC_API_URL=POLYGON_JSON_RPC_API_URL:latest"
-  #     - "--update-secrets=POLYGON_NETWORK_ID=POLYGON_NETWORK_ID:latest"
-  #     - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
-  #     - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
-  #     - "--update-secrets=ZNS_NETWORK=ZNS_NETWORK:latest"
-  #     - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
-  #     - >-
-  #       --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
-  #     - "--region=$_DEPLOY_REGION"
-  #     - "--quiet"
-  #   id: Deploy ETH ZIL MATIC workers
-  #   entrypoint: gcloud
+  #   entrypoint: bash
+  #   id: clean up to ensure only 1 worker is running
+  #   env:
+  #     - "SHA=$COMMIT_SHA"
+  #   script: |
+  #     #!/usr/bin/env bash
+  #     echo "getting old revisions... this takes some time"
+  #     REVISIONS=`gcloud run revisions list --region=us-central1  --filter="metadata.name ~ resolution-staging-workers AND metadata.labels.commit-sha \!~ ${SHA}" --format="table[no-heading](metadata.name)"`
+  #     echo "cleaning up old revisions that are not from commit SHA: ${SHA}"
+  #     echo ${REVISIONS}
+  #     while IFS= read -r rev; do
+  #       echo "removing revision ${rev} "
+  #       gcloud run revisions delete ${rev} --region=us-central1 --quiet
+  #     done <<< "$REVISIONS"
 timeout: 1800s
 images:
   - "$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
