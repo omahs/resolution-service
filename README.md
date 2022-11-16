@@ -13,7 +13,10 @@
 - [Running the service](README.md#running-the-service)
   - [Environment configuration options](README.md#environment-configuration-options)
   - [Running modes](README.md#running-modes)
+  - [API keys](README.md#api-keys)
+- [Documentation](README.md#documentation)
   - [API reference](README.md#api-reference)
+  - [Postman collection](README.md#postman-collection)
 - [Development notes](README.md#development-notes)
 
 Resolution service provides an API for getting domain data and metadata regardless of that domain's location (whether it is stored in Ethereum, Zilliqa, or any other blockchain). The service caches blockchain events in a database for easy retrieval without accessing blockchain APIs.
@@ -23,8 +26,7 @@ The resolution service is provided as a docker image so it can be launched on a 
 ## Resolution service endpoints
 
 - Production Mainnet: http://resolve.unstoppabledomains.com/api-docs/
-- Staging Testnet (Ethereum Goerly, Polygon Mumbai):
-  https://resolve.staging.unstoppabledomains.com/api-docs/
+- Staging Testnet (Ethereum Goerly, Polygon Mumbai): https://resolve.staging.unstoppabledomains.com/api-docs/
 
 ## Installation
 
@@ -166,9 +168,11 @@ curl --location --request POST '/enroll' \
 
 > Note: The API key enrollment endpoint is only intended for internal use on your server as it requires the value of the `RESOLUTION_APP_AUTH_KEY` variable defined in the `service.env` file for authentication. If the `RESOLUTION_APP_AUTH_KEY` is not defined, the endpoint will not work.
 
-## API reference
+## Documentation
 
-The full api reference [OpenAPI specification](https://resolve.unstoppabledomains.com/api-docs/) By default, all API endpoints are enabled. Use the `RUNNING_MODE` env variable to enable specific sets of endpoints.
+### API reference
+
+The full API reference [OpenAPI specification](https://resolve.unstoppabledomains.com/api-docs/) By default, all API endpoints are enabled. Use the `RUNNING_MODE` env variable to enable specific sets of endpoints.
 
 | Endpoint | Description |
 | - | - |
@@ -188,7 +192,13 @@ The full api reference [OpenAPI specification](https://resolve.unstoppabledomain
 | **Enrollment endpoints:** |
 | POST /enroll | Enroll an API key into the resolution service |
 
-> Note: The `/domains`, `/records`, and `/reverse` endpoints require an API key. The key must be provided as a `Bearer` authentication header for requests. New keys must be added manually to the database (see [API keys](#api-keys) for more info).
+> Note: The `/domains`, `/records`, and `/reverse` endpoints require an API key. The key must be provided as a `Bearer` authentication header for requests. New keys must be enrolled into the resolution service (see [API keys](README.md#api-keys) for more info).
+
+### Postman collection
+
+Unstoppable Domains provides a Postman collection that you can fork to your workspace and interact with the resolution service API in one click.
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://god.gw.postman.com/run-collection/19507736-52bf9f35-1608-4dc4-a96d-e62682b59199?action=collection%2Ffork&collection-url=entityId%3D19507736-52bf9f35-1608-4dc4-a96d-e62682b59199%26entityType%3Dcollection%26workspaceId%3D6762865c-b510-4216-ba7f-45cd07f164c7#?env%5BResolution%20Service%20-%20Open%20API%5D=W3sia2V5IjoiYmFzZV91cmwiLCJ2YWx1ZSI6Imh0dHBzOi8vcmVzb2x2ZS51bnN0b3BwYWJsZWRvbWFpbnMuY29tIiwiZW5hYmxlZCI6dHJ1ZSwidHlwZSI6ImRlZmF1bHQiLCJzZXNzaW9uVmFsdWUiOiJodHRwczovL3Jlc29sdmUudW5zdG9wcGFibGVkb21haW5zLmNvbSIsInNlc3Npb25JbmRleCI6MH0seyJrZXkiOiJhcGlfa2V5IiwidmFsdWUiOiIiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoic2VjcmV0Iiwic2Vzc2lvblZhbHVlIjoiIiwic2Vzc2lvbkluZGV4IjoxfV0=)
 
 ## Development notes
 
@@ -201,7 +211,7 @@ Additional pre-requirements that are necessary for development:
 - Node.JS 14.16.1 Can be installed using [NVM](https://github.com/nvm-sh/nvm)
 - [yarn](https://yarnpkg.com/lang/en/docs/install)
 
-### Running in dev. mode
+### Running in dev mode
 
 1. Install project dependencies
 
