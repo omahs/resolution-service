@@ -197,6 +197,19 @@ export const env = {
     DATADOG_AGENT_HOSTNAME: process.env.DATADOG_AGENT_HOSTNAME || 'localhost',
     DD_AGENT_HOST: process.env.DD_AGENT_HOST || 'localhost',
     APP_AUTH_KEY: process.env.RESOLUTION_APP_AUTH_KEY || '',
+    RATE_LIMITER: {
+      RATE_LIMITER_DISABLED:
+        process.env.RATE_LIMITER_DISABLED == 'true' ? true : false,
+      DEFAULT_MAX_REQUESTS: parseNumberFromEnv(
+        process.env.RATE_LIMITER_DEFAULT_MAX_REQUESTS,
+        5,
+      ),
+      METADATA_MAX_REQUESTS: parseNumberFromEnv(
+        process.env.RATE_LIMITER_METADATA_MAX_REQUESTS,
+        10,
+      ),
+      WINDOW_MS: parseNumberFromEnv(process.env.RATE_LIMITER_WINDOW_MS, 1000),
+    },
   },
   TYPEORM: {
     LOGGING: {

@@ -6,12 +6,13 @@ import {
   getReverseResolution,
 } from '../services/Resolution';
 import { ApiKeyAuthMiddleware } from '../middleware/ApiKeyAuthMiddleware';
+import RateLimiter from '../middleware/RateLimiter';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
 })
 @JsonController()
-@UseBefore(ApiKeyAuthMiddleware)
+@UseBefore(RateLimiter(), ApiKeyAuthMiddleware)
 export class ReverseController {
   @Get('/reverse/:address')
   @ResponseSchema(DomainResponse)

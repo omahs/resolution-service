@@ -1,4 +1,4 @@
-import { Get, JsonController, Redirect } from 'routing-controllers';
+import { Get, JsonController, Redirect, UseBefore } from 'routing-controllers';
 import 'reflect-metadata';
 import { ResponseSchema } from 'routing-controllers-openapi';
 import { IsBoolean, IsNumber, ValidateNested } from 'class-validator';
@@ -12,6 +12,7 @@ import {
   UnstoppableDomainTlds,
   UnsupportedTlds,
 } from '../types/common';
+import RateLimiter from '../middleware/RateLimiter';
 
 class BlockchainStatus {
   @IsBoolean()
@@ -47,6 +48,7 @@ class StatusResponse {
 }
 
 @JsonController()
+@UseBefore(RateLimiter())
 export class StatusController {
   private zilProvider = new ZilProvider();
 

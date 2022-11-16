@@ -4,6 +4,7 @@ import {
   Header,
   Param,
   QueryParam,
+  UseBefore,
 } from 'routing-controllers';
 import Moralis from 'moralis/node';
 import { ResponseSchema } from 'routing-controllers-openapi';
@@ -45,6 +46,7 @@ import { Domain, DomainsResolution } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
 import { belongsToTld, findDomainByNameOrToken } from '../utils/domain';
+import RateLimiter from '../middleware/RateLimiter';
 
 const DEFAULT_IMAGE_URL = (name: string) =>
   `https://metadata.unstoppabledomains.com/image-src/${name}.svg` as const;
@@ -52,6 +54,8 @@ const BASE_IMAGE_URL =
   `${env.APPLICATION.ERC721_METADATA.GOOGLE_CLOUD_STORAGE_BASE_URL}/images` as const;
 const INVALID_DOMAIN_IMAGE_URL =
   `${env.APPLICATION.ERC721_METADATA.GOOGLE_CLOUD_STORAGE_BASE_URL}/images/invalid-domain.svg` as const;
+const METADATA_MAX_REQUESTS =
+  env.APPLICATION.RATE_LIMITER.METADATA_MAX_REQUESTS;
 
 export enum SupportedL2Chain {
   Polygon = 'polygon',
@@ -180,6 +184,7 @@ class ImageResponse {
 }
 
 @Controller()
+@UseBefore(RateLimiter({ max: METADATA_MAX_REQUESTS }))
 export class MetaDataController {
   @Get('/deaddata/:domainOrToken')
   @ResponseSchema(OpenSeaMetadata)

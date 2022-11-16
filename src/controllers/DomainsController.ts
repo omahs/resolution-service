@@ -31,12 +31,13 @@ import {
   normalizeDomainOrToken,
 } from '../utils/domain';
 import { DeadAdresses } from '../types/common';
+import RateLimiter from '../middleware/RateLimiter';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
 })
 @JsonController()
-@UseBefore(ApiKeyAuthMiddleware)
+@UseBefore(RateLimiter(), ApiKeyAuthMiddleware)
 export class DomainsController {
   @Get('/domains/:domainName')
   @ResponseSchema(DomainResponse)

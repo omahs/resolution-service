@@ -5,14 +5,17 @@ import {
   HeaderParam,
   ForbiddenError,
   BadRequestError,
+  UseBefore,
 } from 'routing-controllers';
 import 'reflect-metadata';
 import { ApiKey } from '../models';
 import { getConnection } from 'typeorm';
 import { APIKeyEnrollmentParams } from './dto/Enrollment';
 import { env } from '../env';
+import RateLimiter from '../middleware/RateLimiter';
 
 @JsonController()
+@UseBefore(RateLimiter())
 export class EnrollmentController {
   @Post('/enroll')
   async postEnroll(

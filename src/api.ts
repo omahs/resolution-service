@@ -50,6 +50,8 @@ export const api = createExpressServer({
   middlewares: [ErrorHandler],
 });
 
+api.set('trust proxy', true);
+
 if (env.APPLICATION.BUGSNAG_API_KEY) {
   Bugsnag.start({
     apiKey: env.APPLICATION.BUGSNAG_API_KEY,
