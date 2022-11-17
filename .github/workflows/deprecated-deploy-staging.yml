@@ -1,11 +1,11 @@
-name: Deploy staging
+name: Deprecated Deploy staging
 
 on:
   workflow_dispatch:
     inputs:
       deployables:
-        description: 'api/workers/dispatch.yaml'
-        default: 'api workers'
+        description: "api/workers/dispatch.yaml"
+        default: "api workers"
         required: true
 env:
   CLOUDSDK_APP_CLOUD_BUILD_TIMEOUT: 1200
@@ -13,18 +13,15 @@ env:
     gcr.io/${{ secrets.GCP_STAGING_PROJECT_ID }}/resolution-service:${{
     github.sha }}
   RESOLUTION_POSTGRES_HOST: ${{ secrets.RESOLUTION_STAGING_POSTGRES_HOST }}
-  RESOLUTION_POSTGRES_USERNAME:
-    ${{ secrets.RESOLUTION_STAGING_POSTGRES_USERNAME }}
-  RESOLUTION_POSTGRES_PASSWORD:
-    ${{ secrets.RESOLUTION_STAGING_POSTGRES_PASSWORD }}
-  RESOLUTION_POSTGRES_DATABASE:
-    ${{ secrets.RESOLUTION_STAGING_POSTGRES_DATABASE}}
+  RESOLUTION_POSTGRES_USERNAME: ${{ secrets.RESOLUTION_STAGING_POSTGRES_USERNAME }}
+  RESOLUTION_POSTGRES_PASSWORD: ${{ secrets.RESOLUTION_STAGING_POSTGRES_PASSWORD }}
+  RESOLUTION_POSTGRES_DATABASE: ${{ secrets.RESOLUTION_STAGING_POSTGRES_DATABASE}}
   ETHEREUM_JSON_RPC_API_URL: ${{ secrets.ETHEREUM_TESTNET_JSON_RPC_API_URL}}
   ETHEREUM_CONFIRMATION_BLOCKS: 12
   VIEWBLOCK_API_KEY: ${{ secrets.VIEWBLOCK_API_KEY }}
   GCP_SQL_INSTANCE: ${{ secrets.GCP_STAGING_SQL_INSTANCE }}
   ETHEREUM_NETWORK_ID: 5
-  ZNS_NETWORK: 'testnet'
+  ZNS_NETWORK: "testnet"
   UNS_REGISTRY_EVENTS_STARTING_BLOCK: 5986000
   CNS_REGISTRY_EVENTS_STARTING_BLOCK: 5986000
   CNS_RESOLVER_ADVANCED_EVENTS_STARTING_BLOCK: 5986000
@@ -37,7 +34,7 @@ env:
   OPENSEA_API_KEY: ${{ secrets.OPENSEA_API_KEY}}
   POLYGON_RESYNC_FROM: ${{ secrets.RESOLUTION_STAGING_POLYGON_RESYNC_FROM}}
   ETHEREUM_RESYNC_FROM: ${{ secrets.RESOLUTION_STAGING_ETHEREUM_RESYNC_FROM}}
-  CLOUD_STORAGE_BUCKET_ID: 'resolution-client-assets-staging'
+  CLOUD_STORAGE_BUCKET_ID: "resolution-client-assets-staging"
   DATADOG_APM_ENABLE: ${{ secrets.RESOLUTION_STAGING_DATADOG_APM_ENABLE }}
   DATADOG_APM_SERVICE_NAME: ${{ secrets.RESOLUTION_STAGING_DATADOG_APM_SERVICENAME }}
   DATADOG_AGENT_HOSTNAME: ${{ secrets.RESOLUTION_STAGING_DATADOG_AGENT_HOSTNAME }}
@@ -52,7 +49,7 @@ jobs:
       contents: read
 
     steps:
-      # see common issue w/GH action runners throwing "No space left on device" errors. https://github.com/orgs/community/discussions/26351 and https://github.com/orgs/community/discussions/26488 and https://github.com/orgs/community/discussions/25678 
+      # see common issue w/GH action runners throwing "No space left on device" errors. https://github.com/orgs/community/discussions/26351 and https://github.com/orgs/community/discussions/26488 and https://github.com/orgs/community/discussions/25678
       - name: free disk space
         run: |
           sudo swapoff -a
@@ -64,7 +61,7 @@ jobs:
       - name: Checkout staging branch
         uses: actions/checkout@v2
         with:
-          ref: 'refs/heads/staging'
+          ref: "refs/heads/staging"
 
       - name: Retrieve cached container image layers
         uses: satackey/action-docker-layer-caching@v0.0.11
@@ -78,8 +75,7 @@ jobs:
         name: Authenticate to GCP
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider:
-            ${{ secrets.WORKLOAD_ID_PROVIDER_STAGING }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_ID_PROVIDER_STAGING }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
       - name: Set up Google Cloud SDK
@@ -115,8 +111,7 @@ jobs:
         name: Authenticate to GCP
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider:
-            ${{ secrets.WORKLOAD_ID_PROVIDER_STAGING }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_ID_PROVIDER_STAGING }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
       # - name: Set up Google Cloud SDK
@@ -161,8 +156,7 @@ jobs:
         name: Authenticate to GCP
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider:
-            ${{ secrets.WORKLOAD_ID_PROVIDER_STAGING }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_ID_PROVIDER_STAGING }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_STAGING }}
 
       # - name: Set up Google Cloud SDK

@@ -1,16 +1,15 @@
-name: Deploy production
+name: Deprecated Deploy production
 
 on:
   workflow_dispatch:
     inputs:
       deployables:
-        description: 'api/workers/dispatch.yaml'
-        default: 'api workers'
+        description: "api/workers/dispatch.yaml"
+        default: "api workers"
         required: true
 env:
   CLOUDSDK_APP_CLOUD_BUILD_TIMEOUT: 1200
-  IMAGE_NAME:
-    gcr.io/${{ secrets.GCP_PROJECT_ID }}/resolution-service:${{ github.sha }}
+  IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/resolution-service:${{ github.sha }}
   RESOLUTION_POSTGRES_HOST: ${{ secrets.RESOLUTION_POSTGRES_HOST }}
   RESOLUTION_POSTGRES_USERNAME: ${{ secrets.RESOLUTION_POSTGRES_USERNAME }}
   RESOLUTION_POSTGRES_PASSWORD: ${{ secrets.RESOLUTION_POSTGRES_PASSWORD }}
@@ -33,7 +32,7 @@ env:
   OPENSEA_API_KEY: ${{ secrets.OPENSEA_API_KEY}}
   POLYGON_RESYNC_FROM: ${{ secrets.RESOLUTION_POLYGON_RESYNC_FROM}}
   ETHEREUM_RESYNC_FROM: ${{ secrets.RESOLUTION_ETHEREUM_RESYNC_FROM}}
-  CLOUD_STORAGE_BUCKET_ID: 'resolution-client-assets'
+  CLOUD_STORAGE_BUCKET_ID: "resolution-client-assets"
   DATADOG_APM_ENABLE: ${{ secrets.RESOLUTION_DATADOG_APM_ENABLE }}
   DATADOG_APM_SERVICE_NAME: ${{ secrets.RESOLUTION_DATADOG_APM_SERVICENAME }}
   DATADOG_AGENT_HOSTNAME: ${{ secrets.RESOLUTION_DATADOG_AGENT_HOSTNAME }}
@@ -64,8 +63,7 @@ jobs:
         name: Authenticate to GCP
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider:
-            ${{ secrets.WORKLOAD_ID_PROVIDER_PRODUCTION }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_ID_PROVIDER_PRODUCTION }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Set up Google Cloud SDK
@@ -102,8 +100,7 @@ jobs:
         name: Authenticate to GCP
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider:
-            ${{ secrets.WORKLOAD_ID_PROVIDER_PRODUCTION }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_ID_PROVIDER_PRODUCTION }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       # - name: Set up Google Cloud SDK
@@ -150,8 +147,7 @@ jobs:
         name: Authenticate to GCP
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider:
-            ${{ secrets.WORKLOAD_ID_PROVIDER_PRODUCTION }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_ID_PROVIDER_PRODUCTION }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_PRODUCTION }}
 
       # - name: Set up Google Cloud SDK
