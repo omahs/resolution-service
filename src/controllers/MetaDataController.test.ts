@@ -109,6 +109,51 @@ describe('MetaDataController', () => {
       expect(resWithName.background_color).eq(BackgroundColor);
     });
 
+    it('should work with a subdomain', async () => {
+      const name = 'sub.domain.crypto';
+      const node = eip137Namehash(name);
+      const { domain } = await DomainTestHelper.createTestDomain({
+        name,
+        node,
+      });
+      const resWithName = await supertest(api)
+        .get(`/metadata/${domain.name}`)
+        .send()
+        .then((r) => r.body);
+
+      const resWithToken = await supertest(api)
+        .get(`/metadata/${domain.node}`)
+        .send()
+        .then((r) => r.body);
+
+      expect(resWithName).to.be.deep.equal(resWithToken);
+      expect(resWithName.name).eq(domain.name);
+      expect(resWithName.description).eq(
+        'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.',
+      );
+      expect(resWithName.external_url).eq(
+        'https://unstoppabledomains.com/search?searchTerm=sub.domain.crypto',
+      );
+      expect(resWithName.image).eq(
+        'https://metadata.unstoppabledomains.com/image-src/sub.domain.crypto.svg',
+      );
+      const correctAttributes = [
+        { trait_type: DomainAttributeTrait.Level, value: 3 },
+        { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
+        { trait_type: DomainAttributeTrait.Length, value: 10 },
+        {
+          trait_type: DomainAttributeTrait.Type,
+          value: AttributeType.Standard,
+        },
+        {
+          trait_type: DomainAttributeTrait.AttributeCharacterSet,
+          value: AttributeCharacterSet.Letter,
+        },
+      ];
+      expect(resWithName.attributes.length).eq(correctAttributes.length);
+      expect(resWithName.attributes).to.have.deep.members(correctAttributes);
+    });
+
     it.skip('should render a deprecated image placeholder for .coin domain', async () => {
       const name = 'deprecated.coin';
       const node = eip137Namehash(name);
