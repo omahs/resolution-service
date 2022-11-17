@@ -129,7 +129,7 @@ describe('MetaDataController', () => {
       expect(resWithName).to.be.deep.equal(resWithToken);
       expect(resWithName.name).eq(domain.name);
       expect(resWithName.description).eq(
-        'BE CAREFUL! This is a subdomain. Even after purchasing this name, the parent domain has the right to revoke ownership of this domain at anytime. Unless the parent is a smart contract specifically designed otherwise.',
+        'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.',
       );
       expect(resWithName.external_url).eq(
         'https://unstoppabledomains.com/search?searchTerm=sub.domain.crypto',

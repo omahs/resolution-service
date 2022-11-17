@@ -393,7 +393,7 @@ export class MetaDataController {
       return "This is the only TLD on the Unstoppable registry. It's not owned by anyone.".concat(
         ipfsDescriptionPart,
       );
-    } else if (domain.level === 2) {
+    } else if (domain.level === 2 || domain.level === 3) {
       const description = belongsToTld(domain.name, UnstoppableDomainTlds.Coin)
         ? '.coin domains are no longer supported by Unstoppable Domains. As a result, records of such domains cannot be updated. Learn more at our blog: https://unstoppabledomains.com/blog/coin. '
         : 'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.';
