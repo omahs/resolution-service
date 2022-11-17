@@ -95,6 +95,10 @@ export default class Domain extends Model {
     return this.getSplittedName().pop() || '';
   }
 
+  get level(): number {
+    return this.name.split('.').length;
+  }
+
   get unicodeName(): string {
     return punycode.toUnicode(this.name);
   }

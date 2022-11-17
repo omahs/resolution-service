@@ -87,7 +87,11 @@ export const getAttributeCharacterSet = (
 export const getAttributeCategory = (
   domain: Domain,
 ): AttributeCategory | null => {
-  return getNumberClub(domain);
+  // number clubs are only for primary domains
+  if (domain.level === 2) {
+    return getNumberClub(domain);
+  }
+  return null;
 };
 
 export const getAttributeType = (domainName: string): AttributeType => {

@@ -232,7 +232,7 @@ export class MetaDataController {
         withOverlay ? domain.name : undefined,
       ));
     const description = this.getDomainDescription(
-      domain.name,
+      domain,
       resolution.resolution,
     );
     const DomainAttributeTrait = this.getAttributeType(domain, {
@@ -356,7 +356,9 @@ export class MetaDataController {
     domainOrToken: string,
   ): Promise<OpenSeaMetadata> {
     const name = domainOrToken.includes('.') ? domainOrToken : null;
-    const description = name ? this.getDomainDescription(name, {}) : null;
+    const description = name
+      ? this.getDomainDescription(new Domain({ name }), {})
+      : null;
     const attributes = name ? this.getAttributeType(new Domain({ name })) : [];
     const image = name ? this.generateDomainImageUrl(name) : null;
     const external_url = name
@@ -375,25 +377,24 @@ export class MetaDataController {
   }
 
   private getDomainDescription(
-    name: string,
+    domain: Domain,
     resolution: Record<string, string>,
   ): string {
-    const levels = name.split('.').length;
     const ipfsDescriptionPart = this.getIpfsDescriptionPart(resolution);
 
     // todo find a better way for this edge case.
-    if (name === 'india.crypto') {
+    if (domain.name === 'india.crypto') {
       return 'This exclusive art piece by Amrit Pal Singh features hands of different skin tones spelling out the word HOPE in sign language. Hope embodies people coming together and having compassion for others in a way that transcends geographical borders. This art is a reminder that, while one individual can’t uplift humanity on their own, collective and inclusive efforts give rise to meaningful change.'.concat(
         ipfsDescriptionPart,
       );
     }
 
-    if (levels === 1) {
+    if (domain.level === 1) {
       return "This is the only TLD on the Unstoppable registry. It's not owned by anyone.".concat(
         ipfsDescriptionPart,
       );
-    } else if (levels === 2 || levels === 3) {
-      const description = belongsToTld(name, UnstoppableDomainTlds.Coin)
+    } else if (domain.level === 2) {
+      const description = belongsToTld(domain.name, UnstoppableDomainTlds.Coin)
         ? '.coin domains are no longer supported by Unstoppable Domains. As a result, records of such domains cannot be updated. Learn more at our blog: https://unstoppabledomains.com/blog/coin. '
         : 'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.';
       return description.concat(ipfsDescriptionPart);
@@ -425,7 +426,7 @@ export class MetaDataController {
       },
       {
         trait_type: DomainAttributeTrait.Level,
-        value: domain.name.split('.').length,
+        value: domain.level,
       },
       {
         trait_type: DomainAttributeTrait.Length,
