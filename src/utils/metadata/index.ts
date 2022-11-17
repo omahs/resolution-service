@@ -43,6 +43,10 @@ export enum AttributeCategory {
 }
 
 export const getNumberClub = (domain: Domain): AttributeCategory | null => {
+  // number clubs are only for primary domains
+  if (domain.level !== 2) {
+    return null;
+  }
   const label = getDomainNameLabel(domain.name);
   if (
     !label ||
@@ -87,11 +91,7 @@ export const getAttributeCharacterSet = (
 export const getAttributeCategory = (
   domain: Domain,
 ): AttributeCategory | null => {
-  // number clubs are only for primary domains
-  if (domain.level === 2) {
-    return getNumberClub(domain);
-  }
-  return null;
+  return getNumberClub(domain);
 };
 
 export const getAttributeType = (domainName: string): AttributeType => {
