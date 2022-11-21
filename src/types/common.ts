@@ -95,9 +95,23 @@ export type AllDomainTlds =
   | ZilliqaUnstoppableDomainTlds
   | ExternalDomainTld;
 
-export const UnsupportedTlds: Array<
-  EvmUnstoppableDomainTlds | ZilliqaUnstoppableDomainTlds
-> = [UnstoppableDomainTlds.Coin, UnstoppableDomainTlds.Unstoppable];
+export const SupportedTlds = [
+  UnstoppableDomainTlds.Crypto,
+  UnstoppableDomainTlds.Bitcoin,
+  UnstoppableDomainTlds.Blockchain,
+  UnstoppableDomainTlds.Dao,
+  UnstoppableDomainTlds.Nft,
+  UnstoppableDomainTlds.Number888,
+  UnstoppableDomainTlds.Wallet,
+  UnstoppableDomainTlds.X,
+  UnstoppableDomainTlds.Klever,
+  UnstoppableDomainTlds.Zil,
+];
+
+export const DeprecatedTlds = [UnstoppableDomainTlds.Coin];
+
+export type SupportedTld = typeof SupportedTlds[number];
+export type DeprecatedTld = typeof DeprecatedTlds[number];
 
 export type WalletAddress = string;
 export const DeadAdresses: Array<WalletAddress> = [

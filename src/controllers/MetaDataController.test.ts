@@ -210,8 +210,7 @@ describe('MetaDataController', () => {
       expect(resWithName.image_data).eq(
         toBase64DataURI(
           DefaultImageData({
-            label: domain.label,
-            tld: domain.extension as UnstoppableDomainTld,
+            domain,
             fontSize: 24,
           }),
         ),
@@ -576,8 +575,7 @@ describe('MetaDataController', () => {
         .send()
         .then((r) => r.body);
       const defaultImageData = DefaultImageData({
-        label: domain.label,
-        tld: domain.extension as UnstoppableDomainTld,
+        domain,
         fontSize: 24,
       });
       expect(res.image_data).to.equal(defaultImageData);
@@ -590,8 +588,7 @@ describe('MetaDataController', () => {
         .send()
         .then((r) => r.body);
       const defaultImageData = DefaultImageData({
-        label: domain.label,
-        tld: domain.extension as UnstoppableDomainTld,
+        domain,
         fontSize: 24,
       });
       expect(res.image_data).to.equal(defaultImageData);
@@ -622,8 +619,7 @@ describe('MetaDataController', () => {
         .then((r) => r.body);
       expect(response).to.deep.eq({
         image_data: DefaultImageData({
-          label: 'unknown',
-          tld: UnstoppableDomainTlds.Crypto,
+          domain: new Domain({ name: 'unknown.crypto' }),
           fontSize: 24,
         }),
       });
@@ -647,10 +643,10 @@ describe('MetaDataController', () => {
         .send()
         .then((r) => r.body);
 
+      const domain = new Domain({ name: uns.name });
       expect(response).to.deep.eq({
         image_data: DefaultImageData({
-          label: uns.label,
-          tld: uns.tld as UnstoppableDomainTld,
+          domain,
           fontSize: 16,
         }),
       });
@@ -661,8 +657,7 @@ describe('MetaDataController', () => {
         .then((r) => r.body);
       expect(responseWithName).to.deep.eq({
         image_data: DefaultImageData({
-          label: uns.label,
-          tld: uns.tld as UnstoppableDomainTld,
+          domain,
           fontSize: 16,
         }),
       });

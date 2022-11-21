@@ -2,8 +2,10 @@ import { Domain } from '../models';
 import { IsZilDomain } from '../services/Resolution';
 import {
   AllDomainTlds,
-  EvmUnstoppableDomainTlds,
-  UnsupportedTlds,
+  DeprecatedTld,
+  DeprecatedTlds,
+  SupportedTld,
+  SupportedTlds,
 } from '../types/common';
 import { eip137Namehash, znsNamehash } from './namehash';
 
@@ -41,11 +43,6 @@ export const findDomainByNameOrToken = async (
   const tokenName = normalizeDomainOrToken(domainOrToken);
   const domainName = normalizeDomainName(domainOrToken);
 
-  const supportedTLD = isSupportedTLD(domainOrToken);
-  if (!supportedTLD) {
-    return undefined;
-  }
-
   let domain =
     (await Domain.findByNode(tokenName, undefined, true)) ||
     (await Domain.findOnChainNoSafe(tokenName));
@@ -53,13 +50,22 @@ export const findDomainByNameOrToken = async (
   if (!domain && IsZilDomain(domainName)) {
     domain = await Domain.findByNode(znsNamehash(domainName), undefined, true);
   }
+  const supportedTLD = domain ? isSupportedTLD(domain.name) : false;
+  if (!supportedTLD) {
+    return undefined;
+  }
 
   return domain;
 };
 
-export const isSupportedTLD = (domainName: string) => {
+export const isSupportedTLD = (domainName: string): boolean => {
   const tld = getDomainNameTld(domainName);
-  return !UnsupportedTlds.includes(tld as EvmUnstoppableDomainTlds);
+  return SupportedTlds.includes(tld as SupportedTld);
+};
+
+export const isDeprecatedTLD = (domainName: string): boolean => {
+  const tld = getDomainNameTld(domainName);
+  return DeprecatedTlds.includes(tld as DeprecatedTld);
 };
 
 export const splitDomain = (

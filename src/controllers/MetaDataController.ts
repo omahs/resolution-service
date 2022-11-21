@@ -17,11 +17,7 @@ import {
   DefaultImageData,
   DeprecatedBackgroundColor,
 } from '../utils/generalImage';
-import {
-  MetadataImageFontSize,
-  UnstoppableDomainTld,
-  UnstoppableDomainTlds,
-} from '../types/common';
+import { MetadataImageFontSize, UnstoppableDomainTlds } from '../types/common';
 import { pathThatSvg } from 'path-that-svg';
 import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 import { env } from '../env';
@@ -45,7 +41,12 @@ import {
 import { Domain, DomainsResolution } from '../models';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
-import { belongsToTld, findDomainByNameOrToken } from '../utils/domain';
+import {
+  belongsToTld,
+  findDomainByNameOrToken,
+  isDeprecatedTLD,
+  isSupportedTLD,
+} from '../utils/domain';
 import RateLimiter from '../middleware/RateLimiter';
 
 const DEFAULT_IMAGE_URL = (name: string) =>
@@ -216,10 +217,7 @@ export class MetaDataController {
     }
     const resolution = getDomainResolution(domain);
 
-    const socialPictureValue = belongsToTld(
-      domain.name,
-      UnstoppableDomainTlds.Coin,
-    )
+    const socialPictureValue = isDeprecatedTLD(domain.name)
       ? ''
       : resolution.resolution['social.picture.value'];
 
@@ -252,10 +250,7 @@ export class MetaDataController {
     };
 
     if (!this.isDomainWithCustomImage(domain.name) && !socialPictureValue) {
-      metadata.background_color = belongsToTld(
-        domain.name,
-        UnstoppableDomainTlds.Coin,
-      )
+      metadata.background_color = isDeprecatedTLD(domain.name)
         ? DeprecatedBackgroundColor
         : BackgroundColor;
     }
@@ -277,11 +272,7 @@ export class MetaDataController {
       return { image_data: '' };
     }
 
-    if (
-      domain &&
-      resolution &&
-      !belongsToTld(domain.name, UnstoppableDomainTlds.Coin)
-    ) {
+    if (domain && resolution && !isDeprecatedTLD(domain.name)) {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
@@ -356,6 +347,24 @@ export class MetaDataController {
     domainOrToken: string,
   ): Promise<OpenSeaMetadata> {
     const name = domainOrToken.includes('.') ? domainOrToken : null;
+
+    if (
+      name &&
+      !isSupportedTLD(name) &&
+      // We still want to return metadata for deprecated domains
+      !isDeprecatedTLD(name)
+    ) {
+      return {
+        name: null,
+        description: null,
+        properties: {
+          records: {},
+        },
+        external_url: null,
+        attributes: [],
+        image: null,
+      };
+    }
     const description = name
       ? this.getDomainDescription(new Domain({ name }), {})
       : null;
@@ -469,13 +478,11 @@ export class MetaDataController {
     name: string,
     resolution: Record<string, string>,
   ): Promise<string> {
-    const splittedName = name.replace(/\.svg/g, '').split('.');
-    const extension = splittedName.pop() || '';
-    const label = splittedName.join('.');
+    const domain = new Domain({ name });
 
-    // .coin TLD is deprecated, UD does not support record updates anymore
-    if (extension === UnstoppableDomainTlds.Coin) {
-      return this.generateDefaultImageData(label, extension);
+    // TLD is deprecated, UD does not support record updates anymore
+    if (isDeprecatedTLD(name)) {
+      return this.generateDefaultImageData(domain);
     }
 
     if (this.isDomainWithCustomImage(name)) {
@@ -503,29 +510,25 @@ export class MetaDataController {
           `Failed to generate image data from the following endpoint: ${imagePathFromDomain}`,
         );
         logger.error(error);
-        return this.generateDefaultImageData(label, extension);
+        return this.generateDefaultImageData(domain);
       }
     }
-    return this.generateDefaultImageData(label, extension);
+    return this.generateDefaultImageData(domain);
   }
 
-  private generateDefaultImageData(label: string, tld: string) {
+  private generateDefaultImageData(domain: Domain) {
     let fontSize: MetadataImageFontSize = 24;
-    if (label.length > 21) {
+    if (domain.label.length > 21) {
       fontSize = 20;
     }
-    if (label.length > 24) {
+    if (domain.label.length > 24) {
       fontSize = 18;
     }
-    if (label.length > 27) {
+    if (domain.label.length > 27) {
       fontSize = 16;
     }
-    if (label.length > 30) {
-      label = label.substring(0, 29).concat('...');
-    }
     return DefaultImageData({
-      label,
-      tld: tld as UnstoppableDomainTld,
+      domain,
       fontSize,
     });
   }

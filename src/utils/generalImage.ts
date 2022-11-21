@@ -1,8 +1,10 @@
+import { Domain } from '../models';
 import {
   MetadataImageFontSize,
   UnstoppableDomainTld,
   UnstoppableDomainTlds,
 } from '../types/common';
+import { isDeprecatedTLD } from './domain';
 
 export const BackgroundColor = '4C47F7';
 export const DeprecatedBackgroundColor = 'CCCCCC';
@@ -14,25 +16,32 @@ const smallFontSizeTlds: UnstoppableDomainTld[] = [
   UnstoppableDomainTlds.Unstoppable,
 ];
 
-export function DefaultImageData(args: {
-  label: string;
-  tld: UnstoppableDomainTld;
+export function DefaultImageData({
+  domain,
+  fontSize,
+}: {
+  domain: Domain;
   fontSize: MetadataImageFontSize;
 }): string {
-  const backgroundColorHash =
-    args.tld === UnstoppableDomainTlds.Coin
-      ? `#${DeprecatedBackgroundColor}`
-      : `#${BackgroundColor}`;
-  const tldStrokeHash =
-    args.tld === UnstoppableDomainTlds.Coin ? '#999999' : '#2FE9FF';
-  const labelX = smallFontSizeTlds.includes(args.tld) ? -26 : 0;
-  const labelWidth = smallFontSizeTlds.includes(args.tld) ? 150 : 100;
+  const backgroundColorHash = isDeprecatedTLD(domain.name)
+    ? `#${DeprecatedBackgroundColor}`
+    : `#${BackgroundColor}`;
+  const tldStrokeHash = isDeprecatedTLD(domain.name) ? '#999999' : '#2FE9FF';
+  const labelX = smallFontSizeTlds.includes(
+    domain.extension as UnstoppableDomainTld,
+  )
+    ? -26
+    : 0;
+  const labelWidth = smallFontSizeTlds.includes(
+    domain.extension as UnstoppableDomainTld,
+  )
+    ? 150
+    : 100;
   const label =
-    args.label.length > 30
-      ? args.label.substring(0, 29).concat('...')
-      : args.label;
-  const logoRayFillHash =
-    args.tld === UnstoppableDomainTlds.Coin ? '#999999' : '#2FE9FF';
+    domain.label.length > 30
+      ? domain.label.substring(0, 29).concat('...')
+      : domain.label;
+  const logoRayFillHash = isDeprecatedTLD(domain.name) ? '#999999' : '#2FE9FF';
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="250" height="250" viewBox="0 0 250 250" version="1.1" fill="none">
     <title>Unstoppable Domains domain</title>
@@ -43,13 +52,11 @@ export function DefaultImageData(args: {
         <g transform="translate(5.000000, 43.000000)">
           <rect x="${labelX}" y="0" width="${labelWidth}" height="34" stroke="${tldStrokeHash}" stroke-width="2.112px" rx="17" />
           <text  dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="bold" fill="#FFFFFF" font-family="${FontFamily}">
-            <tspan x="19%" y="20">.${args.tld.toUpperCase()}</tspan>
+            <tspan x="19%" y="20">.${domain.extension.toUpperCase()}</tspan>
           </text>
         </g>
 
-        <text text-anchor="middle" font-family="${FontFamily}" font-size="${
-    args.fontSize
-  }" font-weight="bold" fill="#FFFFFF">
+        <text text-anchor="middle" font-family="${FontFamily}" font-size="${fontSize}" font-weight="bold" fill="#FFFFFF">
           <tspan x="22.5%" y="26">${label}</tspan>
         </text>
       </g>
