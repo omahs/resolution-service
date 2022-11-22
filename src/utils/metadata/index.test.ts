@@ -4,8 +4,29 @@ import {
   AttributeCategory,
   getAttributeCharacterSet,
   getNumberClub,
+  getAttributeType,
+  AttributeType,
 } from '.';
 import { Domain } from '../../models';
+
+describe('getAttributeType', () => {
+  it('should return subdomain', () => {
+    const domainNames = ['test.testing.nft', 'efef.efff.x', 'wef.efe.f.ef.0.x'];
+    for (const domainName of domainNames) {
+      expect(getAttributeType(new Domain({ name: domainName }))).to.equal(
+        AttributeType.Subdomain,
+      );
+    }
+  });
+  it('should return standard', () => {
+    const domainNames = ['test.nft', 'efef.x', 'x'];
+    for (const domainName of domainNames) {
+      expect(getAttributeType(new Domain({ name: domainName }))).to.equal(
+        AttributeType.Standard,
+      );
+    }
+  });
+});
 
 describe('getNumberClub', () => {
   it('should not return anything', () => {

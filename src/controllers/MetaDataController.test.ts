@@ -143,7 +143,7 @@ describe('MetaDataController', () => {
         { trait_type: DomainAttributeTrait.Length, value: 10 },
         {
           trait_type: DomainAttributeTrait.Type,
-          value: AttributeType.Standard,
+          value: AttributeType.Subdomain,
         },
         {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,

@@ -443,7 +443,7 @@ export class MetaDataController {
       },
       {
         trait_type: DomainAttributeTrait.Type,
-        value: getAttributeType(domain.name),
+        value: getAttributeType(domain),
       },
     ];
     const category = getAttributeCategory(domain);

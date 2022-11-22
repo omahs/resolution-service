@@ -32,6 +32,7 @@ export enum AttributeCharacterSet {
 
 export enum AttributeType {
   Standard = 'standard',
+  Subdomain = 'subdomain',
   Animal = 'animal',
   Premium = 'premium',
 }
@@ -94,13 +95,16 @@ export const getAttributeCategory = (
   return getNumberClub(domain);
 };
 
-export const getAttributeType = (domainName: string): AttributeType => {
+export const getAttributeType = (domain: Domain): AttributeType => {
   const AnimalHelper: AnimalDomainHelper = new AnimalDomainHelper();
-  if (PremiumDomains.includes(domainName)) {
+  if (PremiumDomains.includes(domain.name)) {
     return AttributeType.Premium;
   }
-  if (AnimalHelper.isAnimalDomain(domainName)) {
+  if (AnimalHelper.isAnimalDomain(domain.name)) {
     return AttributeType.Animal;
+  }
+  if (domain.level > 2) {
+    return AttributeType.Subdomain;
   }
   return AttributeType.Standard;
 };
