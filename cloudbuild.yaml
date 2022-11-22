@@ -234,7 +234,7 @@ substitutions:
   _DEPLOY_REGION: us-central1
   _SERVICE_NAME: resolution-staging
   _RESOLUTION_SERVICE_POSTGRES_HOST: TBD
-  _SKIP_DEPLOY_WORKER: true
+  _SKIP_DEPLOY_WORKER: "true"
 tags:
   - gcp-cloud-build-deploy-cloud-run
   - resolution-service
