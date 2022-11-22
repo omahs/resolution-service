@@ -140,6 +140,7 @@ steps:
     args:
       - "-c"
       - |
+        #!/usr/bin/env bash
         if [ "$_SKIP_DEPLOY_WORKER" != "true" ]
         then
           gcloud run services update $_SERVICE_NAME-workers --platform=managed --quiet \
