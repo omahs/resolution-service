@@ -89,7 +89,7 @@ describe('MetaDataController', () => {
         { trait_type: DomainAttributeTrait.Length, value: 10 },
         {
           trait_type: DomainAttributeTrait.Type,
-          value: AttributeType.Standard,
+          value: AttributeType.Clean,
         },
         {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -198,7 +198,7 @@ describe('MetaDataController', () => {
         { trait_type: DomainAttributeTrait.Length, value: 10 },
         {
           trait_type: DomainAttributeTrait.Type,
-          value: AttributeType.Standard,
+          value: AttributeType.Clean,
         },
         {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -366,7 +366,7 @@ describe('MetaDataController', () => {
           { trait_type: DomainAttributeTrait.Length, value: 7 },
           {
             trait_type: DomainAttributeTrait.Type,
-            value: AttributeType.Standard,
+            value: AttributeType.Clean,
           },
           {
             trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -418,7 +418,7 @@ describe('MetaDataController', () => {
           { trait_type: DomainAttributeTrait.Length, value: uns.label.length },
           {
             trait_type: DomainAttributeTrait.Type,
-            value: AttributeType.Standard,
+            value: AttributeType.Clean,
           },
           {
             trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -503,7 +503,7 @@ describe('MetaDataController', () => {
           },
           {
             trait_type: DomainAttributeTrait.Type,
-            value: AttributeType.Standard,
+            value: AttributeType.Clean,
           },
           {
             trait_type: DomainAttributeTrait.AttributeCharacterSet,
