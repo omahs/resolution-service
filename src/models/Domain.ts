@@ -112,6 +112,15 @@ export default class Domain extends Model {
     return this.reverseResolutions.length > 0;
   }
 
+  static async getChildrenCountByParentName(
+    name: string,
+    repository: Repository<Domain> = this.getRepository(),
+  ): Promise<number> {
+    return repository.count({
+      where: { parent: { name } },
+      relations: ['parent'],
+    });
+  }
   static async findAllByNodes(
     nodes: string[],
     repository: Repository<Domain> = this.getRepository(),

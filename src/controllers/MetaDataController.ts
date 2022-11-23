@@ -233,7 +233,7 @@ export class MetaDataController {
       domain,
       resolution.resolution,
     );
-    const DomainAttributeTrait = this.getAttributeType(domain, {
+    const DomainAttributeTrait = await this.getAttributeType(domain, {
       verifiedNftPicture: isSocialPictureVerified,
     });
     const imageUrl = this.generateDomainImageUrl(domain.name);
@@ -368,7 +368,9 @@ export class MetaDataController {
     const description = name
       ? this.getDomainDescription(new Domain({ name }), {})
       : null;
-    const attributes = name ? this.getAttributeType(new Domain({ name })) : [];
+    const attributes = name
+      ? await this.getAttributeType(new Domain({ name }))
+      : [];
     const image = name ? this.generateDomainImageUrl(name) : null;
     const external_url = name
       ? `https://unstoppabledomains.com/search?searchTerm=${name}`
@@ -422,12 +424,12 @@ export class MetaDataController {
     return '';
   }
 
-  private getAttributeType(
+  private async getAttributeType(
     domain: Domain,
     meta?: {
       verifiedNftPicture?: boolean;
     },
-  ): OpenSeaMetadataAttribute[] {
+  ): Promise<OpenSeaMetadataAttribute[]> {
     const attributes: OpenSeaMetadataAttribute[] = [
       {
         trait_type: DomainAttributeTrait.Ending,
@@ -443,7 +445,7 @@ export class MetaDataController {
       },
       {
         trait_type: DomainAttributeTrait.Type,
-        value: getAttributeType(domain),
+        value: await getAttributeType(domain),
       },
     ];
     const category = getAttributeCategory(domain);
