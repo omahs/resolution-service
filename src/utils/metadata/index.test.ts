@@ -21,14 +21,6 @@ describe('getAttributeType', () => {
       );
     }
   });
-  it('should return standard', async () => {
-    const domainNames = ['test.nft', 'efef.x', 'x'];
-    for (const domainName of domainNames) {
-      expect(await getAttributeType(new Domain({ name: domainName }))).to.equal(
-        AttributeType.Standard,
-      );
-    }
-  });
   it('should return clean', async () => {
     const domainNames = ['test.nft', 'tsioerj.x'];
     for (const domainName of domainNames) {
