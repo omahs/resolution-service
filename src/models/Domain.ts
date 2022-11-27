@@ -118,6 +118,7 @@ export default class Domain extends Model {
   ): Promise<boolean> {
     const child = await repository.findOne({
       where: { parent: { name } },
+      relations: ['parent'],
     });
     return Boolean(child);
   }
