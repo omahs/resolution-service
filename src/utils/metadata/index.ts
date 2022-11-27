@@ -109,7 +109,7 @@ export const getAttributeType = async (
   if (domain.level > 2) {
     return AttributeType.Subdomain;
   }
-  if ((await Domain.getChildrenCountByParentName(domain.name)) === 0) {
+  if (!(await Domain.isNameParentOfChild(domain.name))) {
     return AttributeType.Clean;
   }
   return AttributeType.Standard;
