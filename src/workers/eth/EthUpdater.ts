@@ -430,7 +430,7 @@ export class EthUpdater {
         this.logger.info(
           `Processing event: type - '${event.event}'; args - ${JSON.stringify(
             event.args,
-          )}`,
+          )}; error - ${event.decodeError}`,
         );
         switch (event.event) {
           case 'Transfer': {
@@ -477,7 +477,7 @@ export class EthUpdater {
           default:
             break;
         }
-        if (save) {
+        if (save && event.event) {
           await this.saveEvent(event, manager);
         }
         lastProcessedEvent = event;
