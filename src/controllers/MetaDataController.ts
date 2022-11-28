@@ -402,16 +402,11 @@ export class MetaDataController {
       return "This is the only TLD on the Unstoppable registry. It's not owned by anyone.".concat(
         ipfsDescriptionPart,
       );
-    } else if (domain.level === 2 || domain.level === 3) {
-      const description = belongsToTld(domain.name, UnstoppableDomainTlds.Coin)
-        ? '.coin domains are no longer supported by Unstoppable Domains. As a result, records of such domains cannot be updated. Learn more at our blog: https://unstoppabledomains.com/blog/coin. '
-        : 'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.';
-      return description.concat(ipfsDescriptionPart);
     }
-
-    return 'BE CAREFUL! This is a subdomain. Even after purchasing this name, the parent domain has the right to revoke ownership of this domain at anytime. Unless the parent is a smart contract specifically designed otherwise.'.concat(
-      ipfsDescriptionPart,
-    );
+    const description = belongsToTld(domain.name, UnstoppableDomainTlds.Coin)
+      ? '.coin domains are no longer supported by Unstoppable Domains. As a result, records of such domains cannot be updated. Learn more at our blog: https://unstoppabledomains.com/blog/coin. '
+      : 'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.';
+    return description.concat(ipfsDescriptionPart);
   }
 
   private getIpfsDescriptionPart(records: Record<string, string>): string {

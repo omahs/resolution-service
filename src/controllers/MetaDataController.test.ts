@@ -16,11 +16,7 @@ import {
   LayerTestFixture,
 } from '../utils/testing/LayerFixturesHelper';
 import { EthereumHelper } from '../utils/testing/EthereumTestsHelper';
-import {
-  Blockchain,
-  UnstoppableDomainTld,
-  UnstoppableDomainTlds,
-} from '../types/common';
+import { Blockchain, UnstoppableDomainTlds } from '../types/common';
 import { env } from '../env';
 import Domain from '../models/Domain';
 import {
@@ -148,6 +144,51 @@ describe('MetaDataController', () => {
         {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,
           value: AttributeCharacterSet.Letter,
+        },
+      ];
+      expect(resWithName.attributes.length).eq(correctAttributes.length);
+      expect(resWithName.attributes).to.have.deep.members(correctAttributes);
+    });
+
+    it('should work with a N-th level domain', async () => {
+      const name = 'sub1.sub2.sub3.domain.crypto';
+      const node = eip137Namehash(name);
+      const { domain } = await DomainTestHelper.createTestDomain({
+        name,
+        node,
+      });
+      const resWithName = await supertest(api)
+        .get(`/metadata/${domain.name}`)
+        .send()
+        .then((r) => r.body);
+
+      const resWithToken = await supertest(api)
+        .get(`/metadata/${domain.node}`)
+        .send()
+        .then((r) => r.body);
+
+      expect(resWithName).to.be.deep.equal(resWithToken);
+      expect(resWithName.name).eq(domain.name);
+      expect(resWithName.description).eq(
+        'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.',
+      );
+      expect(resWithName.external_url).eq(
+        `https://unstoppabledomains.com/search?searchTerm=${name}`,
+      );
+      expect(resWithName.image).eq(
+        `https://metadata.unstoppabledomains.com/image-src/${name}.svg`,
+      );
+      const correctAttributes = [
+        { trait_type: DomainAttributeTrait.Level, value: 5 },
+        { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
+        { trait_type: DomainAttributeTrait.Length, value: 21 },
+        {
+          trait_type: DomainAttributeTrait.Type,
+          value: AttributeType.Subdomain,
+        },
+        {
+          trait_type: DomainAttributeTrait.AttributeCharacterSet,
+          value: AttributeCharacterSet.Alphanumeric,
         },
       ];
       expect(resWithName.attributes.length).eq(correctAttributes.length);
