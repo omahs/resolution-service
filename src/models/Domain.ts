@@ -119,6 +119,7 @@ export default class Domain extends Model {
     const child = await repository.findOne({
       where: { parent: { name } },
       relations: ['parent'],
+      cache: true,
     });
     return Boolean(child);
   }
