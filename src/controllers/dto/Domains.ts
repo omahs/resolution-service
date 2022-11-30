@@ -24,7 +24,7 @@ import SupportedKeysJson from 'uns/resolver-keys.json';
 // Need to specity types explicitly because routing-controllers gets easily confused
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 
-export class DomainMetadata {
+export class DomainBaseMetadata {
   @IsString()
   domain: string = '';
 
@@ -32,6 +32,11 @@ export class DomainMetadata {
   @IsString()
   owner: string | null = null;
 
+  @IsBoolean()
+  reverse: boolean = false;
+}
+
+export class DomainMetadata extends DomainBaseMetadata {
   @IsOptional()
   @IsString()
   resolver: string | null = null;
@@ -49,9 +54,11 @@ export class DomainMetadata {
   @IsOptional()
   @IsString()
   registry: string | null = null;
+}
 
-  @IsBoolean()
-  reverse: boolean = false;
+export class DomainBaseResponse {
+  @ValidateNested()
+  meta: DomainBaseMetadata = new DomainBaseMetadata();
 }
 
 export class DomainResponse {

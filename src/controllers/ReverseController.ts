@@ -1,6 +1,17 @@
-import { Get, JsonController, Param, UseBefore } from 'routing-controllers';
+import {
+  Get,
+  Post,
+  JsonController,
+  Param,
+  Body,
+  UseBefore,
+} from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
-import { DomainResponse } from './dto/Domains';
+import { DomainResponse, DomainBaseResponse } from './dto/Domains';
+import {
+  BulkReverseQueryParams,
+  BulkReverseQueryResponse,
+} from './dto/Reverse';
 import {
   getDomainResolution,
   getReverseResolution,
@@ -17,7 +28,7 @@ export class ReverseController {
   @Get('/reverse/:address')
   @ResponseSchema(DomainResponse)
   async getReverse(@Param('address') address: string): Promise<DomainResponse> {
-    const reverse = await getReverseResolution(address);
+    const [reverse] = await getReverseResolution([address]);
     const response = new DomainResponse();
     if (reverse) {
       const domain = reverse.domain;
@@ -35,5 +46,31 @@ export class ReverseController {
     }
 
     return response;
+  }
+
+  @Post('/reverse/query')
+  @ResponseSchema(BulkReverseQueryResponse)
+  async getReverses(
+    @Body() params: BulkReverseQueryParams,
+  ): Promise<BulkReverseQueryResponse> {
+    const { addresses } = params;
+
+    const reverses = await getReverseResolution(addresses, {
+      cache: true,
+      withDomainResolutions: false,
+    });
+
+    const data = reverses.map(({ domain, reverseAddress }) => {
+      const response = new DomainBaseResponse();
+      response.meta = {
+        domain: domain.name,
+        owner: reverseAddress,
+        reverse: true,
+      };
+
+      return response;
+    });
+
+    return { data };
   }
 }

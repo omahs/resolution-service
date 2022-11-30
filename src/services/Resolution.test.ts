@@ -179,12 +179,12 @@ describe('Resolution service', () => {
     });
 
     it('should return reverse resolution for l1', async () => {
-      const reverse = await getReverseResolution(l1ReverseAddr);
+      const [reverse] = await getReverseResolution([l1ReverseAddr]);
       expect(reverse?.domain?.name).to.equal(l1Domain.name);
     });
 
     it('should return reverse resolution for l2', async () => {
-      const reverse = await getReverseResolution(l2ReverseAddr);
+      const [reverse] = await getReverseResolution([l2ReverseAddr]);
       expect(reverse?.domain?.name).to.equal(l2Domain.name);
     });
 
@@ -198,24 +198,42 @@ describe('Resolution service', () => {
         await l2Domain.save();
       }
 
-      const reverse = await getReverseResolution(l1ReverseAddr);
+      const [reverse] = await getReverseResolution([l1ReverseAddr]);
       expect(reverse?.domain?.name).to.equal(l1Domain.name);
     });
 
-    it('should return undefined if no reverse resolution', async () => {
-      const removed = l2Domain.removeReverseResolution(
+    it('should return empty arrary if no reverse resolution', async () => {
+      l2Domain.removeReverseResolution(
         Blockchain.MATIC,
         env.APPLICATION.POLYGON.NETWORK_ID,
       );
       await l2Domain.save();
 
-      const reverse = await getReverseResolution(l2ReverseAddr);
-      expect(reverse).to.be.undefined;
+      const reverse = await getReverseResolution([l2ReverseAddr]);
+      expect(reverse).to.be.empty;
     });
 
-    it('should return undefined for invalid address', async () => {
-      const reverse = await getReverseResolution('invalid');
-      expect(reverse).to.be.undefined;
+    it('should return empty arrary for invalid address', async () => {
+      const reverse = await getReverseResolution(['invalid']);
+      expect(reverse).to.be.empty;
+    });
+
+    it('should not return domain.resolutions if withDomainResolutions is false', async () => {
+      const [reverse1, reverse2] = await getReverseResolution([
+        l1ReverseAddr,
+        l2ReverseAddr,
+      ]);
+      expect(reverse1?.domain?.resolutions).to.be.empty;
+      expect(reverse2?.domain?.resolutions).to.be.empty;
+    });
+
+    it('should return multiple reverse resolutions', async () => {
+      const [reverse1, reverse2] = await getReverseResolution([
+        l1ReverseAddr,
+        l2ReverseAddr,
+      ]);
+      expect(reverse1?.domain?.name).to.equal(l1Domain.name);
+      expect(reverse2?.domain?.name).to.equal(l2Domain.name);
     });
   });
 });

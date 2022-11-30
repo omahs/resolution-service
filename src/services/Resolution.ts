@@ -3,6 +3,7 @@ import { Domain, DomainsResolution, DomainsReverseResolution } from '../models';
 import { Blockchain } from '../types/common';
 import { isSupportedTLD } from '../utils/domain';
 import { ETHAddressRegex } from '../utils/ethersUtils';
+import { In } from 'typeorm';
 
 export function IsZilDomain(name: string): boolean {
   const tokens = name.split('.');
@@ -37,36 +38,70 @@ export function getDomainResolution(domain: Domain): DomainsResolution {
   return resolution;
 }
 
+/**
+ * Get reverse resolution for a given ETH wallet address
+ * @param addresses ETH wallet address
+ * @param options
+ * @param options.cache caching the query for 10 mins
+ * @param options.withDomainResolutions BE CAREFUL to use the `withDomainResolutions` option.
+ * If it's set to `false`, it won't contain `domain.resolutions`
+ * data. Only set to `false` for faster query and make sure
+ * you don't need `domain.resolutions`.
+ * @returns DomainsReverseResolution that may or may not contain `domain.resolutions`
+ * depending on `options.withDomainResolutions`
+ */
 export async function getReverseResolution(
-  address: string,
-): Promise<DomainsReverseResolution | undefined> {
-  if (!address.match(ETHAddressRegex)) {
-    return undefined;
-  }
+  addresses: string[],
+  options: {
+    cache?: boolean;
+    withDomainResolutions?: boolean;
+  } = {
+    cache: false,
+    withDomainResolutions: true,
+  },
+): Promise<DomainsReverseResolution[]> {
+  const { cache, withDomainResolutions } = options;
+  const CACHE_TIME = 600000; // 10 mins
 
-  let reverse = await DomainsReverseResolution.findOne({
+  const validAddresses = addresses.filter((addr) =>
+    addr.match(ETHAddressRegex),
+  );
+  const addressSet = new Set(validAddresses); // remove duplicate
+  const addressArr = [...addressSet];
+
+  const reverseOnETH = await DomainsReverseResolution.find({
     where: {
       networkId: env.APPLICATION.ETHEREUM.NETWORK_ID,
       blockchain: Blockchain.ETH,
-      reverseAddress: address,
+      reverseAddress: In(addressArr),
     },
-    relations: ['domain', 'domain.resolutions'],
+    relations: [
+      'domain',
+      ...(withDomainResolutions ? ['domain.resolutions'] : []),
+    ],
+    cache: cache ? CACHE_TIME : undefined,
   });
-  if (!reverse) {
-    reverse = await DomainsReverseResolution.findOne({
-      where: {
-        networkId: env.APPLICATION.POLYGON.NETWORK_ID,
-        blockchain: Blockchain.MATIC,
-        reverseAddress: address,
-      },
-      relations: ['domain', 'domain.resolutions'],
-    });
-  }
 
-  const domainName = reverse?.domain?.name as string;
-  if (domainName && !isSupportedTLD(domainName)) {
-    return undefined;
-  }
+  const addressOnETH = reverseOnETH.map((reverse) => reverse.reverseAddress);
+  const addressOnETHSet = new Set(addressOnETH); // turn into a set for O(1) lookup
+  const addressNotOnETH = addressArr.filter(
+    (address) => !addressOnETHSet.has(address),
+  );
 
-  return reverse;
+  const reverseOnMATIC = await DomainsReverseResolution.find({
+    where: {
+      networkId: env.APPLICATION.POLYGON.NETWORK_ID,
+      blockchain: Blockchain.MATIC,
+      reverseAddress: In(addressNotOnETH),
+    },
+    relations: [
+      'domain',
+      ...(withDomainResolutions ? ['domain.resolutions'] : []),
+    ],
+    cache: cache ? CACHE_TIME : undefined,
+  });
+
+  return [...reverseOnETH, ...reverseOnMATIC].filter((reverse) =>
+    isSupportedTLD(reverse.domain.name),
+  );
 }
