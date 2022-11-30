@@ -4,7 +4,9 @@ import {
   ArrayUnique,
   Matches,
   ArrayMaxSize,
+  ValidateNested,
 } from 'class-validator';
+import { JSONSchema } from 'class-validator-jsonschema';
 import { ETHAddressRegex } from '../../utils/ethersUtils';
 import { DomainBaseResponse } from './Domains';
 
@@ -18,5 +20,13 @@ export class BulkReverseQueryParams {
 }
 
 export class BulkReverseQueryResponse {
-  data: Array<DomainBaseResponse>;
+  @ValidateNested()
+  @JSONSchema({
+    items: {
+      $ref: '#/components/schemas/DomainBaseResponse',
+    },
+    type: 'array',
+    $ref: '',
+  })
+  data: DomainBaseResponse[];
 }

@@ -49,6 +49,9 @@ export class ReverseController {
   }
 
   @Post('/reverse/query')
+  @OpenAPI({
+    summary: 'Get bulk reverse resolution',
+  })
   @ResponseSchema(BulkReverseQueryResponse)
   async getReverses(
     @Body() params: BulkReverseQueryParams,
