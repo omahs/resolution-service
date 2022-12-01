@@ -176,12 +176,15 @@ The full API reference [OpenAPI specification](https://resolve.unstoppabledomain
 
 | Endpoint | Description |
 | - | - |
-| **Service endpoints:** |
+| **Domain endpoints:** |
 | GET /domains | Gets the list of domains. |
 | GET /domains/:domainName | Gets the resolution of the specified domain. |
 | GET /records | Gets resolution records for multiple domains requested. |
 | GET /domains/:domainName/transfers/latest | Gets the transfer history of a domain name. |
+| **Reverse endpoints:** |
 | GET /reverse/:address | Gets the reverse record of a wallet address. |
+| POST /reverse/query | Gets the reverse record of multiple wallet addresses. |
+| **Service endpoints:** |
 | GET /supported_tlds | Gets all the domain endings supported by Unstoppable Domains. |
 | GET /status | Gets the synchronization status. |
 | GET /api-docs | Returns a swagger documentation page. |
