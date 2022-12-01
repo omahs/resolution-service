@@ -3,13 +3,23 @@ import { api } from '../api';
 import { expect } from 'chai';
 import { ApiKey, CnsRegistryEvent } from '../models';
 import { DomainTestHelper } from '../utils/testing/DomainTestHelper';
+import * as heap from '../utils/heap';
+import { HeapEvents } from '../types/heap';
 import { describe } from 'mocha';
+import sinon from 'sinon';
 
 describe('DomainsController', () => {
   let testApiKey: ApiKey;
+  let trackStub: any;
+  const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
 
   beforeEach(async () => {
     testApiKey = await ApiKey.createApiKey('testing key');
+    trackStub = sinon.stub(heap, 'track');
+  });
+
+  afterEach(async () => {
+    trackStub.restore();
   });
 
   describe('GET /domains/:domainName/transfers/latest', () => {
@@ -116,6 +126,15 @@ describe('DomainsController', () => {
           },
         ],
       });
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_LATEST_DOMAIN_TRANSFER,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          domainName: testDomain.name,
+          uri: `/domains/${testDomain.name}/transfers/latest`,
+        },
+      });
     });
 
     it('should return one result if domain has no transfers in another network', async () => {
@@ -169,6 +188,15 @@ describe('DomainsController', () => {
             blockchain: 'MATIC',
           },
         ],
+      });
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_LATEST_DOMAIN_TRANSFER,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          domainName: testDomain.name,
+          uri: `/domains/${testDomain.name}/transfers/latest`,
+        },
       });
     });
   });

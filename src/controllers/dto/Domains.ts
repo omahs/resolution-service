@@ -150,7 +150,7 @@ export class DomainsListQuery {
     };
   }
 
-  nextStargingAfter(domain: Domain | undefined) {
+  nextStartingAfter(domain: Domain | undefined) {
     return domain
       ? DomainsListQuery.SortFieldsMap[this.sortBy].getNextStartingAfterValue(
           domain,

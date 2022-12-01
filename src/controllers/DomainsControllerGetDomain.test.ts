@@ -9,6 +9,9 @@ import { getConnection } from 'typeorm';
 import { Blockchain } from '../types/common';
 import { ETHContracts } from '../contracts';
 import { describe } from 'mocha';
+import sinon from 'sinon';
+import * as heap from '../utils/heap';
+import { HeapEvents } from '../types/heap';
 
 describe('DomainsController', () => {
   let testApiKey: ApiKey;
@@ -39,14 +42,15 @@ describe('DomainsController', () => {
       domain.setResolution(resolution);
       await domain.save();
 
+      const domainName = 'brad.crypto';
       const res = await supertest(api)
-        .get('/domains/brad.crypto')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
       expect(res.body).containSubset({
         meta: {
-          domain: 'brad.crypto',
+          domain: domainName,
           owner: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
           resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
@@ -81,14 +85,15 @@ describe('DomainsController', () => {
       domain.setResolution(resolution);
       await domain.save();
 
+      const domainName = 'brad.crypto';
       const res = await supertest(api)
-        .get('/domains/brad.crypto')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
       expect(res.body).containSubset({
         meta: {
-          domain: 'brad.crypto',
+          domain: domainName,
           owner: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
           resolver: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
           registry: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
@@ -111,8 +116,9 @@ describe('DomainsController', () => {
     });
 
     it('should return non-minted domain', async () => {
+      const domainName = 'unminted-long-domain.crypto';
       const res = await supertest(api)
-        .get('/domains/unminted-long-domain.crypto')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.body).containSubset({
@@ -131,8 +137,9 @@ describe('DomainsController', () => {
     });
 
     it('should return non-minted domain when used a wrong tld', async () => {
+      const domainName = 'bobby.funnyrabbit';
       const res = await supertest(api)
-        .get('/domains/bobby.funnyrabbit')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
@@ -164,8 +171,9 @@ describe('DomainsController', () => {
         resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
       });
 
+      const domainName = 'test.coin';
       const res = await supertest(api)
-        .get('/domains/test.coin')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
 
@@ -196,8 +204,9 @@ describe('DomainsController', () => {
         },
         resolver: '0xb66DcE2DA6afAAa98F2013446dBCB0f4B0ab2842',
       });
+
       const res = await supertest(api)
-        .get('/domains/TESTdomainforCase.crypto')
+        .get(`/domains/TESTdomainforCase.crypto`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
@@ -234,8 +243,9 @@ describe('DomainsController', () => {
         networkId: env.APPLICATION.ETHEREUM.NETWORK_ID,
       });
 
+      let domainName = znsDomain.name;
       const znsResult = await supertest(api)
-        .get(`/domains/${znsDomain.name}`)
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(znsResult.status).eq(200);
@@ -243,15 +253,17 @@ describe('DomainsController', () => {
         env.APPLICATION.ZILLIQA.ZNS_REGISTRY_CONTRACT,
       );
 
+      domainName = cnsDomain.name;
       const cnsResult = await supertest(api)
-        .get(`/domains/${cnsDomain.name}`)
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(cnsResult.status).eq(200);
       expect(cnsResult.body.meta.registry).eq(ETHContracts.CNSRegistry.address);
 
+      domainName = unsDomain.name;
       const unsResult = await supertest(api)
-        .get(`/domains/${unsDomain.name}`)
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(unsResult.status).eq(200);
@@ -259,8 +271,9 @@ describe('DomainsController', () => {
     });
 
     it('should return non-minted domain ending on .zil', async () => {
+      const domainName = 'notreal134522.zil';
       const res = await supertest(api)
-        .get('/domains/notreal134522.zil')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
@@ -289,8 +302,10 @@ describe('DomainsController', () => {
         node: '0x8052ef7b6b4eee4bc0d7014f0e216db6270bf0055bcd3582368601f2de5e60f0',
         resolution: {},
       });
+
+      const domainName = 'sometestforzil.zil';
       const res = await supertest(api)
-        .get('/domains/sometestforzil.zil')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
@@ -319,8 +334,10 @@ describe('DomainsController', () => {
         node: '0x067b0a0d1db14a412c12c3e48b5a54209744626a74fabdb534da79dbcca52c63',
         resolution: {},
       });
+
+      const domainName = 'sometestforzil.zil';
       const res = await supertest(api)
-        .get('/domains/sometestforzil.zil')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
@@ -349,8 +366,10 @@ describe('DomainsController', () => {
         node: '0x067b0a0d1db14a412c12c3e48b5a54209744626a74fabdb534da79dbcca52c63',
         resolution: {},
       });
+
+      const domainName = 'sometestforzil.zil';
       const res = await supertest(api)
-        .get('/domains/sometestforzil.zil')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
@@ -388,8 +407,9 @@ describe('DomainsController', () => {
         resolver: '0xb66DcE2DA6afAAa98F2013446dBCB0f4B0ab2842',
       });
 
+      const domainName = 'brad.crypto';
       const res = await supertest(api)
-        .get('/domains/brad.crypto')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
 
@@ -439,8 +459,9 @@ describe('DomainsController', () => {
       domain.setResolution(resolution);
       await domain.save();
 
+      const domainName = 'brad.crypto';
       const res = await supertest(api)
-        .get('/domains/brad.crypto')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
@@ -481,8 +502,9 @@ describe('DomainsController', () => {
       domain.setResolution(resolution);
       await domain.save();
 
+      const domainName = 'brad.crypto';
       const res = await supertest(api)
-        .get('/domains/brad.crypto')
+        .get(`/domains/${domainName}`)
         .auth(testApiKey.apiKey, { type: 'bearer' })
         .send();
       expect(res.status).eq(200);
@@ -500,6 +522,78 @@ describe('DomainsController', () => {
           'crypto.ETH.address': '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
         },
       });
+    });
+
+    it('should call the tracking event on a successful response', async () => {
+      const trackStub = sinon.stub(heap, 'track');
+      const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
+      let domainName = 'brad.crypto';
+      let res = await supertest(api)
+        .get(`/domains/${domainName}`)
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
+      expect(res.status).eq(200);
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_DOMAIN,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          domainName,
+          uri: `/domains/${domainName}`,
+        },
+      });
+
+      domainName = 'unminted-long-domain.crypto';
+      res = await supertest(api)
+        .get(`/domains/${domainName}`)
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_DOMAIN,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          domainName,
+          uri: `/domains/${domainName}`,
+        },
+      });
+
+      domainName = 'bobby.funnyrabbit';
+      res = await supertest(api)
+        .get(`/domains/${domainName}`)
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_DOMAIN,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          domainName,
+          uri: `/domains/${domainName}`,
+        },
+      });
+      trackStub.restore();
+    });
+
+    it('should not call the tracking event on an unsuccessful response', async () => {
+      const trackStub = sinon.stub(heap, 'track');
+      let res = await supertest(api).get('/domains/brad.crypto').send();
+      expect(res.status).eq(403);
+      expect(res.body).containSubset({
+        message: 'Please provide a valid API key.',
+      });
+      expect(trackStub).to.not.be.called;
+
+      const connection = getConnection();
+      connection.close();
+      res = await supertest(api)
+        .get('/domains/brad.crypto')
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
+      expect(res.status).eq(500);
+      expect(trackStub).to.not.be.called;
+      await connection.connect(); // restore the connection to the db;
+      trackStub.restore();
     });
   });
 

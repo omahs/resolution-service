@@ -210,6 +210,12 @@ export const env = {
       ),
       WINDOW_MS: parseNumberFromEnv(process.env.RATE_LIMITER_WINDOW_MS, 1000),
     },
+    HEAP: {
+      URI: 'https://heapanalytics.com/api/track',
+      APP_ID: process.env.HEAP_APP_ID,
+      PUBLIC_IDENTITY: 'public',
+      PROP_MAX_CHARACTER_LIMIT: 1024,
+    },
   },
   TYPEORM: {
     LOGGING: {

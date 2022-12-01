@@ -20,7 +20,8 @@ export const nockConfigure = () => {
     return (
       host.includes('127.0.0.1') ||
       host.includes('localhost') ||
-      host.includes('storage.googleapis.com')
+      host.includes('storage.googleapis.com') ||
+      host.includes('heapanalytics.com')
     );
   });
 };

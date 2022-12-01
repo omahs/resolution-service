@@ -117,3 +117,15 @@ export type WalletAddress = string;
 export const DeadAdresses: Array<WalletAddress> = [
   '0xdeaddeaddeaddeaddeaddeaddeaddeaddeaddead',
 ];
+
+export enum HttpMethods {
+  CONNECT = 'CONNECT',
+  DELETE = 'DELETE',
+  GET = 'GET',
+  HEAD = 'HEAD',
+  OPTIONS = 'OPTIONS',
+  PATCH = 'PATCH',
+  POST = 'POST',
+  PUT = 'PUT',
+  TRACE = 'TRACE',
+}

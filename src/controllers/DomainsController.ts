@@ -1,17 +1,16 @@
 import 'reflect-metadata';
+import { Response } from 'express';
 import {
   Get,
   JsonController,
   Param,
   Params,
   QueryParams,
+  Res,
+  UseAfter,
   UseBefore,
 } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
-import { CnsRegistryEvent, Domain } from '../models';
-import { ApiKeyAuthMiddleware } from '../middleware/ApiKeyAuthMiddleware';
-import { getDomainResolution, IsZilDomain } from '../services/Resolution';
-import { eip137Namehash, znsNamehash } from '../utils/namehash';
 import {
   DomainResponse,
   DomainsListQuery,
@@ -22,7 +21,12 @@ import {
   DomainsRecordsResponse,
   DomainRecords,
 } from './dto/Domains';
+import { CnsRegistryEvent, Domain } from '../models';
+import { ApiKeyAuthMiddleware } from '../middleware/ApiKeyAuthMiddleware';
+import { getDomainResolution, IsZilDomain } from '../services/Resolution';
 import { ConvertArrayQueryParams } from '../middleware/ConvertArrayQueryParams';
+import RateLimiter from '../middleware/RateLimiter';
+import { SendHeapEvent } from '../middleware/SendHeapEvent';
 import { In } from 'typeorm';
 import pick from 'lodash/pick';
 import {
@@ -30,20 +34,24 @@ import {
   normalizeDomainName,
   normalizeDomainOrToken,
 } from '../utils/domain';
+import { eip137Namehash, znsNamehash } from '../utils/namehash';
 import { DeadAdresses } from '../types/common';
-import RateLimiter from '../middleware/RateLimiter';
+import { HeapEvents } from '../types/heap';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
 })
 @JsonController()
 @UseBefore(RateLimiter(), ApiKeyAuthMiddleware)
+@UseAfter(SendHeapEvent)
 export class DomainsController {
   @Get('/domains/:domainName')
   @ResponseSchema(DomainResponse)
   async getDomain(
+    @Res() res: Response,
     @Param('domainName') domainName: string,
   ): Promise<DomainResponse> {
+    res.locals.heapEventName = HeapEvents.GET_DOMAIN;
     const emptyResponse = {
       meta: {
         domain: domainName,
@@ -58,9 +66,7 @@ export class DomainsController {
     };
 
     domainName = domainName.toLowerCase();
-
     const supportedTLD = isSupportedTLD(domainName);
-
     if (!supportedTLD) {
       return emptyResponse;
     }
@@ -69,6 +75,7 @@ export class DomainsController {
       where: { name: domainName },
       relations: ['resolutions', 'reverseResolutions'],
     });
+
     if (domain) {
       const resolution = getDomainResolution(domain);
       const response = new DomainResponse();
@@ -84,6 +91,7 @@ export class DomainsController {
       response.records = resolution.resolution;
       return response;
     }
+
     return {
       meta: {
         domain: domainName,
@@ -123,8 +131,10 @@ export class DomainsController {
   @UseBefore(ConvertArrayQueryParams('owners'))
   @UseBefore(ConvertArrayQueryParams('tlds'))
   async getDomainsList(
+    @Res() res: Response,
     @QueryParams() query: DomainsListQuery,
   ): Promise<DomainsListResponse> {
+    res.locals.heapEventName = HeapEvents.GET_DOMAINS;
     // Use raw query becaues typeorm doesn't seem to handle multiple nested relations (e.g. resolution.domain.parent.name)
     const where = [];
     if (query.tlds) {
@@ -223,7 +233,7 @@ export class DomainsController {
     response.meta = {
       perPage: query.perPage,
       nextStartingAfter:
-        query.nextStargingAfter(lastDomain) || query.startingAfter || '',
+        query.nextStartingAfter(lastDomain) || query.startingAfter || '',
       sortBy: query.sortBy,
       sortDirection: query.sortDirection,
       hasMore,
@@ -255,9 +265,12 @@ export class DomainsController {
     },
   })
   async getDomainsLastTransfer(
+    @Res() res: Response,
     @Params() query: UnsDomainQuery,
   ): Promise<DomainLatestTransferResponse> {
+    res.locals.heapEventName = HeapEvents.GET_LATEST_DOMAIN_TRANSFER;
     const supportedTLD = isSupportedTLD(query.domainName);
+
     if (!supportedTLD) {
       return {
         data: [],
@@ -291,6 +304,7 @@ export class DomainsController {
         blockchain: event.blockchain,
       };
     });
+
     return response;
   }
 
@@ -318,8 +332,10 @@ export class DomainsController {
   })
   @UseBefore(ConvertArrayQueryParams('domains'))
   async getDomainsRecords(
+    @Res() res: Response,
     @QueryParams() query: DomainsRecordsQuery,
   ): Promise<DomainsRecordsResponse> {
+    res.locals.heapEventName = HeapEvents.GET_DOMAIN_RECORDS;
     let domainNames = query.domains.map(normalizeDomainName);
     domainNames = domainNames.filter((domainName) => {
       return isSupportedTLD(domainName);
