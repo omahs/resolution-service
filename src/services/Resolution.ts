@@ -61,8 +61,6 @@ export async function getReverseResolution(
   },
 ): Promise<DomainsReverseResolution[]> {
   const { cache, withDomainResolutions } = options;
-  const CACHE_TIME = 600000; // 10 mins
-
   const validAddresses = addresses.filter((addr) =>
     addr.match(ETHAddressRegex),
   );
@@ -79,7 +77,7 @@ export async function getReverseResolution(
       'domain',
       ...(withDomainResolutions ? ['domain.resolutions'] : []),
     ],
-    cache: cache ? CACHE_TIME : undefined,
+    cache: cache ? env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME : undefined,
   });
 
   const addressOnETH = reverseOnETH.map((reverse) => reverse.reverseAddress);
@@ -98,7 +96,7 @@ export async function getReverseResolution(
       'domain',
       ...(withDomainResolutions ? ['domain.resolutions'] : []),
     ],
-    cache: cache ? CACHE_TIME : undefined,
+    cache: cache ? env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME : undefined,
   });
 
   return [...reverseOnETH, ...reverseOnMATIC].filter((reverse) =>

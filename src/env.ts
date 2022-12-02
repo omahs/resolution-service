@@ -258,6 +258,12 @@ export const env = {
       ),
     },
   },
+  CACHE: {
+    IN_MEMORY_CACHE_EXPIRATION_TIME: parseNumberFromEnv(
+      process.env.IN_MEMORY_CACHE_EXPIRATION_TIME,
+      600000, // 10 minutes
+    ),
+  },
   MORALIS: {
     API_URL: process.env.MORALIS_API_URL,
     APP_ID: process.env.MORALIS_APP_ID,

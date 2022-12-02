@@ -124,6 +124,7 @@ Note that the service is stateless, so the container doesn't need persistent sto
 | METADATA_MAX_REQUESTS                       | 10                                                | :x:                | The max number of requests for the /metadata endpoints before reaching the rate limit                   |
 | WINDOW_MS                                   | 1000                                              | :x:                | The time window for requests before the window is reset for the rate limiting middleware                |
 | HEAP_APP_ID | - | :x: | The [Heap](https://www.heap.io/) application ID used for sending trackig events |
+| IN_MEMORY_CACHE_EXPIRATION_TIME | 60000 | :x: | The typeorm in memory cache expiration time in milliseconds |
 
 ### Running modes
 

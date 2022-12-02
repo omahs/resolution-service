@@ -20,6 +20,7 @@ import { queryNewURIEvent } from '../utils/ethersUtils';
 import CnsRegistryEvent from './CnsRegistryEvent';
 import { logger } from '../logger';
 import DomainsReverseResolution from './DomainsReverseResolution';
+import { env } from '../env';
 
 @Entity({ name: 'domains' })
 export default class Domain extends Model {
@@ -115,6 +116,7 @@ export default class Domain extends Model {
   static async findAllByNodes(
     nodes: string[],
     repository: Repository<Domain> = this.getRepository(),
+    cache?: boolean,
   ): Promise<Domain[]> {
     if (!nodes.length) {
       return [];
@@ -123,6 +125,7 @@ export default class Domain extends Model {
     return repository.find({
       where: { node: In(nodes) },
       relations: ['resolutions', 'parent'],
+      cache: cache ? env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME : undefined,
     });
   }
 
@@ -135,7 +138,7 @@ export default class Domain extends Model {
       ? await repository.findOne({
           where: { node },
           relations: ['resolutions', 'reverseResolutions', 'parent'],
-          cache: cache ? 600000 /* 10 mins */ : undefined,
+          cache: cache ? env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME : undefined,
         })
       : undefined;
   }

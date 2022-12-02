@@ -3,6 +3,7 @@ import { WinstonTypeormLogger } from './WinstonTypeormLogger';
 import SnakeNamingStrategy from './SnakeNamingStrategy';
 import { logger } from '../logger';
 import { env } from '../env';
+
 const runningMode = env.APPLICATION.RUNNING_MODE;
 
 process.env.TZ = 'UTC';

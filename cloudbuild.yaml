@@ -70,6 +70,8 @@ steps:
       - "--update-secrets=RATE_LIMITER_DEFAULT_MAX_REQUESTS=RATE_LIMITER_DEFAULT_MAX_REQUESTS:latest"
       - "--update-secrets=RATE_LIMITER_WINDOW_MS=RATE_LIMITER_WINDOW_MS:latest"
       - "--update-secrets=HEAP_APP_ID=HEAP_APP_ID:latest"
+      - "--update-secrets=IN_MEMORY_CACHE_EXPIRATION_TIME=IN_MEMORY_CACHE_EXPIRATION_TIME:latest"
+
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
       - "--region=$_DEPLOY_REGION"
@@ -125,6 +127,8 @@ steps:
       - "--update-secrets=RATE_LIMITER_DISABLED=RATE_LIMITER_DISABLED:latest"
       - "--update-secrets=RATE_LIMITER_METADATA_MAX_REQUESTS=RATE_LIMITER_METADATA_MAX_REQUESTS:latest"
       - "--update-secrets=RATE_LIMITER_WINDOW_MS=RATE_LIMITER_WINDOW_MS:latest"
+      - "--update-secrets=IN_MEMORY_CACHE_EXPIRATION_TIME=IN_MEMORY_CACHE_EXPIRATION_TIME:latest"
+
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
       - "--region=$_DEPLOY_REGION"

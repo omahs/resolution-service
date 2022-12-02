@@ -37,6 +37,7 @@ import {
 import { eip137Namehash, znsNamehash } from '../utils/namehash';
 import { DeadAdresses } from '../types/common';
 import { HeapEvents } from '../types/heap';
+import { env } from '../env';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
@@ -74,6 +75,7 @@ export class DomainsController {
     const domain = await Domain.findOne({
       where: { name: domainName },
       relations: ['resolutions', 'reverseResolutions'],
+      cache: env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME,
     });
 
     if (domain) {
@@ -201,7 +203,9 @@ export class DomainsController {
     }
 
     qb.take(query.perPage + 1);
-    const domains = await qb.getMany();
+    const domains = await qb
+      .cache(env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME)
+      .getMany();
     const hasMore = domains.length > query.perPage;
     if (hasMore) {
       domains.pop();
@@ -341,13 +345,21 @@ export class DomainsController {
       return isSupportedTLD(domainName);
     });
     const tokens = domainNames.map(normalizeDomainOrToken);
-    const domains = await Domain.findAllByNodes(tokens);
+    const domains = await Domain.findAllByNodes(
+      tokens,
+      Domain.getRepository(),
+      true,
+    );
     const zilTokens = domainNames
       .filter(
         (name) => IsZilDomain(name) && !domains.some((d) => d.name === name),
       )
       .map(znsNamehash);
-    const zilDomains = await Domain.findAllByNodes(zilTokens);
+    const zilDomains = await Domain.findAllByNodes(
+      zilTokens,
+      Domain.getRepository(),
+      true,
+    );
     const allDomains = domains.concat(zilDomains);
     const domainsRecords: DomainRecords[] = [];
 
