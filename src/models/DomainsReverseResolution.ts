@@ -27,12 +27,13 @@ export default class DomainsReverseResolution extends Model {
   @Column('int', {
     comment: 'the networkId where the reverse resolution came from',
   })
-  networkId: number; //
+  networkId: number;
 
   @Column({
     name: 'domain_id',
     comment: 'the reverse resolution domain for this address',
   })
+  @Index()
   domainId: number;
 
   @ManyToOne(() => Domain, (domain) => domain.reverseResolutions, {

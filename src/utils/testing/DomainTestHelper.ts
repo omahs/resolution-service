@@ -121,6 +121,7 @@ export class DomainTestHelper {
         DomainTestHelper.getRegistryAddressFromLocation(
           optionsTwo.blockchain ?? 'CNS',
         ),
+      domainId: domain.id,
     });
     await resolutionTwo.save();
     domain.resolutions = [resolution, resolutionTwo];

@@ -49,6 +49,13 @@ export default class DomainsResolution extends Model {
   @Column('int')
   networkId: number;
 
+  @Column({
+    name: 'domain_id',
+    comment: 'the resolution domain',
+  })
+  @Index()
+  domainId: number;
+
   @ManyToOne(() => Domain, (domain) => domain.resolutions)
   @JoinColumn({ name: 'domain_id' })
   domain: Domain;
