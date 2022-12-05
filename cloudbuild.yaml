@@ -21,7 +21,7 @@ steps:
   #########################################
 
   ########
-  # deploy API,MIGRATIONS for none all endpoints that are not /metadata
+  # deploy API for none all endpoints that are not /metadata
   # fastly will direct traffic based upon the endpoint
   ########
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
@@ -61,7 +61,7 @@ steps:
       - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
       - "--update-secrets=POLYGON_JSON_RPC_API_URL=POLYGON_JSON_RPC_API_URL:latest"
       - "--update-secrets=POLYGON_NETWORK_ID=POLYGON_NETWORK_ID:latest"
-      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API,MIGRATIONS"
+      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API"
       - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
       - "--update-secrets=ZNS_NETWORK=ZNS_NETWORK:latest"
       - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
@@ -80,7 +80,7 @@ steps:
     entrypoint: gcloud
 
   # ########
-  # # deploy API,MIGRATIONS for /metadata requests
+  # # deploy API for /metadata requests
   # # fastly will direct traffic based upon the endpoint
   # ########
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
@@ -120,7 +120,7 @@ steps:
       - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
       - "--update-secrets=POLYGON_JSON_RPC_API_URL=POLYGON_JSON_RPC_API_URL:latest"
       - "--update-secrets=POLYGON_NETWORK_ID=POLYGON_NETWORK_ID:latest"
-      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API,MIGRATIONS"
+      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API"
       - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
       - "--update-secrets=ZNS_NETWORK=ZNS_NETWORK:latest"
       - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"
@@ -137,7 +137,7 @@ steps:
     entrypoint: gcloud
 
   # ########
-  # # deploy ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
+  # # deploy MIGRATIONS,ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
   # ########
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     id: Deploy ETH ZIL MATIC workers
@@ -178,7 +178,7 @@ steps:
           --update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2 \
           --update-secrets=POLYGON_JSON_RPC_API_URL=POLYGON_JSON_RPC_API_URL:latest \
           --update-secrets=POLYGON_NETWORK_ID=POLYGON_NETWORK_ID:latest \
-          --update-env-vars=^##^RESOLUTION_RUNNING_MODE=ETH_WORKER,ZIL_WORKER,MATIC_WORKER \
+          --update-env-vars=^##^RESOLUTION_RUNNING_MODE=MIGRATIONS,ETH_WORKER,ZIL_WORKER,MATIC_WORKER \
           --update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest \
           --update-secrets=ZNS_NETWORK=ZNS_NETWORK:latest \
           --update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest \
