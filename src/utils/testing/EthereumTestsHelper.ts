@@ -13,9 +13,11 @@ export class EthereumNetworkHelper {
   private sandboxInitialized = false;
   private accounts: Record<string, Wallet> = {};
   private provider: StaticJsonRpcProvider;
+  private options: any;
 
-  constructor(provider: StaticJsonRpcProvider) {
+  constructor(provider: StaticJsonRpcProvider, options?: any) {
     this.provider = provider;
+    this.options = options;
   }
 
   public async fundAccounts(...accounts: Wallet[]): Promise<void> {
@@ -58,7 +60,7 @@ export class EthereumNetworkHelper {
   public async startNetwork(options: any = {}): Promise<void> {
     if (!this.sandboxInitialized) {
       this.sandboxInitialized = true;
-      const sandbox = await Sandbox.start(options);
+      const sandbox = await Sandbox.start({ ...this.options, ...options });
       const accounts: Record<string, any> = sandbox.accounts;
 
       this.sandbox = sandbox;

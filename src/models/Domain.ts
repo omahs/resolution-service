@@ -8,7 +8,14 @@ import {
   OneToMany,
   Repository,
 } from 'typeorm';
-import { IsOptional, IsString, Matches } from 'class-validator';
+import {
+  Allow,
+  IsOptional,
+  IsString,
+  Matches,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
 import ValidateWith from '../services/ValidateWith';
 import { Model } from '.';
 import { eip137Namehash, znsNamehash } from '../utils/namehash';
@@ -63,14 +70,23 @@ export default class Domain extends Model {
   })
   reverseResolutions: DomainsReverseResolution[];
 
-  constructor(attributes?: Attributes<Domain>) {
+  private validationRepository?: Repository<Domain>;
+
+  constructor(
+    attributes?: Attributes<Domain>,
+    validationRepository?: Repository<Domain>,
+  ) {
     super();
     this.attributes<Domain>(attributes);
+    this.validationRepository = validationRepository;
   }
 
   protected async beforeValidate(): Promise<void> {
     if (!this.parent) {
-      this.parent = (await Domain.findOne({ name: this.extension })) || null;
+      this.parent = this.validationRepository
+        ? (await this.validationRepository.findOne({ name: this.extension })) ||
+          null
+        : (await Domain.findOne({ name: this.extension })) || null;
     }
   }
 
@@ -151,7 +167,7 @@ export default class Domain extends Model {
       (await repository.findOne({
         where: { node },
         relations: ['resolutions', 'reverseResolutions', 'parent'],
-      })) || new Domain({ node })
+      })) || new Domain({ node }, repository)
     );
   }
 
@@ -290,11 +306,13 @@ export default class Domain extends Model {
         ? znsNamehash(this.name)
         : eip137Namehash(name);
 
-    const newDomain = new Domain();
-    newDomain.attributes({
-      name: name,
-      node: node,
-    });
+    const newDomain = new Domain(
+      {
+        name: name,
+        node: node,
+      },
+      repository,
+    );
     await repository.save(newDomain);
     return newDomain;
   }

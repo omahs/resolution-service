@@ -116,8 +116,9 @@ describe('EthUpdater handles reorgs', () => {
     await service.run();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     sinonSandbox.restore();
+    await EthereumHelper.stopNetwork();
   });
 
   // Worker timeline:
@@ -207,7 +208,12 @@ describe('EthUpdater handles reorgs', () => {
 
     await service.run();
 
-    expect(deleteSpy).to.be.calledOnceWith(domainAt10.blockNumber); // delete all events starting from the last matching
+    expect(deleteSpy).to.be.calledOnceWith(
+      domainAt10.blockNumber,
+      service.blockchain,
+      service.networkId,
+      sinon.match.any,
+    ); // delete all events starting from the last matching
 
     const workerStatus = await WorkerStatus.findOne({
       location: Blockchain.ETH,

@@ -13,7 +13,7 @@ import {
 import { Block } from '@ethersproject/abstract-provider';
 import sinon from 'sinon';
 
-describe.skip('EthUpdater l2 worker', () => {
+describe('EthUpdater l2 worker', () => {
   const L1Fixture: LayerTestFixture = new LayerTestFixture();
   const L2Fixture: LayerTestFixture = new LayerTestFixture();
   let owner: string;
@@ -25,13 +25,13 @@ describe.skip('EthUpdater l2 worker', () => {
     await L2Fixture.setup(Blockchain.MATIC, env.APPLICATION.POLYGON, {
       network: {
         url: 'http://localhost:7546',
-        chainId: 1337,
+        chainId: env.APPLICATION.POLYGON.NETWORK_ID,
         dbPath: './.sandboxl2',
       },
     });
   });
 
-  after(async () => {
+  afterEach(async () => {
     await L1Fixture.networkHelper.stopNetwork();
     await L2Fixture.networkHelper.stopNetwork();
   });
@@ -221,9 +221,6 @@ describe.skip('EthUpdater l2 worker', () => {
       recipient = L2Fixture.networkHelper.getAccount('9').address;
 
       // L1
-      await L1Fixture.networkHelper.startNetwork();
-      await L1Fixture.networkHelper.resetNetwork();
-
       await L1Fixture.networkHelper.mineBlocksForConfirmation(10);
       await mintDomain(L1Fixture, domain1);
 
@@ -233,9 +230,6 @@ describe.skip('EthUpdater l2 worker', () => {
       await L1Fixture.networkHelper.mineBlocksForConfirmation(20);
 
       // L2
-      await L2Fixture.networkHelper.startNetwork();
-      await L2Fixture.networkHelper.resetNetwork();
-
       await L2Fixture.networkHelper.mineBlocksForConfirmation(10);
       domainAt10 = await mintDomain(L2Fixture, domain1);
 

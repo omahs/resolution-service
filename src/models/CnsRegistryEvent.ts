@@ -7,6 +7,7 @@ import {
   Min,
   ValidateIf,
   IsOptional,
+  Allow,
 } from 'class-validator';
 import { Column, Entity, Index, MoreThan, Not, Repository } from 'typeorm';
 import ValidateWith from '../services/ValidateWith';
@@ -95,28 +96,54 @@ export default class CnsRegistryEvent extends Model {
   @Index()
   node: string | null = null;
 
+  private validationRepository?: Repository<CnsRegistryEvent>;
+
   static tokenIdToNode(tokenId: BigNumber): string {
     const node = tokenId.toHexString().replace(/^(0x)?/, '');
     return '0x' + node.padStart(64, '0');
   }
 
-  constructor(attributes?: Attributes<CnsRegistryEvent>) {
+  constructor(
+    attributes?: Attributes<CnsRegistryEvent>,
+    validationRepository?: Repository<CnsRegistryEvent>,
+  ) {
     super();
     this.attributes<CnsRegistryEvent>(attributes);
+    this.validationRepository = validationRepository;
   }
 
   async blockNumberIncreases(): Promise<boolean> {
-    if (this.hasId()) {
-      return true;
+    if (this.validationRepository) {
+      if (this.validationRepository?.hasId(this)) {
+        return true;
+      }
+      return !(await this.validationRepository.findOne({
+        blockchain: this.blockchain,
+        networkId: this.networkId,
+        blockNumber: MoreThan(this.blockNumber),
+      }));
+    } else {
+      // use default repositories so typeorm doesn't make extra txes
+      if (this.hasId()) {
+        return true;
+      }
+      return !(await CnsRegistryEvent.findOne({
+        blockchain: this.blockchain,
+        networkId: this.networkId,
+        blockNumber: MoreThan(this.blockNumber),
+      }));
     }
-    return !(await CnsRegistryEvent.findOne({
-      blockchain: this.blockchain,
-      networkId: this.networkId,
-      blockNumber: MoreThan(this.blockNumber),
-    }));
   }
 
   async logIndexForBlockIncreases(): Promise<boolean> {
+    if (this.validationRepository) {
+      return !(await this.validationRepository.findOne({
+        blockchain: this.blockchain,
+        networkId: this.networkId,
+        blockNumber: this.blockNumber,
+        logIndex: MoreThan(this.logIndex),
+      }));
+    }
     return !(await CnsRegistryEvent.findOne({
       blockchain: this.blockchain,
       networkId: this.networkId,

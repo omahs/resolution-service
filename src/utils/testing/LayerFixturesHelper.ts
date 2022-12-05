@@ -46,6 +46,7 @@ export class LayerTestFixture {
   provider: StaticJsonRpcProvider;
   config: EthUpdaterConfig;
   network: Blockchain;
+  sandboxNetConfig: any;
 
   async setup(
     network: Blockchain,
@@ -55,9 +56,11 @@ export class LayerTestFixture {
     this.network = network;
     this.config = updaterConfig;
     this.provider = GetProviderForConfig(this.config);
-    this.networkHelper = new EthereumNetworkHelper(this.provider);
-    await this.networkHelper.startNetwork(networkConfig);
-    await this.networkHelper.resetNetwork();
+    this.networkHelper = new EthereumNetworkHelper(
+      this.provider,
+      networkConfig,
+    );
+    await this.networkHelper.startNetwork();
 
     const ethContracts = getEthConfig(
       this.config.NETWORK_ID.toString(),
@@ -72,7 +75,7 @@ export class LayerTestFixture {
   }
 
   async prepareService(owner: string, uns: NSConfig) {
-    await this.networkHelper.resetNetwork();
+    await this.networkHelper.startNetwork();
 
     const block = await this.provider.getBlock('latest');
     sinon

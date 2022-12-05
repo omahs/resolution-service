@@ -41,6 +41,13 @@ export class EthUpdater {
 
   private logger: winston.Logger;
 
+  private manager: EntityManager;
+
+  private eventRepository: Repository<CnsRegistryEvent>;
+  private domainRepository: Repository<Domain>;
+  private domainReverseRepository: Repository<DomainsReverseResolution>;
+  private workerStatusRepository: Repository<WorkerStatus>;
+
   constructor(blockchain: Blockchain, config: EthUpdaterConfig) {
     this.logger = WorkerLogger(blockchain);
     this.config = config;
@@ -62,20 +69,26 @@ export class EthUpdater {
   }
 
   getLatestMirroredBlock(): Promise<number> {
-    return WorkerStatus.latestMirroredBlockForWorker(this.blockchain);
+    return WorkerStatus.latestMirroredBlockForWorker(
+      this.blockchain,
+      this.workerStatusRepository,
+    );
   }
 
   getLatestMirroredBlockHash(): Promise<string | undefined> {
-    return WorkerStatus.latestMirroredBlockHashForWorker(this.blockchain);
+    return WorkerStatus.latestMirroredBlockHashForWorker(
+      this.blockchain,
+      this.workerStatusRepository,
+    );
   }
 
-  private async saveLastMirroredBlock(manager: EntityManager): Promise<void> {
+  private async saveLastMirroredBlock(): Promise<void> {
     return WorkerStatus.saveWorkerStatus(
       this.blockchain,
       this.currentSyncBlock,
       this.currentSyncBlockHash,
       undefined,
-      manager.getRepository(WorkerStatus),
+      this.workerStatusRepository,
     );
   }
 
@@ -149,14 +162,14 @@ export class EthUpdater {
         domain.setResolution(resolution);
         await domainRepository.save(domain);
       } else {
-        resolution.ownerAddress = event.args?.to.toLowerCase();
+        resolution.ownerAddress = event.args?.to?.toLowerCase();
         await domainRepository.save(domain);
       }
     } else if (domain) {
       // domain exists, so it's probably a bridge
       const resolution = domain.getResolution(this.blockchain, this.networkId);
 
-      resolution.ownerAddress = event.args?.to.toLowerCase();
+      resolution.ownerAddress = event.args?.to?.toLowerCase();
       resolution.registry = this.cnsRegistry.address;
 
       const contractAddress = event.address.toLowerCase();
@@ -335,6 +348,7 @@ export class EthUpdater {
   private async processSetReverse(
     event: Event,
     domainRepository: Repository<Domain>,
+    reverseRepository: Repository<DomainsReverseResolution>,
   ): Promise<void> {
     const args = unwrap(event.args);
     const { addr, tokenId } = args;
@@ -346,7 +360,7 @@ export class EthUpdater {
       );
     }
 
-    let reverse = await DomainsReverseResolution.findOne(
+    let reverse = await reverseRepository.findOne(
       {
         reverseAddress: addr,
         blockchain: this.blockchain,
@@ -381,7 +395,7 @@ export class EthUpdater {
     const args = unwrap(event.args);
     const { addr } = args;
 
-    const reverseResolution = await DomainsReverseResolution.findOne({
+    const reverseResolution = await reverseRepository.findOne({
       where: {
         reverseAddress: addr,
         blockchain: this.blockchain,
@@ -396,34 +410,32 @@ export class EthUpdater {
     await reverseRepository.remove(reverseResolution);
   }
 
-  private async saveEvent(event: Event, manager: EntityManager): Promise<void> {
+  private async saveEvent(event: Event): Promise<void> {
     const values: Record<string, string> = {};
     Object.entries(event?.args || []).forEach(([key, value]) => {
       values[key] = BigNumber.isBigNumber(value) ? value.toHexString() : value;
     });
     const contractAddress = event.address.toLowerCase();
-    await manager.getRepository(CnsRegistryEvent).save(
-      new CnsRegistryEvent({
-        contractAddress,
-        type: event.event,
-        blockNumber: event.blockNumber,
-        blockHash: event.blockHash,
-        logIndex: event.logIndex,
-        transactionHash: event.transactionHash,
-        returnValues: values,
-        blockchain: this.blockchain,
-        networkId: this.networkId,
-        node: event.args?.[0],
-      }),
+    await this.eventRepository.save(
+      new CnsRegistryEvent(
+        {
+          contractAddress,
+          type: event.event,
+          blockNumber: event.blockNumber,
+          blockHash: event.blockHash,
+          logIndex: event.logIndex,
+          transactionHash: event.transactionHash,
+          returnValues: values,
+          blockchain: this.blockchain,
+          networkId: this.networkId,
+          node: event.args?.[0],
+        },
+        this.eventRepository,
+      ),
     );
   }
 
-  private async processEvents(
-    events: Event[],
-    manager: EntityManager,
-    save = true,
-  ) {
-    const domainRepository = manager.getRepository(Domain);
+  private async processEvents(events: Event[], save = true) {
     let lastProcessedEvent: Event | undefined = undefined;
     for (const event of events) {
       try {
@@ -434,41 +446,45 @@ export class EthUpdater {
         );
         switch (event.event) {
           case 'Transfer': {
-            await this.processTransfer(event, domainRepository);
+            await this.processTransfer(event, this.domainRepository);
             break;
           }
           case 'NewURI': {
             await this.processNewUri(
               event,
               lastProcessedEvent,
-              domainRepository,
+              this.domainRepository,
             );
             break;
           }
           case 'ResetRecords': {
-            await this.processResetRecords(event, domainRepository);
+            await this.processResetRecords(event, this.domainRepository);
             break;
           }
           case 'Set': {
-            await this.processSet(event, domainRepository);
+            await this.processSet(event, this.domainRepository);
             break;
           }
           case 'Resolve': {
-            await this.processResolve(event, domainRepository);
+            await this.processResolve(event, this.domainRepository);
             break;
           }
           case 'Sync': {
-            await this.processSync(event, domainRepository);
+            await this.processSync(event, this.domainRepository);
             break;
           }
           case 'SetReverse': {
-            await this.processSetReverse(event, domainRepository);
+            await this.processSetReverse(
+              event,
+              this.domainRepository,
+              this.domainReverseRepository,
+            );
             break;
           }
           case 'RemoveReverse': {
             await this.processRemoveReverse(
               event,
-              manager.getRepository(DomainsReverseResolution),
+              this.domainReverseRepository,
             );
             break;
           }
@@ -478,22 +494,23 @@ export class EthUpdater {
             break;
         }
         if (save && event.event) {
-          await this.saveEvent(event, manager);
+          await this.saveEvent(event);
         }
         lastProcessedEvent = event;
       } catch (error) {
-        if (error instanceof EthUpdaterError) {
-          this.logger.error(
-            `Failed to process ${this.blockchain} event: ${JSON.stringify(
-              event,
-            )}. Error:  ${error}`,
-          );
-        }
+        this.logger.error(
+          `Failed to process ${this.blockchain} event: ${JSON.stringify(
+            event,
+          )}. Error:  ${error}`,
+        );
+        throw error;
       }
     }
   }
 
-  private async findLastMatchingBlock(): Promise<{
+  private async findLastMatchingBlock(
+    repository: Repository<CnsRegistryEvent>,
+  ): Promise<{
     blockNumber: number;
     blockHash: string;
   }> {
@@ -501,6 +518,7 @@ export class EthUpdater {
       this.config.MAX_REORG_SIZE,
       this.blockchain,
       this.networkId,
+      repository,
     );
 
     // Check first and last blocks as edge cases
@@ -543,14 +561,15 @@ export class EthUpdater {
     return latestEventBlocks[searchReorgFrom];
   }
 
-  private async rebuildDomainFromEvents(
-    tokenId: string,
-    manager: EntityManager,
-  ) {
-    const domain = await Domain.findByNode(tokenId);
+  private async rebuildDomainFromEvents(tokenId: string) {
+    const domain = await Domain.findByNode(
+      tokenId,
+      this.domainRepository,
+      false,
+    );
 
     this.logger.debug(`Rebuilding domain ${domain?.name} from db events`);
-    const domainEvents = await CnsRegistryEvent.find({
+    const domainEvents = await this.eventRepository.find({
       where: {
         node: tokenId,
         blockchain: this.blockchain,
@@ -572,42 +591,42 @@ export class EthUpdater {
       convertedEvents.push(tmpEvent as Event);
     }
 
-    await domain?.getResolution(this.blockchain, this.networkId)?.remove();
-    await domain
-      ?.getReverseResolution(this.blockchain, this.networkId)
-      ?.remove();
-    await this.processEvents(convertedEvents, manager, false);
+    const resolution =
+      [domain?.getResolution(this.blockchain, this.networkId)] || [];
+    const reverseResolution =
+      [domain?.getReverseResolution(this.blockchain, this.networkId)] || [];
+    this.manager.remove([...resolution, ...reverseResolution]);
+    await this.processEvents(convertedEvents, false);
   }
 
   private async handleReorg(): Promise<number> {
-    const reorgStartingBlock = await this.findLastMatchingBlock();
+    const reorgStartingBlock = await this.findLastMatchingBlock(
+      this.eventRepository,
+    );
+    await WorkerStatus.saveWorkerStatus(
+      this.blockchain,
+      reorgStartingBlock.blockNumber,
+      reorgStartingBlock.blockHash,
+      undefined,
+      this.workerStatusRepository,
+    );
 
-    await getConnection().transaction(async (manager) => {
-      await WorkerStatus.saveWorkerStatus(
-        this.blockchain,
-        reorgStartingBlock.blockNumber,
-        reorgStartingBlock.blockHash,
-        undefined,
-        manager.getRepository(WorkerStatus),
-      );
+    const cleanUp = await CnsRegistryEvent.cleanUpEvents(
+      reorgStartingBlock.blockNumber,
+      this.blockchain,
+      this.networkId,
+      this.eventRepository,
+    );
 
-      const cleanUp = await CnsRegistryEvent.cleanUpEvents(
-        reorgStartingBlock.blockNumber,
-        this.blockchain,
-        this.networkId,
-        manager.getRepository(CnsRegistryEvent),
-      );
+    const promises: Promise<void>[] = [];
+    for (const tokenId of cleanUp.affected) {
+      promises.push(this.rebuildDomainFromEvents(tokenId));
+    }
+    await Promise.all(promises);
 
-      const promises: Promise<void>[] = [];
-      for (const tokenId of cleanUp.affected) {
-        promises.push(this.rebuildDomainFromEvents(tokenId, manager));
-      }
-      await Promise.all(promises);
-
-      this.logger.warn(
-        `Deleted ${cleanUp.deleted} events after reorg and reverted ${cleanUp.affected.size} domains`,
-      );
-    });
+    this.logger.warn(
+      `Deleted ${cleanUp.deleted} events after reorg and reverted ${cleanUp.affected.size} domains`,
+    );
 
     return reorgStartingBlock.blockNumber;
   }
@@ -655,46 +674,69 @@ export class EthUpdater {
     return { fromBlock: reorgStartingBlock, toBlock: latestNetBlock };
   }
 
-  public async run(): Promise<void> {
+  private async runInTransaction(func: () => Promise<void>): Promise<void> {
+    this.manager = getConnection().createQueryRunner().manager;
+    this.eventRepository = this.manager.getRepository(CnsRegistryEvent);
+    this.domainRepository = this.manager.getRepository(Domain);
+    this.domainReverseRepository = this.manager.getRepository(
+      DomainsReverseResolution,
+    );
+    this.workerStatusRepository = this.manager.getRepository(WorkerStatus);
+    await this.manager.queryRunner?.startTransaction('REPEATABLE READ');
     try {
-      this.logger.info(`EthUpdater is pulling updates from ${this.blockchain}`);
-
-      const { fromBlock, toBlock } = await this.syncBlockRanges();
-
-      this.logger.info(
-        `Current network block ${toBlock}: Syncing mirror from ${fromBlock} to ${toBlock}`,
-      );
-
-      this.currentSyncBlock = fromBlock;
-
-      while (this.currentSyncBlock < toBlock) {
-        const fetchBlock = Math.min(
-          this.currentSyncBlock + this.config.BLOCK_FETCH_LIMIT,
-          toBlock,
-        );
-
-        const events = await this.getRegistryEvents(
-          this.currentSyncBlock + 1,
-          fetchBlock,
-        );
-
-        await getConnection().transaction(async (manager) => {
-          await this.processEvents(events, manager);
-          this.currentSyncBlock = fetchBlock;
-          this.currentSyncBlockHash = (
-            await this.provider.getBlock(this.currentSyncBlock)
-          )?.hash;
-          await this.saveLastMirroredBlock(manager);
-        });
-      }
+      await WorkerStatus.lockBlockchainStatus(this.blockchain, this.manager);
+      await func();
+      await this.manager.queryRunner?.commitTransaction();
     } catch (error) {
       this.logger.error(
         `Unhandled error occured while processing ${this.blockchain} events: ${error}`,
       );
+      await this.manager.queryRunner?.rollbackTransaction();
+    } finally {
+      await this.manager.release();
+    }
+  }
+
+  public async run(): Promise<void> {
+    return this.runInTransaction(() => this.runWorkerSync());
+  }
+
+  public async runWorkerSync(): Promise<void> {
+    this.logger.info(`EthUpdater is pulling updates from ${this.blockchain}`);
+
+    const { fromBlock, toBlock } = await this.syncBlockRanges();
+
+    this.logger.info(
+      `Current network block ${toBlock}: Syncing mirror from ${fromBlock} to ${toBlock}`,
+    );
+
+    this.currentSyncBlock = fromBlock;
+
+    while (this.currentSyncBlock < toBlock) {
+      const fetchBlock = Math.min(
+        this.currentSyncBlock + this.config.BLOCK_FETCH_LIMIT,
+        toBlock,
+      );
+
+      const events = await this.getRegistryEvents(
+        this.currentSyncBlock + 1,
+        fetchBlock,
+      );
+
+      await this.processEvents(events);
+      this.currentSyncBlock = fetchBlock;
+      this.currentSyncBlockHash = (
+        await this.provider.getBlock(this.currentSyncBlock)
+      )?.hash;
+      await this.saveLastMirroredBlock();
     }
   }
 
   public async resync(): Promise<void> {
+    return this.runInTransaction(() => this.runWorkerReync());
+  }
+
+  public async runWorkerReync(): Promise<void> {
     if (this.config.RESYNC_FROM === undefined) {
       return;
     }
@@ -705,22 +747,22 @@ export class EthUpdater {
     const netBlock = await this.provider.getBlock(this.config.RESYNC_FROM);
 
     let cleanUp = 0;
-    await getConnection().transaction(async (manager) => {
-      await WorkerStatus.saveWorkerStatus(
-        this.blockchain,
-        this.config.RESYNC_FROM!,
-        netBlock.hash,
-        undefined,
-        manager.getRepository(WorkerStatus),
-      );
 
-      ({ deleted: cleanUp } = await CnsRegistryEvent.cleanUpEvents(
-        this.config.RESYNC_FROM!,
-        this.blockchain,
-        this.networkId,
-        manager.getRepository(CnsRegistryEvent),
-      ));
-    });
+    await WorkerStatus.saveWorkerStatus(
+      this.blockchain,
+      this.config.RESYNC_FROM!,
+      netBlock.hash,
+      undefined,
+      this.workerStatusRepository,
+    );
+
+    ({ deleted: cleanUp } = await CnsRegistryEvent.cleanUpEvents(
+      this.config.RESYNC_FROM!,
+      this.blockchain,
+      this.networkId,
+      this.eventRepository,
+    ));
+
     this.logger.info(
       `Deleted ${cleanUp} events. Restart the service without RESYNC_FROM to sync again.`,
     );
@@ -734,7 +776,11 @@ export function startWorker(blockchain: Blockchain, config: any): void {
     });
   } else {
     setIntervalAsync(async () => {
-      await new EthUpdater(blockchain, config).run();
+      try {
+        await new EthUpdater(blockchain, config).run();
+      } catch (error) {
+        logger.error(error);
+      }
     }, config.FETCH_INTERVAL);
   }
 }
