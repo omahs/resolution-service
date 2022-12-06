@@ -273,7 +273,11 @@ export class EthUpdater {
     domain.setResolution(resolution);
     await domainRepository.save(domain);
     if (key === 'social.picture.value' && !!value) {
-      await cacheSocialPictureInCDN(value, domain, resolution);
+      try {
+        await cacheSocialPictureInCDN(value, domain, resolution);
+      } catch (error) {
+        this.logger.error(`Failed to cache PFP for ${domain}: ${error}`);
+      }
     }
   }
 
