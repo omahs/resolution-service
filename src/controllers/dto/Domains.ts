@@ -20,37 +20,48 @@ import NetworkConfig from 'uns/uns-config.json';
 import ValidateWith from '../../services/ValidateWith';
 import { JSONSchema } from 'class-validator-jsonschema';
 import SupportedKeysJson from 'uns/resolver-keys.json';
+import { ObjectType, Field, Int } from 'type-graphql';
+import { ResolutionRecords } from '../../graphql/scalars';
 
 // Need to specity types explicitly because routing-controllers gets easily confused
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 
+@ObjectType()
 export class DomainBaseMetadata {
+  @Field(() => String)
   @IsString()
   domain: string = '';
 
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   owner: string | null = null;
 
+  @Field(() => Boolean)
   @IsBoolean()
   reverse: boolean = false;
 }
 
+@ObjectType()
 export class DomainMetadata extends DomainBaseMetadata {
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   resolver: string | null = null;
 
+  @Field(() => Blockchain, { nullable: true })
   @IsOptional()
   @IsString()
   @IsIn(Object.values(Blockchain), { each: true })
   blockchain: keyof typeof Blockchain | null = null;
 
+  @Field(() => Int, { nullable: true })
   @IsOptional()
   @IsNumber()
   @IsIn(Object.keys(NetworkConfig.networks).map(toNumber))
   networkId: number | null = null;
 
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   registry: string | null = null;
@@ -61,10 +72,13 @@ export class DomainBaseResponse {
   meta: DomainBaseMetadata = new DomainBaseMetadata();
 }
 
+@ObjectType()
 export class DomainResponse {
+  @Field(() => DomainMetadata)
   @ValidateNested()
   meta: DomainMetadata = new DomainMetadata();
 
+  @Field(() => ResolutionRecords)
   @IsObject()
   records: Record<string, string> = {};
 }

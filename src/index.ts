@@ -9,6 +9,8 @@ import connect from './database/connect';
 import { startWorker as startEthWorker } from './workers/eth/EthUpdater';
 import startZilUpdater from './workers/ZilUpdater';
 import { Blockchain } from './types/common';
+import { buildGraphQLSchema } from './graphql';
+import { graphqlHTTP } from 'express-graphql';
 
 connect().then(async () => {
   /**
@@ -43,6 +45,10 @@ connect().then(async () => {
     startZilUpdater();
     logger.info(`ZIL worker is enabled and running`);
   }
+
+  const schema = await buildGraphQLSchema();
+
+  api.use('/graphql', graphqlHTTP({ schema, graphiql: true }));
 
   // We're running API on any case since we need to
   // expose status, readiness and health check endpoints even in workers mode

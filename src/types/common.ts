@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export type KeysOfType<T, TProp> = NonNullable<
   {
     [P in keyof T]: T[P] extends TProp ? P : never;
@@ -58,6 +60,10 @@ export enum Blockchain {
   ZIL = 'ZIL',
   MATIC = 'MATIC',
 }
+
+registerEnumType(Blockchain, {
+  name: 'Blockchain',
+});
 
 export enum EvmUnstoppableDomainTlds {
   Crypto = 'crypto',
