@@ -13,5 +13,9 @@ module.exports = {
     plugins: ['@typescript-eslint'],
     rules: {
         "@typescript-eslint/ban-ts-comment": "off",
-      }
+        "@typescript-eslint/no-floating-promises": ["error"]
+    },
+    parserOptions: {
+        project: ["tsconfig.json"]
+    },
 }

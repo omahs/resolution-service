@@ -10,7 +10,7 @@ import { startWorker as startEthWorker } from './workers/eth/EthUpdater';
 import startZilUpdater from './workers/ZilUpdater';
 import { Blockchain } from './types/common';
 
-connect().then(async () => {
+void connect().then(async () => {
   /**
    * Temporary disable snapshot feature until we implement chain reorg handling functionality.
    * Check the following story and PR for details:

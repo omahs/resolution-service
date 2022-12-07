@@ -46,4 +46,4 @@ const run = async () => {
   await client.end();
 };
 
-run();
+void run();

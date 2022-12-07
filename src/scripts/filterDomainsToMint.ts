@@ -25,4 +25,4 @@ const run = async () => {
   console.log(`Filtered ${domainsToStore.length} domains to ${fileName}`);
 };
 
-run();
+void run();

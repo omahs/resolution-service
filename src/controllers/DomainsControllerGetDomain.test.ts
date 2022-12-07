@@ -585,7 +585,7 @@ describe('DomainsController', () => {
       expect(trackStub).to.not.be.called;
 
       const connection = getConnection();
-      connection.close();
+      await connection.close();
       res = await supertest(api)
         .get('/domains/brad.crypto')
         .auth(testApiKey.apiKey, { type: 'bearer' })
@@ -600,7 +600,7 @@ describe('DomainsController', () => {
   describe('Errors handling', () => {
     it('should format the 500 error', async () => {
       const connection = getConnection();
-      connection.close();
+      await connection.close();
       const res = await supertest(api)
         .get('/domains/brad.crypto')
         .auth(testApiKey.apiKey, { type: 'bearer' })

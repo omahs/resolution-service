@@ -28,4 +28,4 @@ const run = async () => {
   console.log(`Checked ${domainsToStore.length} domains to ${fileName}`);
 };
 
-run();
+void run();

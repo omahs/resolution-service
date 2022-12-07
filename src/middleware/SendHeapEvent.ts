@@ -14,7 +14,7 @@ export class SendHeapEvent implements ExpressMiddlewareInterface {
             throw new Error('No Heap Event Name was set in controller logic');
           }
 
-          track({
+          void track({
             identity: req.ip,
             eventName: res.locals.heapEventName,
             properties: {
@@ -22,7 +22,7 @@ export class SendHeapEvent implements ExpressMiddlewareInterface {
               apiKey: req.apiKey?.apiKey,
               uri: req.originalUrl,
             },
-          });
+          }).catch((error) => logger.error(error));
         } catch (error: any) {
           logger.error(error);
         }

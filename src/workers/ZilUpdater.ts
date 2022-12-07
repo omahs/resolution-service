@@ -13,9 +13,8 @@ const runWorker = async (worker: ZilWorker): Promise<void> => {
   }
 };
 
-export default async (): Promise<void> => {
+export default (): void => {
   const worker = new ZilWorker();
-  await runWorker(worker);
   setIntervalAsync(async () => {
     await runWorker(worker);
   }, env.APPLICATION.ZILLIQA.FETCH_INTERVAL);

@@ -571,8 +571,11 @@ export class EthUpdater {
       this.domainRepository,
       false,
     );
+    if (!domain) {
+      return;
+    }
 
-    this.logger.debug(`Rebuilding domain ${domain?.name} from db events`);
+    this.logger.warn(`Rebuilding domain ${domain.name} from db events`);
     const domainEvents = await this.eventRepository.find({
       where: {
         node: tokenId,
@@ -595,11 +598,17 @@ export class EthUpdater {
       convertedEvents.push(tmpEvent as Event);
     }
 
-    const resolution =
-      [domain?.getResolution(this.blockchain, this.networkId)] || [];
-    const reverseResolution =
-      [domain?.getReverseResolution(this.blockchain, this.networkId)] || [];
-    this.manager.remove([...resolution, ...reverseResolution]);
+    const resolution = domain.getResolution(this.blockchain, this.networkId);
+    if (resolution.ownerAddress) {
+      await this.manager.remove(resolution);
+    }
+    const reverseResolution = domain.getReverseResolution(
+      this.blockchain,
+      this.networkId,
+    );
+    if (reverseResolution) {
+      await this.manager.remove(reverseResolution);
+    }
     await this.processEvents(convertedEvents, false);
   }
 
@@ -754,14 +763,14 @@ export class EthUpdater {
 
     await WorkerStatus.saveWorkerStatus(
       this.blockchain,
-      this.config.RESYNC_FROM!,
+      this.config.RESYNC_FROM,
       netBlock.hash,
       undefined,
       this.workerStatusRepository,
     );
 
     ({ deleted: cleanUp } = await CnsRegistryEvent.cleanUpEvents(
-      this.config.RESYNC_FROM!,
+      this.config.RESYNC_FROM,
       this.blockchain,
       this.networkId,
       this.eventRepository,
@@ -773,9 +782,12 @@ export class EthUpdater {
   }
 }
 
-export function startWorker(blockchain: Blockchain, config: any): void {
+export function startWorker(
+  blockchain: Blockchain,
+  config: EthUpdaterConfig,
+): void {
   if (config.RESYNC_FROM !== undefined) {
-    new EthUpdater(blockchain, config).resync().then(() => {
+    void new EthUpdater(blockchain, config).resync().then(() => {
       logger.info('Resync successful.');
     });
   } else {
