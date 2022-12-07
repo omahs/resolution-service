@@ -5,15 +5,25 @@ import createSVGfromTemplate, { simpleSVGTemplate } from './svgTemplate';
 import btoa from 'btoa';
 import { env } from '../../env';
 import { Storage } from '@google-cloud/storage';
-import { fetchTokenMetadata } from '../../controllers/MetaDataController';
 import { logger } from '../../logger';
+import { MetadataService } from '../../services/MetadataService';
+import AnimalDomainHelper from '../AnimalDomainHelper/AnimalDomainHelper';
+
+export type SocialPictureOptions = {
+  chainId: string;
+  nftStandard: string;
+  contractAddress: string;
+  tokenId: string;
+};
 
 const storageOptions = env.CLOUD_STORAGE.API_ENDPOINT_URL
   ? { apiEndpoint: env.CLOUD_STORAGE.API_ENDPOINT_URL } // for development using local emulator
   : {}; // for production
 const storage = new Storage(storageOptions);
 
-export const parsePictureRecord = (avatarRecord: string) => {
+export const parsePictureRecord = (
+  avatarRecord: string,
+): SocialPictureOptions => {
   const regex =
     /(\d+)\/(erc721|erc1155|cryptopunks):(0x[a-fA-F0-9]{40})\/(\d+)/;
   const matches = regex.exec(avatarRecord);
@@ -156,7 +166,14 @@ export const cacheSocialPictureInCDN = async (
     .file(fileNameWithOverlay)
     .exists();
   if (!fileExists || !fileWithOverlayExists) {
-    const { fetchedMetadata, image } = await fetchTokenMetadata(resolution);
+    // TODO: Refactor this code
+    // (1) Why are there function declarations inside of function declarations?
+    // (2) In the meantime, just instantiate a service as a stop gap
+    // (3) Are there no tests around these methods?
+    const { fetchedMetadata, image } = await new MetadataService(
+      null,
+      null,
+    ).fetchTokenMetadata(resolution);
     const [imageData, mimeType] = await getNFTSocialPicture(image).catch(() => [
       '',
       null,

@@ -6,39 +6,25 @@ import {
   QueryParam,
   UseBefore,
 } from 'routing-controllers';
-import Moralis from 'moralis/node';
 import { ResponseSchema } from 'routing-controllers-openapi';
-import fetch from 'node-fetch';
-import AnimalDomainHelper, {
-  OpenSeaMetadataAttribute,
-} from '../utils/AnimalDomainHelper/AnimalDomainHelper';
+import AnimalDomainHelper from '../utils/AnimalDomainHelper/AnimalDomainHelper';
 import {
   BackgroundColor,
-  DefaultImageData,
   DeprecatedBackgroundColor,
 } from '../utils/generalImage';
 import { MetadataImageFontSize, UnstoppableDomainTlds } from '../types/common';
 import { pathThatSvg } from 'path-that-svg';
-import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
+
 import { env } from '../env';
-import { logger } from '../logger';
 import {
-  parsePictureRecord,
   getNftPfpImageFromCDN,
   cacheSocialPictureInCDN,
   checkNftPfpImageExistFromCDN,
 } from '../utils/socialPicture';
 import { getDomainResolution } from '../services/Resolution';
-import {
-  CustomImageDomains,
-  getAttributeCharacterSet,
-  getAttributeCategory,
-  getAttributeType,
-  DomainAttributeTrait,
-  AttributeCharacterSet,
-  AttributePictureType,
-} from '../utils/metadata';
 import { Domain, DomainsResolution } from '../models';
+import { MetadataService } from '../services/MetadataService';
+import { ImageResponse, OpenSeaMetadata } from './dto/Metadata';
 import { OpenSeaPort, Network } from 'opensea-js';
 import { EthereumProvider } from '../workers/EthereumProvider';
 import {
@@ -49,144 +35,21 @@ import {
 } from '../utils/domain';
 import RateLimiter from '../middleware/RateLimiter';
 
-const DEFAULT_IMAGE_URL = (name: string) =>
-  `https://metadata.unstoppabledomains.com/image-src/${name}.svg` as const;
-const BASE_IMAGE_URL =
-  `${env.APPLICATION.ERC721_METADATA.GOOGLE_CLOUD_STORAGE_BASE_URL}/images` as const;
 const INVALID_DOMAIN_IMAGE_URL =
   `${env.APPLICATION.ERC721_METADATA.GOOGLE_CLOUD_STORAGE_BASE_URL}/images/invalid-domain.svg` as const;
 const METADATA_MAX_REQUESTS =
   env.APPLICATION.RATE_LIMITER.METADATA_MAX_REQUESTS;
 
-export enum SupportedL2Chain {
-  Polygon = 'polygon',
-  Binance = 'bsc',
-  Avalanche = 'avalanche',
-  Fantom = 'fantom',
-}
-export enum NetworkId {
-  Polygon = '137',
-  Binance = '56',
-  Avalanche = '43114',
-  Fantom = '250',
-}
-
-const getChainName = (chainId: string): SupportedL2Chain | 'eth' => {
-  switch (chainId) {
-    case NetworkId.Polygon:
-      return SupportedL2Chain.Polygon;
-    case NetworkId.Binance:
-      return SupportedL2Chain.Binance;
-    case NetworkId.Avalanche:
-      return SupportedL2Chain.Avalanche;
-    case NetworkId.Fantom:
-      return SupportedL2Chain.Fantom;
-    default:
-      return 'eth';
-  }
-};
-
-let isMoralisInitialized = false;
-const initMoralisSdk = async (): Promise<typeof Moralis> => {
-  if (isMoralisInitialized) {
-    return Moralis;
-  }
-
-  const serverUrl = env.MORALIS.API_URL;
-  const appId = env.MORALIS.APP_ID;
-  await Moralis.start({ serverUrl, appId });
-  isMoralisInitialized = true;
-  return Moralis;
-};
-
-let openSeaSDK: OpenSeaPort | undefined;
-const initOpenSeaSdk = (): OpenSeaPort => {
-  if (openSeaSDK) {
-    return openSeaSDK;
-  }
-
-  openSeaSDK = new OpenSeaPort(EthereumProvider, {
-    networkName: Network.Main,
-    apiKey: env.OPENSEA.API_KEY,
-  });
-
-  return openSeaSDK;
-};
-
-const AnimalHelper: AnimalDomainHelper = new AnimalDomainHelper();
-
-type DomainProperties = {
-  records: Record<string, string>;
-};
-
-class Erc721Metadata {
-  @IsString()
-  name: string | null;
-
-  @IsString()
-  description: string | null;
-
-  @IsString()
-  image: string | null;
-
-  @IsString()
-  external_url: string | null;
-}
-
-class OpenSeaMetadata extends Erc721Metadata {
-  @IsOptional()
-  @IsString()
-  external_link?: string;
-
-  @IsOptional()
-  @IsString()
-  image_url?: string;
-
-  @IsObject()
-  properties: DomainProperties;
-
-  @IsArray()
-  attributes: Array<OpenSeaMetadataAttribute>;
-
-  @IsOptional()
-  @IsString()
-  background_color?: string;
-
-  @IsOptional()
-  @IsString()
-  animation_url?: string;
-
-  @IsOptional()
-  @IsString()
-  youtube_url?: string;
-}
-
-class TokenMetadata {
-  @IsObject()
-  fetchedMetadata: {
-    name: string;
-    token_uri?: string;
-    metadata?: string;
-    image?: string;
-    background_color?: string;
-  };
-
-  @IsString()
-  image: string;
-}
-
-class ImageResponse {
-  @IsOptional()
-  @IsString()
-  image?: string | null;
-
-  @IsString()
-  image_data: string;
-}
-
 @Controller()
 @UseBefore(RateLimiter({ max: METADATA_MAX_REQUESTS }))
 export class MetaDataController {
+  private metadataService: MetadataService;
+
+  constructor() {
+    // TODO: Implement DI once its ready
+    this.metadataService = new MetadataService(null, null);
+  }
+
   @Get('/deaddata/:domainOrToken')
   @ResponseSchema(OpenSeaMetadata)
   async getDeadData(): Promise<{
@@ -213,7 +76,7 @@ export class MetaDataController {
   ): Promise<OpenSeaMetadata> {
     const domain = await findDomainByNameOrToken(domainOrToken);
     if (!domain) {
-      return this.defaultMetaResponse(domainOrToken);
+      return this.metadataService.defaultMetaResponse(domainOrToken);
     }
     const resolution = getDomainResolution(domain);
 
@@ -229,14 +92,14 @@ export class MetaDataController {
         socialPictureValue,
         withOverlay ? domain.name : undefined,
       ));
-    const description = this.getDomainDescription(
+    const description = this.metadataService.getDomainDescription(
       domain,
       resolution.resolution,
     );
-    const DomainAttributeTrait = this.getAttributeType(domain, {
+    const DomainAttributeTrait = this.metadataService.getAttributeType(domain, {
       verifiedNftPicture: isSocialPictureVerified,
     });
-    const imageUrl = this.generateDomainImageUrl(domain.name);
+    const imageUrl = this.metadataService.generateDomainImageUrl(domain.name);
     const metadata: OpenSeaMetadata = {
       name: domain.name,
       description,
@@ -249,7 +112,10 @@ export class MetaDataController {
       attributes: DomainAttributeTrait,
     };
 
-    if (!this.isDomainWithCustomImage(domain.name) && !socialPictureValue) {
+    if (
+      !this.metadataService.isDomainWithCustomImage(domain.name) &&
+      !socialPictureValue
+    ) {
       metadata.background_color = isDeprecatedTLD(domain.name)
         ? DeprecatedBackgroundColor
         : BackgroundColor;
@@ -276,7 +142,7 @@ export class MetaDataController {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
-        (await getOrCacheNowPfpNFT(
+        (await this.metadataService.getOrCacheNowPfpNFT(
           socialPictureValue,
           domain,
           resolution,
@@ -286,12 +152,15 @@ export class MetaDataController {
       return {
         image_data:
           pfpImageFromCDN ||
-          (await this.generateImageData(name, resolution?.resolution || {})),
+          (await this.metadataService.generateImageData(
+            name,
+            resolution?.resolution || {},
+          )),
       };
     }
 
     return {
-      image_data: await this.generateImageData(
+      image_data: await this.metadataService.generateImageData(
         name,
         resolution?.resolution || {},
       ),
@@ -323,7 +192,7 @@ export class MetaDataController {
       const socialPictureValue = resolution.resolution['social.picture.value'];
       const pfpImageFromCDN =
         socialPictureValue &&
-        (await getOrCacheNowPfpNFT(
+        (await this.metadataService.getOrCacheNowPfpNFT(
           socialPictureValue,
           domain,
           resolution,
@@ -333,339 +202,19 @@ export class MetaDataController {
       return (
         pfpImageFromCDN ||
         (await pathThatSvg(
-          await this.generateImageData(name, resolution?.resolution || {}),
+          await this.metadataService.generateImageData(
+            name,
+            resolution?.resolution || {},
+          ),
         ))
       );
     }
 
     return await pathThatSvg(
-      await this.generateImageData(name, resolution?.resolution || {}),
+      await this.metadataService.generateImageData(
+        name,
+        resolution?.resolution || {},
+      ),
     );
   }
-
-  private async defaultMetaResponse(
-    domainOrToken: string,
-  ): Promise<OpenSeaMetadata> {
-    const name = domainOrToken.includes('.') ? domainOrToken : null;
-
-    if (
-      name &&
-      !isSupportedTLD(name) &&
-      // We still want to return metadata for deprecated domains
-      !isDeprecatedTLD(name)
-    ) {
-      return {
-        name: null,
-        description: null,
-        properties: {
-          records: {},
-        },
-        external_url: null,
-        attributes: [],
-        image: null,
-      };
-    }
-    const description = name
-      ? this.getDomainDescription(new Domain({ name }), {})
-      : null;
-    const attributes = name ? this.getAttributeType(new Domain({ name })) : [];
-    const image = name ? this.generateDomainImageUrl(name) : null;
-    const external_url = name
-      ? `https://unstoppabledomains.com/search?searchTerm=${name}`
-      : null;
-    return {
-      name,
-      description,
-      properties: {
-        records: {},
-      },
-      external_url,
-      attributes,
-      image,
-    };
-  }
-
-  private getDomainDescription(
-    domain: Domain,
-    resolution: Record<string, string>,
-  ): string {
-    const ipfsDescriptionPart = this.getIpfsDescriptionPart(resolution);
-
-    // todo find a better way for this edge case.
-    if (domain.name === 'india.crypto') {
-      return 'This exclusive art piece by Amrit Pal Singh features hands of different skin tones spelling out the word HOPE in sign language. Hope embodies people coming together and having compassion for others in a way that transcends geographical borders. This art is a reminder that, while one individual can’t uplift humanity on their own, collective and inclusive efforts give rise to meaningful change.'.concat(
-        ipfsDescriptionPart,
-      );
-    }
-
-    if (domain.level === 1) {
-      return "This is the only TLD on the Unstoppable registry. It's not owned by anyone.".concat(
-        ipfsDescriptionPart,
-      );
-    } else if (domain.level === 2 || domain.level === 3) {
-      const description = belongsToTld(domain.name, UnstoppableDomainTlds.Coin)
-        ? '.coin domains are no longer supported by Unstoppable Domains. As a result, records of such domains cannot be updated. Learn more at our blog: https://unstoppabledomains.com/blog/coin. '
-        : 'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.';
-      return description.concat(ipfsDescriptionPart);
-    }
-
-    return 'BE CAREFUL! This is a subdomain. Even after purchasing this name, the parent domain has the right to revoke ownership of this domain at anytime. Unless the parent is a smart contract specifically designed otherwise.'.concat(
-      ipfsDescriptionPart,
-    );
-  }
-
-  private getIpfsDescriptionPart(records: Record<string, string>): string {
-    const ipfsHash = records['dweb.ipfs.hash'] || records['ipfs.html.value'];
-    if (ipfsHash) {
-      return `\nhttps://gateway.pinata.cloud/ipfs/${ipfsHash}`;
-    }
-    return '';
-  }
-
-  private getAttributeType(
-    domain: Domain,
-    meta?: {
-      verifiedNftPicture?: boolean;
-    },
-  ): OpenSeaMetadataAttribute[] {
-    const attributes: OpenSeaMetadataAttribute[] = [
-      {
-        trait_type: DomainAttributeTrait.Ending,
-        value: domain.extension,
-      },
-      {
-        trait_type: DomainAttributeTrait.Level,
-        value: domain.level,
-      },
-      {
-        trait_type: DomainAttributeTrait.Length,
-        value: domain.label.length,
-      },
-      {
-        trait_type: DomainAttributeTrait.Type,
-        value: getAttributeType(domain),
-      },
-    ];
-    const category = getAttributeCategory(domain);
-    if (category) {
-      attributes.push({
-        trait_type: DomainAttributeTrait.Category,
-        value: category,
-      });
-    }
-    const characterSet = getAttributeCharacterSet(domain);
-    if (characterSet !== AttributeCharacterSet.None) {
-      attributes.push({
-        trait_type: DomainAttributeTrait.AttributeCharacterSet,
-        value: characterSet,
-      });
-    }
-    if (meta?.verifiedNftPicture) {
-      attributes.push({
-        trait_type: DomainAttributeTrait.Picture,
-        value: AttributePictureType.VerifiedNft,
-      });
-    }
-
-    return attributes;
-  }
-
-  private isDomainWithCustomImage(name: string): boolean {
-    return Boolean(CustomImageDomains[name]);
-  }
-
-  private async generateImageData(
-    name: string,
-    resolution: Record<string, string>,
-  ): Promise<string> {
-    const domain = new Domain({ name });
-
-    // TLD is deprecated, UD does not support record updates anymore
-    if (isDeprecatedTLD(name)) {
-      return this.generateDefaultImageData(domain);
-    }
-
-    if (this.isDomainWithCustomImage(name)) {
-      return '';
-    }
-
-    const animalImage = await AnimalHelper.getAnimalImageData(name);
-    if (animalImage) {
-      return animalImage;
-    }
-
-    const imagePathFromDomain = resolution['social.image.value'];
-    if (
-      imagePathFromDomain &&
-      imagePathFromDomain.startsWith(
-        'https://cdn.unstoppabledomains.com/bucket/',
-      ) &&
-      imagePathFromDomain.endsWith('.svg')
-    ) {
-      try {
-        const ret = await fetch(imagePathFromDomain);
-        return await ret.text();
-      } catch (error) {
-        logger.error(
-          `Failed to generate image data from the following endpoint: ${imagePathFromDomain}`,
-        );
-        logger.error(error);
-        return this.generateDefaultImageData(domain);
-      }
-    }
-    return this.generateDefaultImageData(domain);
-  }
-
-  private generateDefaultImageData(domain: Domain) {
-    let fontSize: MetadataImageFontSize = 24;
-    if (domain.label.length > 21) {
-      fontSize = 20;
-    }
-    if (domain.label.length > 24) {
-      fontSize = 18;
-    }
-    if (domain.label.length > 27) {
-      fontSize = 16;
-    }
-    return DefaultImageData({
-      domain,
-      fontSize,
-    });
-  }
-
-  private generateDomainImageUrl(name: string): string {
-    if (this.isDomainWithCustomImage(name)) {
-      return `${BASE_IMAGE_URL}/${CustomImageDomains[name]}`;
-    }
-
-    const animalImageUrl = AnimalHelper.getAnimalImageUrl(name);
-    if (animalImageUrl) {
-      return animalImageUrl;
-    }
-
-    return DEFAULT_IMAGE_URL(name);
-  }
-}
-
-// maybe move to a helper file
-export async function fetchTokenMetadata(
-  resolution: DomainsResolution,
-): Promise<TokenMetadata> {
-  async function fetchOpenSeaMetadata(
-    contractAddress: string,
-    tokenId: string,
-  ) {
-    const openSea = initOpenSeaSdk();
-    const response = await openSea.api.getAsset({
-      tokenAddress: contractAddress,
-      tokenId: tokenId,
-    });
-    return {
-      image: response.imageUrl.endsWith('=s250')
-        ? response.imageUrl.split('=s250')[0]
-        : response.imageUrl,
-      background_color: response.backgroundColor,
-      owner_of: response.owner.address,
-    };
-  }
-
-  async function fetchMoralisMetadata(options: {
-    chain: SupportedL2Chain | 'eth';
-    address: string;
-    token_id: string;
-  }) {
-    const moralis = await initMoralisSdk();
-    return await moralis.Web3API.token.getTokenIdMetadata(options);
-  }
-
-  let chainId = '';
-  let contractAddress = '';
-  let tokenId = '';
-
-  if (resolution.resolution['social.picture.value']) {
-    try {
-      const parsedPicture = parsePictureRecord(
-        resolution.resolution['social.picture.value'],
-      );
-
-      chainId = parsedPicture.chainId;
-      contractAddress = parsedPicture.contractAddress;
-      tokenId = parsedPicture.tokenId;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  const options = {
-    chain: getChainName(chainId),
-    address: contractAddress,
-    token_id: tokenId,
-  };
-  let image = '';
-  let fetchedMetadata;
-  let tokenIdMetadata;
-  let validNftPfp = false;
-
-  if (options.address && options.token_id) {
-    try {
-      if (options.chain === 'eth') {
-        fetchedMetadata = await fetchOpenSeaMetadata(contractAddress, tokenId);
-        image = fetchedMetadata.image;
-      } else {
-        tokenIdMetadata = await fetchMoralisMetadata(options);
-      }
-    } catch (error: any) {
-      if (!error.message.includes('No metadata found')) {
-        logger.error(error);
-      }
-    }
-  }
-  const fetchedOwnerAddress =
-    (tokenIdMetadata as any)?.owner_of || fetchedMetadata?.owner_of || '';
-  if (
-    resolution?.ownerAddress &&
-    fetchedOwnerAddress.toLowerCase() === resolution.ownerAddress.toLowerCase()
-  ) {
-    validNftPfp = true;
-  }
-  if (validNftPfp && tokenIdMetadata?.metadata) {
-    try {
-      fetchedMetadata = JSON.parse(tokenIdMetadata.metadata);
-      image = fetchedMetadata?.image;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  if (validNftPfp && !image && !!tokenIdMetadata?.token_uri) {
-    const response = await fetch(tokenIdMetadata.token_uri, {
-      timeout: 5000,
-    });
-    fetchedMetadata = await response.json();
-    image = fetchedMetadata?.image;
-  }
-  return { fetchedMetadata, image }; // TODO: get rid of socialPicture param
-}
-
-async function getOrCacheNowPfpNFT(
-  socialPicture: string,
-  domain: Domain,
-  resolution: DomainsResolution,
-  withOverlay: boolean,
-) {
-  const cachedPfpNFT = await getNftPfpImageFromCDN(
-    socialPicture,
-    withOverlay ? domain.name : undefined,
-  );
-  if (!cachedPfpNFT) {
-    await cacheSocialPictureInCDN(socialPicture, domain, resolution);
-    // This is not optimal, should return image instead of 2nd call
-    // TODO: improve PFP NFT fetching after caching in CDN
-    const trulyCachedPFPNFT = await getNftPfpImageFromCDN(
-      socialPicture,
-      withOverlay ? domain.name : undefined,
-    );
-    return trulyCachedPFPNFT;
-  }
-  return cachedPfpNFT;
 }
