@@ -42,7 +42,7 @@ describe('getAttributeType', () => {
     });
     subdomain.parent = domain;
     await subdomain.save();
-    expect(await getAttributeType(domain)).to.be.equal(AttributeType.Standard);
+    expect(getAttributeType(domain)).to.be.equal(AttributeType.Standard);
   });
 });
 
