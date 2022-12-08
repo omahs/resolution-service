@@ -8,6 +8,9 @@ import {
   AttributeType,
 } from '.';
 import { Domain } from '../../models';
+import { Blockchain } from '../../types/common';
+import { eip137Namehash } from '../namehash';
+import { DomainTestHelper } from '../testing/DomainTestHelper';
 
 describe('getAttributeType', () => {
   it('should return subdomain', () => {
@@ -18,13 +21,28 @@ describe('getAttributeType', () => {
       );
     }
   });
-  it('should return standard', () => {
-    const domainNames = ['test.nft', 'efef.x', 'x'];
-    for (const domainName of domainNames) {
-      expect(getAttributeType(new Domain({ name: domainName }))).to.equal(
-        AttributeType.Standard,
-      );
-    }
+  it('should return standard', async () => {
+    const { domain } = await DomainTestHelper.createTestDomain({
+      name: 'test.nft',
+      node: eip137Namehash('test.nft'),
+      ownerAddress: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
+      blockchain: Blockchain.ETH,
+      networkId: 1337,
+      registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+      resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+    });
+    const { domain: subdomain } = await DomainTestHelper.createTestDomain({
+      name: 'sub.test.nft',
+      node: eip137Namehash('sub.test.nft'),
+      ownerAddress: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
+      blockchain: Blockchain.ETH,
+      networkId: 1337,
+      registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+      resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+    });
+    subdomain.parent = domain;
+    await subdomain.save();
+    expect(getAttributeType(domain)).to.be.equal(AttributeType.Standard);
   });
 });
 
