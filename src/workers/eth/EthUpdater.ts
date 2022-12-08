@@ -446,7 +446,7 @@ export class EthUpdater {
         this.logger.info(
           `Processing event: type - '${event.event}'; args - ${JSON.stringify(
             event.args,
-          )}; error - ${event.decodeError}`,
+          )};${event.decodeError ? ` error: ${event.decodeError}` : ''}`,
         );
         switch (event.event) {
           case 'Transfer': {
@@ -497,18 +497,25 @@ export class EthUpdater {
           default:
             break;
         }
-        if (save && event.event) {
-          await this.saveEvent(event);
-        }
-        lastProcessedEvent = event;
       } catch (error) {
         this.logger.error(
           `Failed to process ${this.blockchain} event: ${JSON.stringify(
             event,
           )}. Error:  ${error}`,
         );
-        throw error;
       }
+      try {
+        if (save && event.event) {
+          await this.saveEvent(event);
+        }
+      } catch (error) {
+        this.logger.error(
+          `Failed to save ${this.blockchain} event: ${JSON.stringify(
+            event,
+          )}. Error:  ${error}`,
+        );
+      }
+      lastProcessedEvent = event;
     }
   }
 

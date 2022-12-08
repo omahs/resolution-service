@@ -451,6 +451,43 @@ describe('EthUpdater', () => {
         Resolve: 1,
       });
     });
+
+    it('saves an event that failed to process', async () => {
+      // run the service for the first time to process mint events
+      await EthereumHelper.mineBlocksForConfirmation();
+      await service.run();
+
+      const recipient = await EthereumHelper.createAccount();
+      const recipientAddress = await recipient.getAddress();
+
+      // perform a transfer on-chain
+      await unsRegistry.functions
+        .transferFrom(owner, recipientAddress, uns.tokenId)
+        .then((receipt) => receipt.wait());
+
+      await EthereumHelper.mineBlocksForConfirmation();
+
+      // find the domain
+      let domain = await Domain.findOne({ where: { name: uns.name } });
+      expect(domain).to.not.be.undefined;
+      await domain?.remove(); // remove it in the DB
+
+      // the transfer event processing should fail, but events should be saved
+      await service.run();
+
+      // the domain does not exist
+      domain = await Domain.findOne({ where: { name: uns.name } });
+      expect(domain).to.be.undefined;
+
+      // but we have all events in the DB
+      expect(await CnsRegistryEvent.groupCount('type')).to.deep.equal({
+        Approval: 1,
+        NewURI: 2,
+        ResetRecords: 1,
+        Transfer: 3,
+        Resolve: 1,
+      });
+    });
   });
 
   describe('add new domain', () => {
