@@ -444,8 +444,12 @@ export class MetaDataController {
         value: domain.label.length,
       },
       {
+        trait_type: DomainAttributeTrait.Subdomains,
+        value: await Domain.getSubdomainCountByParentName(domain.name),
+      },
+      {
         trait_type: DomainAttributeTrait.Type,
-        value: await getAttributeType(domain),
+        value: getAttributeType(domain),
       },
     ];
     const category = getAttributeCategory(domain);

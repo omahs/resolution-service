@@ -87,9 +87,10 @@ describe('MetaDataController', () => {
         { trait_type: DomainAttributeTrait.Level, value: 2 },
         { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
         { trait_type: DomainAttributeTrait.Length, value: 10 },
+        { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
         {
           trait_type: DomainAttributeTrait.Type,
-          value: AttributeType.Clean,
+          value: AttributeType.Standard,
         },
         {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -196,9 +197,10 @@ describe('MetaDataController', () => {
           value: UnstoppableDomainTlds.Coin,
         },
         { trait_type: DomainAttributeTrait.Length, value: 10 },
+        { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
         {
           trait_type: DomainAttributeTrait.Type,
-          value: AttributeType.Clean,
+          value: AttributeType.Standard,
         },
         {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -364,9 +366,10 @@ describe('MetaDataController', () => {
           { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
           { trait_type: DomainAttributeTrait.Level, value: 2 },
           { trait_type: DomainAttributeTrait.Length, value: 7 },
+          { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
           {
             trait_type: DomainAttributeTrait.Type,
-            value: AttributeType.Clean,
+            value: AttributeType.Standard,
           },
           {
             trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -416,9 +419,10 @@ describe('MetaDataController', () => {
           { trait_type: DomainAttributeTrait.Ending, value: 'wallet' },
           { trait_type: DomainAttributeTrait.Level, value: 2 },
           { trait_type: DomainAttributeTrait.Length, value: uns.label.length },
+          { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
           {
             trait_type: DomainAttributeTrait.Type,
-            value: AttributeType.Clean,
+            value: AttributeType.Standard,
           },
           {
             trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -501,9 +505,10 @@ describe('MetaDataController', () => {
             trait_type: DomainAttributeTrait.Length,
             value: domain.label.length,
           },
+          { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
           {
             trait_type: DomainAttributeTrait.Type,
-            value: AttributeType.Clean,
+            value: AttributeType.Standard,
           },
           {
             trait_type: DomainAttributeTrait.AttributeCharacterSet,

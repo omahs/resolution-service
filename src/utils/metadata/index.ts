@@ -17,6 +17,7 @@ export enum DomainAttributeTrait {
   Type = 'Type',
   Picture = 'Picture',
   AttributeCharacterSet = 'Character Set',
+  Subdomains = 'Subdomains',
 }
 
 export enum AttributePictureType {
@@ -35,7 +36,6 @@ export enum AttributeType {
   Subdomain = 'subdomain',
   Animal = 'animal',
   Premium = 'premium',
-  Clean = 'clean', // domain has no subdomains
 }
 
 export enum AttributeCategory {
@@ -96,9 +96,7 @@ export const getAttributeCategory = (
   return getNumberClub(domain);
 };
 
-export const getAttributeType = async (
-  domain: Domain,
-): Promise<AttributeType> => {
+export const getAttributeType = (domain: Domain): AttributeType => {
   const AnimalHelper: AnimalDomainHelper = new AnimalDomainHelper();
   if (PremiumDomains.includes(domain.name)) {
     return AttributeType.Premium;
@@ -108,9 +106,6 @@ export const getAttributeType = async (
   }
   if (domain.level > 2) {
     return AttributeType.Subdomain;
-  }
-  if (!(await Domain.isNameParentOfChild(domain.name))) {
-    return AttributeType.Clean;
   }
   return AttributeType.Standard;
 };

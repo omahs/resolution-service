@@ -13,19 +13,11 @@ import { eip137Namehash } from '../namehash';
 import { DomainTestHelper } from '../testing/DomainTestHelper';
 
 describe('getAttributeType', () => {
-  it('should return subdomain', async () => {
+  it('should return subdomain', () => {
     const domainNames = ['test.testing.nft', 'efef.efff.x', 'wef.efe.f.ef.0.x'];
     for (const domainName of domainNames) {
-      expect(await getAttributeType(new Domain({ name: domainName }))).to.equal(
+      expect(getAttributeType(new Domain({ name: domainName }))).to.equal(
         AttributeType.Subdomain,
-      );
-    }
-  });
-  it('should return clean', async () => {
-    const domainNames = ['test.nft', 'tsioerj.x'];
-    for (const domainName of domainNames) {
-      expect(await getAttributeType(new Domain({ name: domainName }))).to.equal(
-        AttributeType.Clean,
       );
     }
   });
