@@ -129,17 +129,6 @@ export default class Domain extends Model {
     return this.reverseResolutions.length > 0;
   }
 
-  static async getSubdomainCountByParentName(
-    name: string,
-    repository: Repository<Domain> = this.getRepository(),
-  ): Promise<number> {
-    return repository.count({
-      where: { parent: { name } },
-      relations: ['parent'],
-      cache: env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME,
-    });
-  }
-
   static async findAllByNodes(
     nodes: string[],
     repository: Repository<Domain> = this.getRepository(),

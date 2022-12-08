@@ -11,7 +11,6 @@ import nock from 'nock';
 import { nockConfigure } from '../mochaHooks';
 import { DomainTestHelper } from '../utils/testing/DomainTestHelper';
 import DomainsReverseResolution from './DomainsReverseResolution';
-import { eip137Namehash } from '../utils/namehash';
 
 describe('Domain', () => {
   describe('constructor()', () => {
@@ -244,37 +243,6 @@ describe('Domain', () => {
         '0xb72f443a17edf4a55f766cf3c83469e6f96494b16823a41a4acb25800f303103',
       );
       expect(fromDb?.parent?.name).to.equal('crypto');
-    });
-  });
-
-  describe('.getSubdomainCountByParentName()', () => {
-    it('should return subdomain count', async () => {
-      const { domain } = await DomainTestHelper.createTestDomain({
-        name: 'test.nft',
-        node: eip137Namehash('test.nft'),
-        ownerAddress: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
-        blockchain: Blockchain.ETH,
-        networkId: 1337,
-        registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
-        resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
-      });
-      const { domain: subdomain } = await DomainTestHelper.createTestDomain({
-        name: 'sub.test.nft',
-        node: eip137Namehash('sub.test.nft'),
-        ownerAddress: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
-        blockchain: Blockchain.ETH,
-        networkId: 1337,
-        registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
-        resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
-      });
-      subdomain.parent = domain;
-      await subdomain.save();
-      expect(
-        await Domain.getSubdomainCountByParentName(domain.name),
-      ).to.be.equal(1);
-      expect(
-        await Domain.getSubdomainCountByParentName(subdomain.name),
-      ).to.be.equal(0);
     });
   });
 

@@ -96,12 +96,9 @@ export class MetaDataController {
       domain,
       resolution.resolution,
     );
-    const DomainAttributeTrait = await this.metadataService.getAttributeType(
-      domain,
-      {
-        verifiedNftPicture: isSocialPictureVerified,
-      },
-    );
+    const DomainAttributeTrait = this.metadataService.getAttributeType(domain, {
+      verifiedNftPicture: isSocialPictureVerified,
+    });
     const imageUrl = this.metadataService.generateDomainImageUrl(domain.name);
     const metadata: OpenSeaMetadata = {
       name: domain.name,

@@ -17,7 +17,6 @@ export enum DomainAttributeTrait {
   Type = 'Type',
   Picture = 'Picture',
   AttributeCharacterSet = 'Character Set',
-  Subdomains = 'Subdomains',
 }
 
 export enum AttributePictureType {
