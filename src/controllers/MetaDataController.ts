@@ -1,9 +1,11 @@
 import {
   Controller,
   Get,
+  Head,
   Header,
   Param,
   QueryParam,
+  Res,
   UseBefore,
 } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
@@ -68,6 +70,15 @@ export class MetaDataController {
     };
   }
 
+  @Head('/metadata/:domainOrToken')
+  @ResponseSchema(OpenSeaMetadata)
+  async headMetaData(
+    @Param('domainOrToken') domainOrToken: string,
+    @QueryParam('withOverlay') withOverlay = true,
+  ) {
+    return {};
+  }
+
   @Get('/metadata/:domainOrToken')
   @ResponseSchema(OpenSeaMetadata)
   async getMetaData(
@@ -122,6 +133,15 @@ export class MetaDataController {
     }
 
     return metadata;
+  }
+
+  @Head('/image/:domainOrToken')
+  @ResponseSchema(OpenSeaMetadata)
+  async headImage(
+    @Param('domainOrToken') domainOrToken: string,
+    @QueryParam('withOverlay') withOverlay = true,
+  ) {
+    return {};
   }
 
   @Get('/image/:domainOrToken')

@@ -1,4 +1,11 @@
-import { Get, JsonController, Redirect, UseBefore } from 'routing-controllers';
+import {
+  Get,
+  Head,
+  JsonController,
+  Redirect,
+  Res,
+  UseBefore,
+} from 'routing-controllers';
 import 'reflect-metadata';
 import { ResponseSchema } from 'routing-controllers-openapi';
 import { IsBoolean, IsNumber, ValidateNested } from 'class-validator';
@@ -70,6 +77,11 @@ export class StatusController {
       status.latestNetworkBlock - status.latestMirroredBlock <=
       status.acceptableDelayInBlocks + config.CONFIRMATION_BLOCKS;
     return status;
+  }
+
+  @Head('/')
+  headRoot() {
+    // Avoids redirects to /api-docs
   }
 
   @Get('/')

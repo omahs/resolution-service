@@ -53,7 +53,39 @@ describe('MetaDataController', () => {
     await L2Fixture.networkHelper.stopNetwork();
   });
 
-  describe('GET /metadata/:DomainOrToken', () => {
+  describe('HEAD', () => {
+    let dummyDomainName: string;
+
+    beforeEach(() => {
+      dummyDomainName = 'unstoppable.crypto';
+    });
+
+    describe('/metadata/:domainOrToken', () => {
+      it('should return empty body', async () => {
+        const response = await supertest(api)
+          .head(`/metadata/${dummyDomainName}`)
+          .send()
+          .then((r) => r);
+
+        const emptyBody = {};
+        expect(response.body).to.be.deep.equal(emptyBody);
+      });
+    });
+
+    describe('/image/:domainOrToken', () => {
+      it('should return empty body', async () => {
+        const response = await supertest(api)
+          .head(`/image/${dummyDomainName}`)
+          .send()
+          .then((r) => r);
+
+        const emptyBody = {};
+        expect(response.body).to.be.deep.equal(emptyBody);
+      });
+    });
+  });
+
+  describe('GET /metadata/:domainOrToken', () => {
     it('should work', async () => {
       const { domain } = await DomainTestHelper.createTestDomain({
         resolution: {

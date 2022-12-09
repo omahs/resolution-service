@@ -37,6 +37,18 @@ describe('StatusController', () => {
     sinonSandbox.restore();
   });
 
+  describe('HEAD /', () => {
+    it('should return empty body', async () => {
+      const response = await supertest(api)
+        .head(`/`)
+        .send()
+        .then((r) => r);
+
+      const emptyBody = {};
+      expect(response.body).to.be.deep.equal(emptyBody);
+    });
+  });
+
   it('should redirect user', async () => {
     const res = await supertest(api)
       .get('/')
