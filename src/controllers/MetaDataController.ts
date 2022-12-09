@@ -5,30 +5,22 @@ import {
   Header,
   Param,
   QueryParam,
-  Res,
   UseBefore,
+  BadRequestError,
 } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
-import AnimalDomainHelper from '../utils/AnimalDomainHelper/AnimalDomainHelper';
 import {
   BackgroundColor,
   DeprecatedBackgroundColor,
 } from '../utils/generalImage';
-import { MetadataImageFontSize, UnstoppableDomainTlds } from '../types/common';
+import { UnstoppableDomainTlds } from '../types/common';
 import { pathThatSvg } from 'path-that-svg';
 
 import { env } from '../env';
-import {
-  getNftPfpImageFromCDN,
-  cacheSocialPictureInCDN,
-  checkNftPfpImageExistFromCDN,
-} from '../utils/socialPicture';
+import { checkNftPfpImageExistFromCDN } from '../utils/socialPicture';
 import { getDomainResolution } from '../services/Resolution';
-import { Domain, DomainsResolution } from '../models';
 import { MetadataService } from '../services/MetadataService';
 import { ImageResponse, OpenSeaMetadata } from './dto/Metadata';
-import { OpenSeaPort, Network } from 'opensea-js';
-import { EthereumProvider } from '../workers/EthereumProvider';
 import {
   belongsToTld,
   findDomainByNameOrToken,
@@ -85,6 +77,10 @@ export class MetaDataController {
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
   ): Promise<OpenSeaMetadata> {
+    if (domainOrToken.includes('.') && !isSupportedTLD(domainOrToken)) {
+      throw new BadRequestError('Unsupported TLD');
+    }
+
     const domain = await findDomainByNameOrToken(domainOrToken);
     if (!domain) {
       return this.metadataService.defaultMetaResponse(domainOrToken);
@@ -150,6 +146,9 @@ export class MetaDataController {
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
   ): Promise<ImageResponse> {
+    if (domainOrToken.includes('.') && !isSupportedTLD(domainOrToken)) {
+      throw new BadRequestError('Unsupported TLD');
+    }
     const domain = await findDomainByNameOrToken(domainOrToken);
     const resolution = domain ? getDomainResolution(domain) : undefined;
     const name = domain ? domain.name : domainOrToken;
@@ -194,11 +193,19 @@ export class MetaDataController {
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
   ): Promise<string> {
-    const domain = await findDomainByNameOrToken(
-      domainOrToken.replace('.svg', ''),
-    );
+    const SVG_SUFFIX = '.svg';
+    const domainOrTokenSanitized = domainOrToken.endsWith(SVG_SUFFIX)
+      ? domainOrToken.substring(0, domainOrToken.length - SVG_SUFFIX.length) // remove the .svg suffix
+      : domainOrToken;
+    if (
+      domainOrTokenSanitized.includes('.') &&
+      !isSupportedTLD(domainOrTokenSanitized)
+    ) {
+      throw new BadRequestError('Unsupported TLD');
+    }
+    const domain = await findDomainByNameOrToken(domainOrTokenSanitized);
     const resolution = domain ? getDomainResolution(domain) : undefined;
-    const name = domain ? domain.name : domainOrToken.replace('.svg', '');
+    const name = domain ? domain.name : domainOrTokenSanitized;
 
     if (!name.includes('.')) {
       return '';
