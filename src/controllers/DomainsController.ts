@@ -188,12 +188,14 @@ export class DomainsController {
     qb.where(`1 = 1`);
 
     // Filter domains with dead address owners from response
-    const deadAddresses = DeadAdresses.map(
-      (addr) => "'" + addr + "'",
-    ).toString();
-    if (!query.owners) {
-      qb.where(`resolution.owner_address not in (${deadAddresses})`);
-    }
+
+    // TODO: figure out a way to filter more efficiently
+    // const deadAddresses = DeadAdresses.map(
+    //   (addr) => "'" + addr + "'",
+    // ).toString();
+    // if (!query.owners) {
+    //   qb.where(`resolution.owner_address not in (${deadAddresses})`);
+    // }
 
     for (const q of where) {
       qb.andWhere(q.query, q.parameters);
@@ -203,7 +205,7 @@ export class DomainsController {
     }
 
     qb.take(query.perPage + 1);
-    const domains = await qb
+    let domains = await qb
       .cache(env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME)
       .getMany();
     const hasMore = domains.length > query.perPage;
@@ -212,6 +214,13 @@ export class DomainsController {
     }
     const lastDomain =
       domains.length !== 0 ? domains[domains.length - 1] : undefined;
+
+    if (!query.owners) {
+      domains = domains.filter((domain) => {
+        const owner = getDomainResolution(domain).ownerAddress;
+        return owner && !DeadAdresses.includes(owner);
+      });
+    }
 
     const response = new DomainsListResponse();
     response.data = [];
