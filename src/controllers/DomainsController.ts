@@ -156,16 +156,19 @@ export class DomainsController {
       }
     }
 
+    let startingAfterId = undefined;
+    const sortDirectionSign = query.sort.direction === 'ASC' ? '>' : '<';
     if (query.startingAfter.length !== 0) {
       const startingVals = query.startingAfter.split('|');
       if (startingVals.length !== query.sort.columns.length) {
         throw new Error('Invalid startingAfter value ' + query.startingAfter);
       }
       for (let i = 0; i < query.sort.columns.length; i++) {
+        if (query.sort.columns[i] === 'domain.id') {
+          startingAfterId = startingVals[i];
+        }
         where.push({
-          query: `${query.sort.columns[i]} ${
-            query.sort.direction === 'ASC' ? '>' : '<'
-          } :startingAfter${i}`,
+          query: `${query.sort.columns[i]} ${sortDirectionSign} :startingAfter${i}`,
           parameters: { [`startingAfter${i}`]: startingVals[i] },
         });
       }
@@ -182,20 +185,34 @@ export class DomainsController {
     }
 
     const qb = Domain.createQueryBuilder('domain');
-    qb.leftJoinAndSelect('domain.resolutions', 'resolution');
-    qb.leftJoinAndSelect('domain.reverseResolutions', 'reverseResolutions');
-    qb.leftJoinAndSelect('domain.parent', 'parent');
+    if (startingAfterId) {
+      qb.leftJoinAndSelect(
+        'domain.resolutions',
+        'resolution',
+        `resolution.domain ${sortDirectionSign} :resDomainId`,
+        { resDomainId: startingAfterId },
+      );
+      qb.leftJoinAndSelect(
+        'domain.reverseResolutions',
+        'reverseResolutions',
+        `reverseResolutions.domain ${sortDirectionSign} :reverseDomainId`,
+        { reverseDomainId: startingAfterId },
+      );
+      qb.leftJoinAndSelect('domain.parent', 'parent');
+    } else {
+      qb.leftJoinAndSelect('domain.resolutions', 'resolution');
+      qb.leftJoinAndSelect('domain.reverseResolutions', 'reverseResolutions');
+      qb.leftJoinAndSelect('domain.parent', 'parent');
+    }
     qb.where(`1 = 1`);
 
     // Filter domains with dead address owners from response
-
-    // TODO: figure out a way to filter more efficiently
-    // const deadAddresses = DeadAdresses.map(
-    //   (addr) => "'" + addr + "'",
-    // ).toString();
-    // if (!query.owners) {
-    //   qb.where(`resolution.owner_address not in (${deadAddresses})`);
-    // }
+    const deadAddresses = DeadAdresses.map(
+      (addr) => "'" + addr + "'",
+    ).toString();
+    if (!query.owners) {
+      qb.where(`resolution.owner_address not in (${deadAddresses})`);
+    }
 
     for (const q of where) {
       qb.andWhere(q.query, q.parameters);
@@ -205,7 +222,7 @@ export class DomainsController {
     }
 
     qb.take(query.perPage + 1);
-    let domains = await qb
+    const domains = await qb
       .cache(env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME)
       .getMany();
     const hasMore = domains.length > query.perPage;
@@ -214,13 +231,6 @@ export class DomainsController {
     }
     const lastDomain =
       domains.length !== 0 ? domains[domains.length - 1] : undefined;
-
-    if (!query.owners) {
-      domains = domains.filter((domain) => {
-        const owner = getDomainResolution(domain).ownerAddress;
-        return owner && !DeadAdresses.includes(owner);
-      });
-    }
 
     const response = new DomainsListResponse();
     response.data = [];
