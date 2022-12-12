@@ -94,30 +94,30 @@ export class StatusController {
   @ResponseSchema(StatusResponse)
   async getStatus(): Promise<StatusResponse> {
     const statusResponse = new StatusResponse();
-    // const blockchain = new Blockchains();
-    // blockchain.ETH = await StatusController.blockchainStatusForNetwork(
-    //   Blockchain.ETH,
-    //   env.APPLICATION.ETHEREUM,
-    //   () => {
-    //     return ethersUtils.getLatestNetworkBlock(EthereumProvider);
-    //   },
-    // );
-    // blockchain.MATIC = await StatusController.blockchainStatusForNetwork(
-    //   Blockchain.MATIC,
-    //   env.APPLICATION.POLYGON,
-    //   () => {
-    //     return ethersUtils.getLatestNetworkBlock(MaticProvider);
-    //   },
-    // );
-    // blockchain.ZIL = await StatusController.blockchainStatusForNetwork(
-    //   Blockchain.ZIL,
-    //   env.APPLICATION.ZILLIQA,
-    //   async () => {
-    //     return (await this.zilProvider.getChainStats()).txHeight;
-    //   },
-    // );
+    const blockchain = new Blockchains();
+    blockchain.ETH = await StatusController.blockchainStatusForNetwork(
+      Blockchain.ETH,
+      env.APPLICATION.ETHEREUM,
+      () => {
+        return ethersUtils.getLatestNetworkBlock(EthereumProvider);
+      },
+    );
+    blockchain.MATIC = await StatusController.blockchainStatusForNetwork(
+      Blockchain.MATIC,
+      env.APPLICATION.POLYGON,
+      () => {
+        return ethersUtils.getLatestNetworkBlock(MaticProvider);
+      },
+    );
+    blockchain.ZIL = await StatusController.blockchainStatusForNetwork(
+      Blockchain.ZIL,
+      env.APPLICATION.ZILLIQA,
+      async () => {
+        return (await this.zilProvider.getChainStats()).txHeight;
+      },
+    );
 
-    // statusResponse.blockchain = blockchain;
+    statusResponse.blockchain = blockchain;
     return statusResponse;
   }
 
