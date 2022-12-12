@@ -568,6 +568,7 @@ describe('DomainsController', () => {
           apiKey: testApiKey.apiKey,
           domainName,
           uri: `/domains/${domainName}`,
+          responseCode: 200,
         },
       });
 
@@ -583,6 +584,7 @@ describe('DomainsController', () => {
           apiKey: testApiKey.apiKey,
           domainName,
           uri: `/domains/${domainName}`,
+          responseCode: 200,
         },
       });
 
@@ -598,6 +600,7 @@ describe('DomainsController', () => {
           apiKey: testApiKey.apiKey,
           domainName,
           uri: `/domains/${domainName}`,
+          responseCode: 200,
         },
       });
       trackStub.restore();

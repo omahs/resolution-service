@@ -216,6 +216,8 @@ export class DomainsController {
 
     const response = new DomainsListResponse();
     response.data = [];
+    res.locals.trackedResponseProperties = {};
+    res.locals.trackedResponseProperties.response_domain_names = [];
     for (const domain of domains) {
       const resolution = getDomainResolution(domain);
       response.data.push({
@@ -235,6 +237,9 @@ export class DomainsController {
           },
         },
       });
+      res.locals.trackedResponseProperties.response_domain_names.push(
+        domain.name,
+      );
     }
 
     response.meta = {

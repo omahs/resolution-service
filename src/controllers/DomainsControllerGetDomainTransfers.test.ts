@@ -133,6 +133,7 @@ describe('DomainsController', () => {
           apiKey: testApiKey.apiKey,
           domainName: testDomain.name,
           uri: `/domains/${testDomain.name}/transfers/latest`,
+          responseCode: 200,
         },
       });
     });
@@ -196,6 +197,7 @@ describe('DomainsController', () => {
           apiKey: testApiKey.apiKey,
           domainName: testDomain.name,
           uri: `/domains/${testDomain.name}/transfers/latest`,
+          responseCode: 200,
         },
       });
     });

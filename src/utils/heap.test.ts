@@ -17,7 +17,7 @@ describe('Heap Utils', () => {
       const propertyValues = ['testing', stringWithLength1024, 'test'];
       const propParam = normalizeHeapPropParam(propertyValues, 'test');
 
-      expect(propParam.length).to.be.lessThanOrEqual(
+      expect(propParam?.length).to.be.lessThanOrEqual(
         env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT,
       );
       expect(propParam).to.be.equal('testing,...');
@@ -31,7 +31,7 @@ describe('Heap Utils', () => {
       const propertyValues = ['testing', 'test'];
       const propParam = normalizeHeapPropParam(propertyValues, 'test');
 
-      expect(propParam.length).to.be.lessThanOrEqual(
+      expect(propParam?.length).to.be.lessThanOrEqual(
         env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT,
       );
       expect(propParam).to.be.equal('testing,test');

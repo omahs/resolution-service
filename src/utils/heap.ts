@@ -3,6 +3,7 @@ import request from 'request-promise';
 import { HeapEvents, HeapEventsProperties } from '../types/heap';
 import { logger } from '../logger';
 import { HttpMethods } from '../types/common';
+import { ParsedQs } from 'qs';
 
 export const track = async (params: {
   identity: string;
@@ -39,58 +40,82 @@ export const track = async (params: {
 // @see https://help.heap.io/definitions/properties/properties-overview/#property-data-types
 // https://help.heap.io/definitions/properties/how-to-create-defined-properties/
 export const normalizeHeapPropParam = (
-  property: string[] | number[],
+  property: undefined | string | string[] | ParsedQs | ParsedQs[] | number[],
   propertyName: string,
-): string => {
-  let result = `${property[0]}`;
+): string | undefined => {
+  console.log;
+  if (property instanceof Array) {
+    let result = `${property[0]}`;
 
-  if (result.length > env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT) {
-    logger.info(
-      `Heap property (${propertyName}) has reached the max character length: ${property}`,
-    );
-    return '...,';
-  }
+    if (result.length > env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT) {
+      logger.info(
+        `Heap property (${propertyName}) has reached the max character length: ${property}`,
+      );
+      return '...,';
+    }
 
-  // Add data to string only if data does not pass character limit constraint.
-  if (property.length > 1) {
-    const remainingProperties = property.slice(1);
-    for (const prop of remainingProperties) {
-      if (
-        `${result},${prop}`.length <=
-        env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT
-      ) {
-        result = `${result},${prop}`;
-      }
-
-      if (
-        `${result},${prop}`.length >
-        env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT
-      ) {
-        // Add ',...' to indicate that the property has been truncated.
+    // Add data to string only if data does not pass character limit constraint.
+    if (property.length > 1) {
+      const remainingProperties = property.slice(1);
+      for (const prop of remainingProperties) {
         if (
-          `${result},...`.length <=
+          `${result},${prop}`.length <=
           env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT
         ) {
-          result = `${result},...`;
-        } else {
-          // determine where the result length with ',...' is not > max
-          const index = determineIndex(result.split(','));
-          if (index === -1) {
-            logger.info(
-              `Heap property (${propertyName}) has reached the max character length: ${property}`,
-            );
-            result = '...,';
-            break;
-          }
-
-          result = `${result.split(',').slice(0, index).join(',')},...`;
+          result = `${result},${prop}`;
         }
 
-        logger.info(
-          `Heap property (${propertyName}) has reached the max character length: ${property}`,
-        );
-        break;
+        if (
+          `${result},${prop}`.length >
+          env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT
+        ) {
+          // Add ',...' to indicate that the property has been truncated.
+          if (
+            `${result},...`.length <=
+            env.APPLICATION.HEAP.PROP_MAX_CHARACTER_LIMIT
+          ) {
+            result = `${result},...`;
+          } else {
+            // determine where the result length with ',...' is not > max
+            const index = determineIndex(result.split(','));
+            if (index === -1) {
+              logger.info(
+                `Heap property (${propertyName}) has reached the max character length: ${property}`,
+              );
+              result = '...,';
+              break;
+            }
+
+            result = `${result.split(',').slice(0, index).join(',')},...`;
+          }
+
+          logger.info(
+            `Heap property (${propertyName}) has reached the max character length: ${property}`,
+          );
+          break;
+        }
       }
+    }
+
+    return result;
+  }
+
+  return;
+};
+
+export const normalizeResponseProperties = (trackedProperties: {
+  [key: string]: string | string[];
+}): Partial<HeapEventsProperties> => {
+  const result: Partial<HeapEventsProperties> = {};
+
+  for (const property in trackedProperties) {
+    result[property] = trackedProperties[property];
+
+    if (trackedProperties[property] instanceof Array) {
+      result[property] = normalizeHeapPropParam(
+        trackedProperties[property],
+        property,
+      );
     }
   }
 
@@ -117,4 +142,38 @@ const determineIndex = (array: string[] | number[]): number => {
   }
 
   return result;
+};
+
+export const parseQueryParams = (
+  params: ParsedQs,
+): Partial<HeapEventsProperties> => {
+  const props: Partial<HeapEventsProperties> = {};
+
+  for (const queryParam in params) {
+    const renamedQueryParam = determineQueryParamTrackingName(queryParam);
+
+    if (params[queryParam] && params[queryParam] instanceof Array) {
+      props[renamedQueryParam] = normalizeHeapPropParam(
+        params[queryParam],
+        queryParam,
+      );
+    } else {
+      props[renamedQueryParam] = params[queryParam];
+    }
+  }
+
+  return props;
+};
+
+const determineQueryParamTrackingName = (paramName: string): string => {
+  const renamedHeapPropertyNames: { [key: string]: string } = {
+    owners: 'owners_address',
+    domains: 'domain_names',
+  };
+
+  if (renamedHeapPropertyNames[paramName]) {
+    return renamedHeapPropertyNames[paramName];
+  }
+
+  return paramName;
 };

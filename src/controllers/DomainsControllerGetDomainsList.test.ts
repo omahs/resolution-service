@@ -74,6 +74,11 @@ describe('DomainsController', () => {
         properties: {
           apiKey: testApiKey.apiKey,
           uri,
+          owners_address:
+            '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2,0x111115e932a88b2e7d0130712b3aa9fb7c522222',
+          tlds: 'crypto',
+          response_domain_names: 'test1.crypto,test3.crypto',
+          responseCode: 200,
         },
       });
       trackStub.restore();

@@ -1,7 +1,11 @@
 import { Middleware, ExpressMiddlewareInterface } from 'routing-controllers';
 import { Response, Request, NextFunction } from 'express';
 import { HttpMethods } from '../types/common';
-import { track } from '../utils/heap';
+import {
+  track,
+  parseQueryParams,
+  normalizeResponseProperties,
+} from '../utils/heap';
 import { logger } from '../logger';
 
 @Middleware({ type: 'after' })
@@ -18,9 +22,16 @@ export class SendHeapEvent implements ExpressMiddlewareInterface {
             identity: req.ip,
             eventName: res.locals.heapEventName,
             properties: {
+              ...(res.locals.trackedResponseProperties
+                ? normalizeResponseProperties(
+                    res.locals.trackedResponseProperties,
+                  )
+                : undefined),
+              ...parseQueryParams(req.query),
               ...req.params,
               apiKey: req.apiKey?.apiKey,
               uri: req.originalUrl,
+              responseCode: res.statusCode,
             },
           }).catch((error) => logger.error(error));
         } catch (error: any) {

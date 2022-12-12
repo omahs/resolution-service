@@ -66,8 +66,11 @@ describe('DomainsController', () => {
         identity: SUPERTEST_TESTING_IP,
         eventName: HeapEvents.GET_DOMAIN_RECORDS,
         properties: {
+          domain_names: 'testb.crypto,test2.crypto',
+          key: 'social.picture.value',
           apiKey: testApiKey.apiKey,
           uri: '/records?domains[]=testb.crypto&domains[]=test2.crypto&key=social.picture.value',
+          responseCode: 200,
         },
       });
       trackStub.restore();
