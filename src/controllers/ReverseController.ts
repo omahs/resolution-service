@@ -18,6 +18,7 @@ import {
 } from '../services/Resolution';
 import { ApiKeyAuthMiddleware } from '../middleware/ApiKeyAuthMiddleware';
 import RateLimiter from '../middleware/RateLimiter';
+import { getTokenIdFromHash } from '../services/Resolution';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
@@ -35,6 +36,8 @@ export class ReverseController {
       const resolution = getDomainResolution(domain);
       response.meta = {
         domain: domain.name,
+        tokenId: getTokenIdFromHash(domain.node),
+        namehash: domain.node,
         blockchain: resolution.blockchain,
         networkId: resolution.networkId,
         owner: resolution.ownerAddress,
@@ -67,6 +70,8 @@ export class ReverseController {
       const response = new DomainBaseResponse();
       response.meta = {
         domain: domain.name,
+        tokenId: getTokenIdFromHash(domain.node),
+        namehash: domain.node,
         owner: reverseAddress,
         reverse: true,
       };

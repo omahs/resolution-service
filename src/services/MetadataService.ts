@@ -17,11 +17,7 @@ import { EthereumProvider } from '../workers/EthereumProvider';
 import Moralis from 'moralis/node';
 import { logger } from '../logger';
 import fetch from 'node-fetch';
-import {
-  MetadataImageFontSize,
-  UnstoppableDomainTld,
-  UnstoppableDomainTlds,
-} from '../types/common';
+import { MetadataImageFontSize, UnstoppableDomainTlds } from '../types/common';
 import AnimalDomainHelper, {
   OpenSeaMetadataAttribute,
 } from '../utils/AnimalDomainHelper/AnimalDomainHelper';
@@ -163,6 +159,8 @@ export class MetadataService {
     ) {
       return {
         name: null,
+        tokenId: null,
+        namehash: null,
         description: null,
         properties: {
           records: {},
@@ -172,6 +170,7 @@ export class MetadataService {
         image: null,
       };
     }
+
     const description = name
       ? this.getDomainDescription(new Domain({ name }), {})
       : null;
@@ -182,6 +181,8 @@ export class MetadataService {
       : null;
     return {
       name,
+      tokenId: null,
+      namehash: null,
       description,
       properties: {
         records: {},

@@ -1,14 +1,16 @@
+import { BigNumber } from 'ethers';
 import supertest from 'supertest';
-import { api } from '../api';
+import sinon from 'sinon';
 import { expect } from 'chai';
+import { describe } from 'mocha';
+
+import { api } from '../api';
 import { ApiKey, Domain, DomainsResolution } from '../models';
 import { DomainTestHelper } from '../utils/testing/DomainTestHelper';
 import { env } from '../env';
 import { Blockchain, DeadAdresses } from '../types/common';
-import { describe } from 'mocha';
 import { HeapEvents } from '../types/heap';
 import * as heap from '../utils/heap';
-import sinon from 'sinon';
 
 describe('DomainsController', () => {
   let testApiKey: ApiKey;
@@ -114,6 +116,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomain.name,
+                tokenId: BigNumber.from(testDomain.node).toString(),
+                namehash: testDomain.node,
                 blockchain: 'ETH',
                 networkId: 1337,
                 owner: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
@@ -157,6 +161,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomain.name,
+                tokenId: BigNumber.from(testDomain.node).toString(),
+                namehash: testDomain.node,
                 blockchain: 'ETH',
                 networkId: 1337,
                 owner: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
@@ -199,6 +205,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomain.name,
+                tokenId: BigNumber.from(testDomain.node).toString(),
+                namehash: testDomain.node,
                 blockchain: resolution.blockchain,
                 networkId: resolution.networkId,
                 owner: resolution.ownerAddress,
@@ -243,6 +251,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomain.name,
+                tokenId: BigNumber.from(testDomain.node).toString(),
+                namehash: testDomain.node,
                 blockchain: resolution.blockchain,
                 networkId: resolution.networkId,
                 owner: resolution.ownerAddress,
@@ -291,6 +301,8 @@ describe('DomainsController', () => {
           attributes: {
             meta: {
               domain: testDomainOne.name,
+              tokenId: BigNumber.from(testDomainOne.node).toString(),
+              namehash: testDomainOne.node,
               blockchain: resolutionOne.blockchain,
               networkId: resolutionOne.networkId,
               owner: resolutionOne.ownerAddress,
@@ -306,6 +318,8 @@ describe('DomainsController', () => {
           attributes: {
             meta: {
               domain: testDomainTwo.name,
+              tokenId: BigNumber.from(testDomainTwo.node).toString(),
+              namehash: testDomainTwo.node,
               blockchain: resolutionTwo.blockchain,
               networkId: resolutionTwo.networkId,
               owner: resolutionTwo.ownerAddress,
@@ -347,6 +361,8 @@ describe('DomainsController', () => {
         attributes: {
           meta: {
             domain: d.domain.name,
+            tokenId: BigNumber.from(d.domain.node).toString(),
+            namehash: d.domain.node,
             blockchain: d.resolution.blockchain,
             networkId: d.resolution.networkId,
             owner: d.resolution.ownerAddress,
@@ -398,6 +414,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomainOne.name,
+                tokenId: BigNumber.from(testDomainOne.node).toString(),
+                namehash: testDomainOne.node,
                 blockchain: resolutionOne.blockchain,
                 networkId: resolutionOne.networkId,
                 owner: resolutionOne.ownerAddress,
@@ -516,6 +534,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: domainOne.name,
+                tokenId: BigNumber.from(domainOne.node).toString(),
+                namehash: domainOne.node,
                 blockchain: 'MATIC',
                 networkId: 1337,
                 owner: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
@@ -534,6 +554,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: domainTwo.name,
+                tokenId: BigNumber.from(domainTwo.node).toString(),
+                namehash: domainTwo.node,
                 blockchain: 'MATIC',
                 networkId: 1337,
                 owner: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
@@ -552,6 +574,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: domainThree.name,
+                tokenId: BigNumber.from(domainThree.node).toString(),
+                namehash: domainThree.node,
                 blockchain: 'MATIC',
                 networkId: 1337,
                 owner: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
@@ -570,6 +594,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: domainFour.name,
+                tokenId: BigNumber.from(domainFour.node).toString(),
+                namehash: domainFour.node,
                 blockchain: 'MATIC',
                 networkId: 1337,
                 owner: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
@@ -628,6 +654,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: domain.name,
+                tokenId: BigNumber.from(domain.node).toString(),
+                namehash: domain.node,
                 blockchain: 'MATIC',
                 networkId: 1337,
                 owner: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
@@ -683,6 +711,8 @@ describe('DomainsController', () => {
           attributes: {
             meta: {
               domain: d.domain.name,
+              tokenId: BigNumber.from(d.domain.node).toString(),
+              namehash: d.domain.node,
               blockchain: d.resolution.blockchain,
               networkId: d.resolution.networkId,
               owner: d.resolution.ownerAddress,
@@ -730,6 +760,8 @@ describe('DomainsController', () => {
         attributes: {
           meta: {
             domain: d.domain.name,
+            tokenId: BigNumber.from(d.domain.node).toString(),
+            namehash: d.domain.node,
             blockchain: d.resolution.blockchain,
             networkId: d.resolution.networkId,
             owner: d.resolution.ownerAddress,
@@ -782,6 +814,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomainOne.name,
+                tokenId: BigNumber.from(testDomainOne.node).toString(),
+                namehash: testDomainOne.node,
                 blockchain: resolutionOne.blockchain,
                 networkId: resolutionOne.networkId,
                 owner: resolutionOne.ownerAddress,
@@ -836,6 +870,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomainOne.name,
+                tokenId: BigNumber.from(testDomainOne.node).toString(),
+                namehash: testDomainOne.node,
                 blockchain: resolutionOne.blockchain,
                 networkId: resolutionOne.networkId,
                 owner: resolutionOne.ownerAddress,
@@ -851,6 +887,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomainTwo.name,
+                tokenId: BigNumber.from(testDomainTwo.node).toString(),
+                namehash: testDomainTwo.node,
                 blockchain: resolutionTwo.blockchain,
                 networkId: resolutionTwo.networkId,
                 owner: resolutionTwo.ownerAddress,
@@ -910,6 +948,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomainOne.name,
+                tokenId: BigNumber.from(testDomainOne.node).toString(),
+                namehash: testDomainOne.node,
                 blockchain: resolutionOne.blockchain,
                 networkId: resolutionOne.networkId,
                 owner: resolutionOne.ownerAddress,
@@ -970,6 +1010,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: testDomainOne.name,
+                tokenId: BigNumber.from(testDomainOne.node).toString(),
+                namehash: testDomainOne.node,
                 blockchain: resolutionOne.blockchain,
                 networkId: resolutionOne.networkId,
                 owner: resolutionOne.ownerAddress,
@@ -1159,6 +1201,8 @@ describe('DomainsController', () => {
             attributes: {
               meta: {
                 domain: dom.domain.name,
+                tokenId: BigNumber.from(dom.domain.node).toString(),
+                namehash: dom.domain.node,
                 blockchain: resolution.blockchain,
                 networkId: resolution.networkId,
                 owner: resolution.ownerAddress,

@@ -1,5 +1,7 @@
 import supertest from 'supertest';
+import { BigNumber } from 'ethers';
 import { expect } from 'chai';
+
 import { api } from '../api';
 import { env } from '../env';
 import { ApiKey, DomainsReverseResolution } from '../models';
@@ -93,6 +95,11 @@ describe('ReverseController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'brad.crypto',
+          tokenId: BigNumber.from(
+            '0x756e4e998dbffd803c21d23b06cd855cdc7a4b57706c95964a37e24b47c10fc9',
+          ).toString(),
+          namehash:
+            '0x756e4e998dbffd803c21d23b06cd855cdc7a4b57706c95964a37e24b47c10fc9',
           owner: ReverseAddress1,
           resolver: Resolver,
           registry: Registry,
@@ -116,6 +123,8 @@ describe('ReverseController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: '',
+          tokenId: null,
+          namehash: null,
           owner: null,
           resolver: null,
           registry: null,
@@ -166,6 +175,8 @@ describe('ReverseController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: '',
+          tokenId: null,
+          namehash: null,
           owner: null,
           resolver: null,
           registry: null,
@@ -222,6 +233,11 @@ describe('ReverseController', () => {
           {
             meta: {
               domain: 'brad.crypto',
+              tokenId: BigNumber.from(
+                '0x756e4e998dbffd803c21d23b06cd855cdc7a4b57706c95964a37e24b47c10fc9',
+              ).toString(),
+              namehash:
+                '0x756e4e998dbffd803c21d23b06cd855cdc7a4b57706c95964a37e24b47c10fc9',
               owner: ReverseAddress1,
               reverse: true,
             },
@@ -243,6 +259,11 @@ describe('ReverseController', () => {
           {
             meta: {
               domain: 'brad.crypto',
+              tokenId: BigNumber.from(
+                '0x756e4e998dbffd803c21d23b06cd855cdc7a4b57706c95964a37e24b47c10fc9',
+              ).toString(),
+              namehash:
+                '0x756e4e998dbffd803c21d23b06cd855cdc7a4b57706c95964a37e24b47c10fc9',
               owner: ReverseAddress1,
               reverse: true,
             },
@@ -250,6 +271,11 @@ describe('ReverseController', () => {
           {
             meta: {
               domain: 'test.crypto',
+              tokenId: BigNumber.from(
+                '0xb72f443a17edf4a55f766cf3c83469e6f96494b16823a41a4acb25800f303103',
+              ).toString(),
+              namehash:
+                '0xb72f443a17edf4a55f766cf3c83469e6f96494b16823a41a4acb25800f303103',
               owner: ReverseAddress2,
               reverse: true,
             },

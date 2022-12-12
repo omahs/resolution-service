@@ -38,6 +38,7 @@ import { eip137Namehash, znsNamehash } from '../utils/namehash';
 import { DeadAdresses } from '../types/common';
 import { HeapEvents } from '../types/heap';
 import { env } from '../env';
+import { getTokenIdFromHash } from '../services/Resolution';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
@@ -53,25 +54,15 @@ export class DomainsController {
     @Param('domainName') domainName: string,
   ): Promise<DomainResponse> {
     res.locals.heapEventName = HeapEvents.GET_DOMAIN;
-    const emptyResponse = {
-      meta: {
-        domain: domainName,
-        owner: null,
-        resolver: null,
-        registry: null,
-        blockchain: null,
-        networkId: null,
-        reverse: false,
-      },
-      records: {},
-    };
 
-    domainName = domainName.toLowerCase();
-    const supportedTLD = isSupportedTLD(domainName);
-    if (!supportedTLD) {
-      return emptyResponse;
+    const response = new DomainResponse();
+
+    if (!isSupportedTLD(domainName.toLowerCase())) {
+      response.meta.domain = domainName;
+      return response;
     }
 
+    domainName = domainName.toLowerCase();
     const domain = await Domain.findOne({
       where: { name: domainName },
       relations: ['resolutions', 'reverseResolutions'],
@@ -80,9 +71,10 @@ export class DomainsController {
 
     if (domain) {
       const resolution = getDomainResolution(domain);
-      const response = new DomainResponse();
       response.meta = {
         domain: domain.name,
+        tokenId: getTokenIdFromHash(domain.node),
+        namehash: domain.node,
         blockchain: resolution.blockchain,
         networkId: resolution.networkId,
         owner: resolution.ownerAddress,
@@ -94,18 +86,8 @@ export class DomainsController {
       return response;
     }
 
-    return {
-      meta: {
-        domain: domainName,
-        owner: null,
-        resolver: null,
-        registry: null,
-        blockchain: null,
-        networkId: null,
-        reverse: false,
-      },
-      records: {},
-    };
+    response.meta.domain = domainName;
+    return response;
   }
 
   @Get('/domains')
@@ -242,6 +224,8 @@ export class DomainsController {
           records: resolution.resolution,
           meta: {
             domain: domain.name,
+            tokenId: getTokenIdFromHash(domain.node),
+            namehash: domain.node,
             blockchain: resolution.blockchain,
             networkId: resolution.networkId,
             owner: resolution.ownerAddress,

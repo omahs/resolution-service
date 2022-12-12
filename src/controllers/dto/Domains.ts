@@ -30,6 +30,14 @@ export class DomainBaseMetadata {
 
   @IsOptional()
   @IsString()
+  namehash: string | null = null;
+
+  @IsOptional()
+  @IsString()
+  tokenId: string | null = null;
+
+  @IsOptional()
+  @IsString()
   owner: string | null = null;
 
   @IsBoolean()

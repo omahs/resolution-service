@@ -1,4 +1,8 @@
+import { BigNumber } from 'ethers';
 import supertest from 'supertest';
+import { describe } from 'mocha';
+import sinon from 'sinon';
+
 import { api } from '../api';
 import { expect } from 'chai';
 import { ApiKey } from '../models';
@@ -8,8 +12,6 @@ import { env } from '../env';
 import { getConnection } from 'typeorm';
 import { Blockchain } from '../types/common';
 import { ETHContracts } from '../contracts';
-import { describe } from 'mocha';
-import sinon from 'sinon';
 import * as heap from '../utils/heap';
 import { HeapEvents } from '../types/heap';
 
@@ -51,6 +53,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: domainName,
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
           resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
@@ -94,6 +98,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: domainName,
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
           resolver: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
           registry: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
@@ -124,6 +130,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'unminted-long-domain.crypto',
+          tokenId: null,
+          namehash: null,
           owner: null,
           resolver: null,
           registry: null,
@@ -146,6 +154,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'bobby.funnyrabbit',
+          tokenId: null,
+          namehash: null,
           owner: null,
           resolver: null,
           registry: null,
@@ -181,6 +191,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'test.coin',
+          tokenId: null,
+          namehash: null,
           owner: null,
           resolver: null,
           registry: null,
@@ -192,7 +204,7 @@ describe('DomainsController', () => {
     });
 
     it('should return correct domain resolution for domain in lowercase', async () => {
-      await DomainTestHelper.createTestDomain({
+      const { domain } = await DomainTestHelper.createTestDomain({
         name: 'testdomainforcase.crypto',
         node: '0x08c2e9d2a30aa81623fcc758848d5556696868222fbc80a15ca46ec2fe2cba4f',
         ownerAddress: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
@@ -213,6 +225,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'testdomainforcase.crypto',
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
           resolver: '0xb66DcE2DA6afAAa98F2013446dBCB0f4B0ab2842',
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
@@ -280,6 +294,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'notreal134522.zil',
+          tokenId: null,
+          namehash: null,
           owner: null,
           resolver: null,
           registry: null,
@@ -292,7 +308,7 @@ describe('DomainsController', () => {
     });
 
     it('should return minted domain ending on .zil', async () => {
-      await DomainTestHelper.createTestDomain({
+      const { domain } = await DomainTestHelper.createTestDomain({
         blockchain: Blockchain.ZIL,
         networkId: env.APPLICATION.ZILLIQA.NETWORK_ID,
         name: 'sometestforzil.zil',
@@ -312,6 +328,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'sometestforzil.zil',
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0xcea21f5a6afc11b3a4ef82e986d63b8b050b6910',
           resolver: '0x34bbdee3404138430c76c2d1b2d4a2d223a896df',
           registry: '0x9611c53be6d1b32058b2747bdececed7e1216793',
@@ -324,7 +342,7 @@ describe('DomainsController', () => {
     });
 
     it('should return zil domain on uns L1', async () => {
-      await DomainTestHelper.createTestDomain({
+      const { domain } = await DomainTestHelper.createTestDomain({
         blockchain: Blockchain.ETH,
         networkId: env.APPLICATION.ETHEREUM.NETWORK_ID,
         name: 'sometestforzil.zil',
@@ -344,6 +362,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'sometestforzil.zil',
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0xcea21f5a6afc11b3a4ef82e986d63b8b050b6910',
           resolver: '0x34bbdee3404138430c76c2d1b2d4a2d223a896df',
           registry: '0x9611c53be6d1b32058b2747bdececed7e1216793',
@@ -356,7 +376,7 @@ describe('DomainsController', () => {
     });
 
     it('should return zil domain on uns L2', async () => {
-      await DomainTestHelper.createTestDomain({
+      const { domain } = await DomainTestHelper.createTestDomain({
         blockchain: Blockchain.MATIC,
         networkId: env.APPLICATION.POLYGON.NETWORK_ID,
         name: 'sometestforzil.zil',
@@ -376,6 +396,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'sometestforzil.zil',
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0xcea21f5a6afc11b3a4ef82e986d63b8b050b6910',
           resolver: '0x34bbdee3404138430c76c2d1b2d4a2d223a896df',
           registry: '0x9611c53be6d1b32058b2747bdececed7e1216793',
@@ -388,7 +410,7 @@ describe('DomainsController', () => {
     });
 
     it('should return correct domain resolution for minted .crypto domain', async () => {
-      await DomainTestHelper.createTestDomain({
+      const { domain } = await DomainTestHelper.createTestDomain({
         name: 'brad.crypto',
         ownerAddress: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
         node: '0x756e4e998dbffd803c21d23b06cd855cdc7a4b57706c95964a37e24b47c10fc9',
@@ -417,6 +439,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'brad.crypto',
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
           resolver: '0xb66DcE2DA6afAAa98F2013446dBCB0f4B0ab2842',
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
@@ -468,6 +492,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'brad.crypto',
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
           resolver: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
           registry: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
@@ -511,6 +537,8 @@ describe('DomainsController', () => {
       expect(res.body).containSubset({
         meta: {
           domain: 'brad.crypto',
+          tokenId: BigNumber.from(domain.node).toString(),
+          namehash: domain.node,
           owner: '0x8aaD44321A86b170879d7A244c1e8d360c99DdA8',
           resolver: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
           registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',

@@ -18,7 +18,10 @@ import { pathThatSvg } from 'path-that-svg';
 
 import { env } from '../env';
 import { checkNftPfpImageExistFromCDN } from '../utils/socialPicture';
-import { getDomainResolution } from '../services/Resolution';
+import {
+  getDomainResolution,
+  getTokenIdFromHash,
+} from '../services/Resolution';
 import { MetadataService } from '../services/MetadataService';
 import { ImageResponse, OpenSeaMetadata } from './dto/Metadata';
 import {
@@ -109,6 +112,8 @@ export class MetaDataController {
     const imageUrl = this.metadataService.generateDomainImageUrl(domain.name);
     const metadata: OpenSeaMetadata = {
       name: domain.name,
+      tokenId: getTokenIdFromHash(domain.node),
+      namehash: domain.node,
       description,
       properties: {
         records: resolution.resolution,

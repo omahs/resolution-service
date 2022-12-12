@@ -16,11 +16,7 @@ import {
   LayerTestFixture,
 } from '../utils/testing/LayerFixturesHelper';
 import { EthereumHelper } from '../utils/testing/EthereumTestsHelper';
-import {
-  Blockchain,
-  UnstoppableDomainTld,
-  UnstoppableDomainTlds,
-} from '../types/common';
+import { Blockchain, UnstoppableDomainTlds } from '../types/common';
 import { env } from '../env';
 import Domain from '../models/Domain';
 import {
@@ -45,12 +41,19 @@ describe('MetaDataController', () => {
         dbPath: './.sandboxl2',
       },
     });
+  });
+
+  beforeEach(() => {
     sinon.stub(Moralis, 'start').resolves();
   });
 
   after(async () => {
     await L1Fixture.networkHelper.stopNetwork();
     await L2Fixture.networkHelper.stopNetwork();
+  });
+
+  afterEach(async () => {
+    sinon.restore();
   });
 
   describe('HEAD', () => {
@@ -356,6 +359,8 @@ describe('MetaDataController', () => {
         .then((r) => r.body);
       expect(response).to.deep.eq({
         name: 'unknown.crypto',
+        tokenId: null,
+        namehash: null,
         properties: {
           records: {},
         },
@@ -386,6 +391,8 @@ describe('MetaDataController', () => {
         .then((r) => r.body);
       expect(responseWithNode).to.deep.eq({
         name: null,
+        tokenId: null,
+        namehash: null,
         properties: {
           records: {},
         },

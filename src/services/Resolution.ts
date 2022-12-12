@@ -1,9 +1,15 @@
+import { BigNumber } from 'ethers';
+import { In } from 'typeorm';
+
 import { env } from '../env';
 import { Domain, DomainsResolution, DomainsReverseResolution } from '../models';
 import { Blockchain } from '../types/common';
 import { isSupportedTLD } from '../utils/domain';
 import { ETHAddressRegex } from '../utils/ethersUtils';
-import { In } from 'typeorm';
+
+export function getTokenIdFromHash(hash: string): string {
+  return BigNumber.from(hash).toString();
+}
 
 export function IsZilDomain(name: string): boolean {
   const tokens = name.split('.');

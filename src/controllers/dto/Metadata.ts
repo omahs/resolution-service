@@ -10,6 +10,12 @@ export class Erc721Metadata {
   name: string | null;
 
   @IsString()
+  tokenId: string | null;
+
+  @IsString()
+  namehash: string | null;
+
+  @IsString()
   description: string | null;
 
   @IsString()
