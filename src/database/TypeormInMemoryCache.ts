@@ -57,3 +57,5 @@ export default class InMemoryCacheProvider implements QueryResultCache {
     return this.cache.getStats();
   }
 }
+
+export const InMemoryCache = new InMemoryCacheProvider();

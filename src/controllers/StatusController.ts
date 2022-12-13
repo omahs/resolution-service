@@ -3,7 +3,6 @@ import {
   Head,
   JsonController,
   Redirect,
-  Res,
   UseBefore,
 } from 'routing-controllers';
 import 'reflect-metadata';
@@ -16,6 +15,7 @@ import * as ethersUtils from '../utils/ethersUtils';
 import { EthereumProvider, MaticProvider } from '../workers/EthereumProvider';
 import { Blockchain, SupportedTld, SupportedTlds } from '../types/common';
 import RateLimiter from '../middleware/RateLimiter';
+import { InMemoryCache } from '../database/TypeormInMemoryCache';
 
 class BlockchainStatus {
   @IsBoolean()
@@ -137,6 +137,13 @@ export class StatusController {
   listSupportedTlds(): { tlds: Array<SupportedTld> } {
     return {
       tlds: SupportedTlds,
+    };
+  }
+
+  @Get('/_status')
+  _status() {
+    return {
+      typeormCacheStats: InMemoryCache.getStatistics(),
     };
   }
 }
