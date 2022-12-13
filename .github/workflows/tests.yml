@@ -47,6 +47,7 @@ jobs:
       CLOUD_STORAGE_BUCKET_ID: 'resolution-client-assets'
       RESOLUTION_APP_AUTH_KEY: 'test-app-key'
       RATE_LIMITER_DISABLED: true
+      IN_MEMORY_CACHE_DISABLED: true
 
     services:
       postgres:

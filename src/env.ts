@@ -39,6 +39,18 @@ function parseNumberFromEnv(envVar: string | undefined, defaultVal: number) {
   return !isNaN(Number(envVar)) ? Number(envVar) : defaultVal;
 }
 
+function parseBooleanFromEnv(
+  envVar: string | undefined,
+  defaultVal: boolean,
+): boolean {
+  const envVarLowerCase = envVar?.toLowerCase();
+  if (envVarLowerCase === 'true' || envVarLowerCase === 'false') {
+    return envVarLowerCase === 'true';
+  }
+
+  return defaultVal;
+}
+
 export type EthUpdaterConfig = {
   CNS_REGISTRY_EVENTS_STARTING_BLOCK: number;
   UNS_REGISTRY_EVENTS_STARTING_BLOCK: number;
@@ -191,15 +203,20 @@ export const env = {
     NEW_RELIC_LICENSE_KEY: process.env.NEW_RELIC_LICENSE_KEY || '',
     NEW_RELIC_APP_NAME: process.env.NEW_RELIC_APP_NAME || '',
     BUGSNAG_API_KEY: process.env.BUGSNAG_API_KEY || '',
-    DATADOG_APM_ENABLE: process.env.DATADOG_APM_ENABLE || 'false',
+    DATADOG_APM_ENABLE: parseBooleanFromEnv(
+      process.env.DATADOG_APM_ENABLE,
+      false,
+    ),
     DATADOG_APM_SERVICE_NAME:
       process.env.DATADOG_APM_SERVICE_NAME || 'resolution-service-staging',
     DATADOG_AGENT_HOSTNAME: process.env.DATADOG_AGENT_HOSTNAME || 'localhost',
     DD_AGENT_HOST: process.env.DD_AGENT_HOST || 'localhost',
     APP_AUTH_KEY: process.env.RESOLUTION_APP_AUTH_KEY || '',
     RATE_LIMITER: {
-      RATE_LIMITER_DISABLED:
-        process.env.RATE_LIMITER_DISABLED == 'true' ? true : false,
+      RATE_LIMITER_DISABLED: parseBooleanFromEnv(
+        process.env.RATE_LIMITER_DISABLED,
+        false,
+      ),
       DEFAULT_MAX_REQUESTS: parseNumberFromEnv(
         process.env.RATE_LIMITER_DEFAULT_MAX_REQUESTS,
         5,
@@ -219,10 +236,7 @@ export const env = {
   },
   TYPEORM: {
     LOGGING: {
-      colorize:
-        process.env.TYPEORM_LOGGING_COLORIZE == null
-          ? true
-          : process.env.TYPEORM_LOGGING_COLORIZE.toLowerCase() == 'true',
+      colorize: parseBooleanFromEnv(process.env.TYPEORM_LOGGING_COLORIZE, true),
     },
     type: 'postgres' as const,
     host: process.env.RESOLUTION_POSTGRES_HOST,
@@ -262,6 +276,10 @@ export const env = {
     IN_MEMORY_CACHE_EXPIRATION_TIME: parseNumberFromEnv(
       process.env.IN_MEMORY_CACHE_EXPIRATION_TIME,
       600000, // 10 minutes
+    ),
+    IN_MEMORY_CACHE_DISABLED: parseBooleanFromEnv(
+      process.env.IN_MEMORY_CACHE_DISABLED,
+      false,
     ),
   },
   MORALIS: {

@@ -17,6 +17,8 @@ import { env } from './env';
 import ErrorHandler from './errors/ErrorHandler';
 import { RoutingControllersOptions } from 'routing-controllers';
 import * as oa from 'openapi3-ts';
+import { Request, Response } from 'express';
+import InMemoryCache from './database/TypeormInMemoryCache';
 
 const enabledControllers = [];
 
@@ -108,7 +110,13 @@ const options = {
   },
 };
 
-api.get('/api-docs/swagger.json', (_req: any, res: any) =>
+api.get('/_status', (_: Request, res: Response) => {
+  res.json({
+    typeOrmCacheStats: InMemoryCache.getStatistics(),
+  });
+});
+
+api.get('/api-docs/swagger.json', (_req: Request, res: Response) =>
   res.json(swaggerSpec),
 );
 api.use(

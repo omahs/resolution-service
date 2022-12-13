@@ -1,4 +1,4 @@
-import InMemoryCacheProvider from './TypeormInMemoryCache';
+import { InMemoryCacheProvider } from './TypeormInMemoryCache';
 const Cache = new InMemoryCacheProvider();
 import { env } from '../env';
 import { expect } from 'chai';

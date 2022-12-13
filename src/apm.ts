@@ -2,7 +2,7 @@ import type { TracerOptions } from 'dd-trace';
 import tracer from 'dd-trace';
 import { env } from './env';
 
-if (env.APPLICATION.DATADOG_APM_ENABLE === 'true') {
+if (env.APPLICATION.DATADOG_APM_ENABLE) {
   const options: TracerOptions = {
     //enabled: true,
     logLevel: 'debug',

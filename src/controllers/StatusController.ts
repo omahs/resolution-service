@@ -3,7 +3,6 @@ import {
   Head,
   JsonController,
   Redirect,
-  Res,
   UseBefore,
 } from 'routing-controllers';
 import 'reflect-metadata';

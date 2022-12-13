@@ -19,14 +19,19 @@
   - [Postman collection](README.md#postman-collection)
 - [Development notes](README.md#development-notes)
 
-Resolution service provides an API for getting domain data and metadata regardless of that domain's location (whether it is stored in Ethereum, Zilliqa, or any other blockchain). The service caches blockchain events in a database for easy retrieval without accessing blockchain APIs.
+Resolution service provides an API for getting domain data and metadata
+regardless of that domain's location (whether it is stored in Ethereum, Zilliqa,
+or any other blockchain). The service caches blockchain events in a database for
+easy retrieval without accessing blockchain APIs.
 
-The resolution service is provided as a docker image so it can be launched on a variety of platforms and in the cloud.
+The resolution service is provided as a docker image so it can be launched on a
+variety of platforms and in the cloud.
 
 ## Resolution service endpoints
 
 - Production Mainnet: http://resolve.unstoppabledomains.com/api-docs/
-- Staging Testnet (Ethereum Goerly, Polygon Mumbai): https://resolve.staging.unstoppabledomains.com/api-docs/
+- Staging Testnet (Ethereum Goerly, Polygon Mumbai):
+  https://resolve.staging.unstoppabledomains.com/api-docs/
 
 ## Installation
 
@@ -34,9 +39,15 @@ The resolution service is provided as a docker image so it can be launched on a 
 
 - **git** - to clone the repository.
 - **docker** - to run the service. Install docker by following
-  [instructions](https://docs.docker.com/engine/install/) for an appropriate system.
-- **postgres** - to store the data. You can configure Postgres on the same server as the resolution service or a dedicated database hosting (e.g. AWS RDS, Google Cloud SQL). To install postgres locally, follow these [instructions](https://www.postgresql.org/download). Make sure to configure password authentication for the DB user that the service will use.
-  - This guide has been tested with Postgres 11.17, although other versions may also work.
+  [instructions](https://docs.docker.com/engine/install/) for an appropriate
+  system.
+- **postgres** - to store the data. You can configure Postgres on the same
+  server as the resolution service or a dedicated database hosting (e.g. AWS
+  RDS, Google Cloud SQL). To install postgres locally, follow these
+  [instructions](https://www.postgresql.org/download). Make sure to configure
+  password authentication for the DB user that the service will use.
+  - This guide has been tested with Postgres 11.17, although other versions may
+    also work.
 
 ### Quick start
 
@@ -69,17 +80,21 @@ configuration options are listed in
 [Environment configuration options](README.md#environment-configuration-options).
 
 4. Create the `resolution_service` postgres database
-     `createdb resolution_service`
+   `createdb resolution_service`
 5. Launch the service
    `docker run -d --env-file service.env -p 3000:3000 --network="host" resolution-service`
 
 ## Running the service
 
-Once the service is started, it will perform initial synchronization with the blockchain networks. It may take more than 24 hours for full synchronization.
+Once the service is started, it will perform initial synchronization with the
+blockchain networks. It may take more than 24 hours for full synchronization.
 
-During the initial synchronization, the API may not work reliably. The synchronization status can be checked using the `/status` endpoint. After the synchronization, you can access the service API endpoints normally.
+During the initial synchronization, the API may not work reliably. The
+synchronization status can be checked using the `/status` endpoint. After the
+synchronization, you can access the service API endpoints normally.
 
-Note that the service is stateless, so the container doesn't need persistent storage. All data is stored in the database.
+Note that the service is stateless, so the container doesn't need persistent
+storage. All data is stored in the database.
 
 ### Environment configuration options
 
@@ -119,12 +134,13 @@ Note that the service is stateless, so the container doesn't need persistent sto
 | ZILLIQA_ACCEPTABLE_DELAY_IN_BLOCKS          | 100                                               | :x:                | How much blocks Zilliqa mirror can lag behind until it's considered as unacceptable and need to be fixed. /status endpoint will return `health: true/false` field depends on number of blocks behind compared with this number.                                                                                             |
 | MORALIS_API_URL                             | -                                                 | :x:                | URL for the Moralis API. Required by the metadata API endpoints (`METADATA_API` running mode).                                                                                                                                                                                                                              |
 | MORALIS_APP_ID                              | -                                                 | :x:                | App ID for the Moralis API. Required by the metadata API endpoints (`METADATA_API` running mode).                                                                                                                                                                                                                           |
-| RATE_LIMITER_DISABLED                       | false                                             | :x:                | Rate limiting flag used to disable the rate limiting middleware for running tests                       |
-| DEFAULT_MAX_REQUESTS                        | 5                                                 | :x:                | The default max number of requests before reaching the rate limit                                       |
-| METADATA_MAX_REQUESTS                       | 10                                                | :x:                | The max number of requests for the /metadata endpoints before reaching the rate limit                   |
-| WINDOW_MS                                   | 1000                                              | :x:                | The time window for requests before the window is reset for the rate limiting middleware                |
-| HEAP_APP_ID | - | :x: | The [Heap](https://www.heap.io/) application ID used for sending trackig events |
-| IN_MEMORY_CACHE_EXPIRATION_TIME | 60000 | :x: | The typeorm in memory cache expiration time in milliseconds |
+| RATE_LIMITER_DISABLED                       | false                                             | :x:                | Rate limiting flag used to disable the rate limiting middleware for running tests                                                                                                                                                                                                                                           |
+| DEFAULT_MAX_REQUESTS                        | 5                                                 | :x:                | The default max number of requests before reaching the rate limit                                                                                                                                                                                                                                                           |
+| METADATA_MAX_REQUESTS                       | 10                                                | :x:                | The max number of requests for the /metadata endpoints before reaching the rate limit                                                                                                                                                                                                                                       |
+| WINDOW_MS                                   | 1000                                              | :x:                | The time window for requests before the window is reset for the rate limiting middleware                                                                                                                                                                                                                                    |
+| HEAP_APP_ID                                 | -                                                 | :x:                | The [Heap](https://www.heap.io/) application ID used for sending trackig events                                                                                                                                                                                                                                             |
+| IN_MEMORY_CACHE_DISABLED                    | false                                             | :x:                | The typeorm in memory cache disable flag, cache disabled for unit tests                                                                                                                                                                                                                                                     |
+| IN_MEMORY_CACHE_EXPIRATION_TIME             | 60000                                             | :x:                | The typeorm in memory cache expiration time in milliseconds                                                                                                                                                                                                                                                                 |
 
 ### Running modes
 
@@ -154,9 +170,13 @@ RESOLUTION_RUNNING_MODE=API,ETH_WORKER
 
 ### API keys
 
-The `/domains`, `/records`, and `/reverse` endpoints require an API key for authentication. The resolution service provides a function to enroll API keys for accessing these endpoints.
+The `/domains`, `/records`, and `/reverse` endpoints require an API key for
+authentication. The resolution service provides a function to enroll API keys
+for accessing these endpoints.
 
-To enroll a new API key into the resolution service, make a `POST` request to the `/enroll` endpoint with the `RESOLUTION_APP_AUTH_KEY` in the `service.env` file and API key details, like so:
+To enroll a new API key into the resolution service, make a `POST` request to
+the `/enroll` endpoint with the `RESOLUTION_APP_AUTH_KEY` in the `service.env`
+file and API key details, like so:
 
 ```shell
 curl --location --request POST '/enroll' \
@@ -168,40 +188,50 @@ curl --location --request POST '/enroll' \
 }'
 ```
 
-> Note: The API key enrollment endpoint is only intended for internal use on your server as it requires the value of the `RESOLUTION_APP_AUTH_KEY` variable defined in the `service.env` file for authentication. If the `RESOLUTION_APP_AUTH_KEY` is not defined, the endpoint will not work.
+> Note: The API key enrollment endpoint is only intended for internal use on
+> your server as it requires the value of the `RESOLUTION_APP_AUTH_KEY` variable
+> defined in the `service.env` file for authentication. If the
+> `RESOLUTION_APP_AUTH_KEY` is not defined, the endpoint will not work.
 
 ## Documentation
 
 ### API reference
 
-The full API reference [OpenAPI specification](https://resolve.unstoppabledomains.com/api-docs/) By default, all API endpoints are enabled. Use the `RUNNING_MODE` env variable to enable specific sets of endpoints.
+The full API reference
+[OpenAPI specification](https://resolve.unstoppabledomains.com/api-docs/) By
+default, all API endpoints are enabled. Use the `RUNNING_MODE` env variable to
+enable specific sets of endpoints.
 
-| Endpoint | Description |
-| - | - |
-| **Domain endpoints:** |
-| GET /domains | Gets the list of domains. |
-| GET /domains/:domainName | Gets the resolution of the specified domain. |
-| GET /records | Gets resolution records for multiple domains requested. |
-| GET /domains/:domainName/transfers/latest | Gets the transfer history of a domain name. |
-| **Reverse endpoints:** |
-| GET /reverse/:address | Gets the reverse record of a wallet address. |
-| POST /reverse/query | Gets the reverse record of multiple wallet addresses. |
-| **Service endpoints:** |
-| GET /supported_tlds | Gets all the domain endings supported by Unstoppable Domains. |
-| GET /status | Gets the synchronization status. |
-| GET /api-docs | Returns a swagger documentation page. |
-| **Metadata endpoints:** |
-| GET /metadata/:domainOrToken | Retrieve erc721 metadata information of the specified domain |
-| GET /image/:domainOrToken | Retrieve `image_data` as a svg string |
-| GET /image-src/:domainOrToken | Retrieve image_data as `image/svg+xml` |
-| **Enrollment endpoints:** |
-| POST /enroll | Enroll an API key into the resolution service |
+| Endpoint                                  | Description                                                   |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| **Domain endpoints:**                     |
+| GET /domains                              | Gets the list of domains.                                     |
+| GET /domains/:domainName                  | Gets the resolution of the specified domain.                  |
+| GET /records                              | Gets resolution records for multiple domains requested.       |
+| GET /domains/:domainName/transfers/latest | Gets the transfer history of a domain name.                   |
+| **Reverse endpoints:**                    |
+| GET /reverse/:address                     | Gets the reverse record of a wallet address.                  |
+| POST /reverse/query                       | Gets the reverse record of multiple wallet addresses.         |
+| **Service endpoints:**                    |
+| GET /supported_tlds                       | Gets all the domain endings supported by Unstoppable Domains. |
+| GET /status                               | Gets the synchronization status.                              |
+| GET /api-docs                             | Returns a swagger documentation page.                         |
+| **Metadata endpoints:**                   |
+| GET /metadata/:domainOrToken              | Retrieve erc721 metadata information of the specified domain  |
+| GET /image/:domainOrToken                 | Retrieve `image_data` as a svg string                         |
+| GET /image-src/:domainOrToken             | Retrieve image_data as `image/svg+xml`                        |
+| **Enrollment endpoints:**                 |
+| POST /enroll                              | Enroll an API key into the resolution service                 |
 
-> Note: The `/domains`, `/records`, and `/reverse` endpoints require an API key. The key must be provided as a `Bearer` authentication header for requests. New keys must be enrolled into the resolution service (see [API keys](README.md#api-keys) for more info).
+> Note: The `/domains`, `/records`, and `/reverse` endpoints require an API key.
+> The key must be provided as a `Bearer` authentication header for requests. New
+> keys must be enrolled into the resolution service (see
+> [API keys](README.md#api-keys) for more info).
 
 ### Postman collection
 
-Unstoppable Domains provides a Postman collection that you can fork to your workspace and interact with the resolution service API in one click.
+Unstoppable Domains provides a Postman collection that you can fork to your
+workspace and interact with the resolution service API in one click.
 
 [![Run in Postman](https://run.pstmn.io/button.svg)](https://god.gw.postman.com/run-collection/19507736-52bf9f35-1608-4dc4-a96d-e62682b59199?action=collection%2Ffork&collection-url=entityId%3D19507736-52bf9f35-1608-4dc4-a96d-e62682b59199%26entityType%3Dcollection%26workspaceId%3D6762865c-b510-4216-ba7f-45cd07f164c7#?env%5BResolution%20Service%20-%20Open%20API%5D=W3sia2V5IjoiYmFzZV91cmwiLCJ2YWx1ZSI6Imh0dHBzOi8vcmVzb2x2ZS51bnN0b3BwYWJsZWRvbWFpbnMuY29tIiwiZW5hYmxlZCI6dHJ1ZSwidHlwZSI6ImRlZmF1bHQiLCJzZXNzaW9uVmFsdWUiOiJodHRwczovL3Jlc29sdmUudW5zdG9wcGFibGVkb21haW5zLmNvbSIsInNlc3Npb25JbmRleCI6MH0seyJrZXkiOiJhcGlfa2V5IiwidmFsdWUiOiIiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoic2VjcmV0Iiwic2Vzc2lvblZhbHVlIjoiIiwic2Vzc2lvbkluZGV4IjoxfV0=)
 
@@ -209,7 +239,10 @@ Unstoppable Domains provides a Postman collection that you can fork to your work
 
 ### Development pre-requirements
 
-The dev. environment generally has the same pre-requirements as running the service normally. So, Postgres and Docker are also necessary. For convenience Postgres configuration can be the same as defaults (username - postgres, password - secret).
+The dev. environment generally has the same pre-requirements as running the
+service normally. So, Postgres and Docker are also necessary. For convenience
+Postgres configuration can be the same as defaults (username - postgres,
+password - secret).
 
 Additional pre-requirements that are necessary for development:
 
@@ -253,7 +286,12 @@ yarn start:dev
 
 ### Running unit tests
 
-Unit tests can be run using `yarn test`. This command will run the tests with ENV variables set in `./local.test.env` file. You should copy `./local.test.env.sample` to `./local.test.env` and redefine any env variable in yours local environment if needed, for example: `export RESOLUTION_POSTGRES_PASSWORD=password`. Testing command will take this variable first instead of using variable from `./local.test.env` file.
+Unit tests can be run using `yarn test`. This command will run the tests with
+ENV variables set in `./local.test.env` file. You should copy
+`./local.test.env.sample` to `./local.test.env` and redefine any env variable in
+yours local environment if needed, for example:
+`export RESOLUTION_POSTGRES_PASSWORD=password`. Testing command will take this
+variable first instead of using variable from `./local.test.env` file.
 
 For checking coverage use `yarn test:coverage`.
 
@@ -261,17 +299,23 @@ Unit/integration tests use a Postgres database that is cleaned before each test.
 By default, the database name is `resolution_service_test`.
 
 ### Debugging
+
 To debug the service, you should use the following command:
+
 ```
 yarn start:dev:debug
 ```
 
 To debug the tests use:
+
 ```
 yarn test:debug
 ```
 
-If you are using [Visual Studio Code](https://docs.microsoft.com/en-us/visualstudio/debugger/attach-to-running-processes-with-the-visual-studio-debugger?view=vs-2022) to debug the code, add this to `.vscode/launch.json` launch configuration:
+If you are using
+[Visual Studio Code](https://docs.microsoft.com/en-us/visualstudio/debugger/attach-to-running-processes-with-the-visual-studio-debugger?view=vs-2022)
+to debug the code, add this to `.vscode/launch.json` launch configuration:
+
 ```
   "configurations": [
     ...,
@@ -291,7 +335,9 @@ If you are using [Visual Studio Code](https://docs.microsoft.com/en-us/visualstu
 
 ![Architecture chart](doc/ResolutionService.png)
 
-The service currently consists of three main components: API and three workers. The API component is a basic HTTP API that allows the reading of domain data from the database. The OpenAPI specification:
+The service currently consists of three main components: API and three workers.
+The API component is a basic HTTP API that allows the reading of domain data
+from the database. The OpenAPI specification:
 [OpenAPI specification](https://resolve.unstoppabledomains.com/api-docs/).
 
 Currently, there are three workers in the resolution service:
@@ -320,7 +366,9 @@ The resolution service outputs logs to `stdout` so they are available by
 Cloud Logging). The general log format should be:
 `<timestamp> <log level>: <Component label> - <Log message>`
 
-The resolution service has a configurable logging level. Log messages are at consistent levels across the whole service. We use the following guidelines to determine the logging level:
+The resolution service has a configurable logging level. Log messages are at
+consistent levels across the whole service. We use the following guidelines to
+determine the logging level:
 
 | Event              | Component       | description                                                                                                                | log level |
 | ------------------ | --------------- | -------------------------------------------------------------------------------------------------------------------------- | --------- |
@@ -333,8 +381,10 @@ The resolution service has a configurable logging level. Log messages are at con
 | Parsed event       | Workers         | Log any event or transaction parsed by the worker                                                                          | debug     |
 | External API calls | all             | Log external API calls                                                                                                     | debug     |
 
-Additionally, the service will report errors to monitoring tools if the appropriate keys are provided in the environment
-configuration. The resolution service has integrations with [bugsnag](https://www.bugsnag.com/) and [newrelic](https://newrelic.com/).
+Additionally, the service will report errors to monitoring tools if the
+appropriate keys are provided in the environment configuration. The resolution
+service has integrations with [bugsnag](https://www.bugsnag.com/) and
+[newrelic](https://newrelic.com/).
 
 ### Adding new env vars
 
@@ -345,27 +395,36 @@ configuration. The resolution service has integrations with [bugsnag](https://ww
 
 ### Testing image uploads locally
 
-Metadata service will cache NFT PFP images, uploading them to [Google Cloud Storage](https://cloud.google.com/cdn) (GCS) CDN. To test file uploads locally, an unofficial [GCS emulator](https://github.com/fsouza/fake-gcs-server) is used.
+Metadata service will cache NFT PFP images, uploading them to
+[Google Cloud Storage](https://cloud.google.com/cdn) (GCS) CDN. To test file
+uploads locally, an unofficial
+[GCS emulator](https://github.com/fsouza/fake-gcs-server) is used.
 
-To use the emulator, ensure Docker [is installed](https://docs.docker.com/desktop/install/mac-install/).
+To use the emulator, ensure Docker
+[is installed](https://docs.docker.com/desktop/install/mac-install/).
 
 Pull the image from Docker Hub
+
 ```
 docker pull fsouza/fake-gcs-server
 ```
 
-Create the following directory structure for the GSC bucket storage, where `resolution-client-assets` is the bucket's name.
+Create the following directory structure for the GSC bucket storage, where
+`resolution-client-assets` is the bucket's name.
+
 ```
   storage
   |--> resolution-client-assets
 ```
 
 Run docker container with mounted bucket directory:
+
 ```
 docker run -d --name fake-gcs-server -p 4443:4443 -v ${PWD}/storage:/data fsouza/fake-gcs-server -scheme http -public-host localhost:4443
 ```
 
 Add the following variable to the local dev config:
+
 ```
 CLOUD_STORAGE_ENDPONT_URL=http://localhost:4443
 ```

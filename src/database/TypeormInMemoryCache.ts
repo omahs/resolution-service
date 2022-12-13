@@ -7,7 +7,7 @@ import type { QueryResultCache } from 'typeorm/cache/QueryResultCache';
 import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions';
 import NodeCache from 'node-cache';
 
-export default class InMemoryCacheProvider implements QueryResultCache {
+export class InMemoryCacheProvider implements QueryResultCache {
   private cache: NodeCache;
 
   constructor(userCache?: NodeCache) {
@@ -57,3 +57,7 @@ export default class InMemoryCacheProvider implements QueryResultCache {
     return this.cache.getStats();
   }
 }
+
+const InMemoryCache = new InMemoryCacheProvider();
+
+export default InMemoryCache;
