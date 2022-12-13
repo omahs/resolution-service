@@ -3,7 +3,6 @@ import { WinstonTypeormLogger } from './WinstonTypeormLogger';
 import SnakeNamingStrategy from './SnakeNamingStrategy';
 import { logger } from '../logger';
 import { env } from '../env';
-import { InMemoryCache } from './TypeormInMemoryCache';
 
 const runningMode = env.APPLICATION.RUNNING_MODE;
 
@@ -20,11 +19,6 @@ if (!manager.connections.length) {
     maxQueryExecutionTime: -1,
     migrationsTableName: 'typeorm_migration',
     migrationsRun: runningMode.includes('MIGRATIONS'),
-    cache: {
-      provider() {
-        return InMemoryCache;
-      },
-    },
   });
 }
 
