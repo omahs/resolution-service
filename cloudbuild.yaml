@@ -35,10 +35,10 @@ steps:
       # need to set via UI for new services
       #- "--allow-unauthenticated"
       - "--tag=commit-$SHORT_SHA"
-      - "--cpu=1000m"
-      - "--memory=512Mi"
+      - "--cpu=2000m"
+      - "--memory=1024Mi"
       - "--min-instances=5"
-      - "--max-instances=50"
+      - "--max-instances=80"
       - "--port=3000"
       - "--set-cloudsql-instances=$_RESOLUTION_SERVICE_POSTGRES_HOST"
       - "--update-secrets=DD_AGENT_HOST=DATADOG_AGENT_HOST:latest"
@@ -94,10 +94,10 @@ steps:
       # need to set via UI for new services
       #- "--allow-unauthenticated"
       - "--tag=commit-$SHORT_SHA"
-      - "--cpu=1000m"
-      - "--memory=512Mi"
+      - "--cpu=2000m"
+      - "--memory=1024Mi"
       - "--min-instances=5"
-      - "--max-instances=50"
+      - "--max-instances=80"
       - "--port=3000"
       - "--set-cloudsql-instances=$_RESOLUTION_SERVICE_POSTGRES_HOST"
       - "--update-secrets=DD_AGENT_HOST=DATADOG_AGENT_HOST:latest"
@@ -151,8 +151,8 @@ steps:
           gcloud run services update $_SERVICE_NAME-workers --platform=managed --quiet \
           --image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
           --tag=commit-$SHORT_SHA \
-          --cpu=1000m \
-          --memory=512Mi \
+          --cpu=2000m \
+          --memory=1024Mi \
           --min-instances=1 \
           --max-instances=1 \
           --port=3000 \
