@@ -23,7 +23,8 @@ import {
 } from './dto/Domains';
 import { CnsRegistryEvent, Domain } from '../models';
 import { ApiKeyAuthMiddleware } from '../middleware/ApiKeyAuthMiddleware';
-import { getDomainResolution, IsZilDomain } from '../services/Resolution';
+import { getDomainResolution } from '../services/Resolution';
+import { IsZilDomain } from '../utils/domain';
 import { ConvertArrayQueryParams } from '../middleware/ConvertArrayQueryParams';
 import RateLimiter from '../middleware/RateLimiter';
 import { SendHeapEvent } from '../middleware/SendHeapEvent';

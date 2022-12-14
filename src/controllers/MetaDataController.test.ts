@@ -52,7 +52,7 @@ describe('MetaDataController', () => {
     await L2Fixture.networkHelper.stopNetwork();
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     sinon.restore();
   });
 
@@ -89,6 +89,14 @@ describe('MetaDataController', () => {
   });
 
   describe('GET /metadata/:domainOrToken', () => {
+    it('should throw an error if invalid domainName is supplied', async () => {
+      const response = await supertest(api).get('/metadata/test.json').send();
+
+      expect(response.statusCode).to.equal(400);
+      expect(response.body.code).to.equal('InvalidInputError');
+      expect(response.body.message).to.equal('Unsupported TLD');
+    });
+
     it('should work', async () => {
       const { domain } = await DomainTestHelper.createTestDomain({
         resolution: {
@@ -142,6 +150,28 @@ describe('MetaDataController', () => {
       };
       expect(resWithName.properties).to.deep.eq(correctProperties);
       expect(resWithName.background_color).eq(BackgroundColor);
+    });
+
+    describe('GET /image-src/:domainOrToken', () => {
+      it('should throw an error if invalid domainName is supplied', async () => {
+        const response = await supertest(api)
+          .get('/image-src/test.json')
+          .send();
+
+        expect(response.statusCode).to.equal(400);
+        expect(response.body.code).to.equal('InvalidInputError');
+        expect(response.body.message).to.equal('Unsupported TLD');
+      });
+
+      it('should throw an error if invalid image extension is supplied', async () => {
+        const response = await supertest(api)
+          .get('/image-src/test.crypto.jpeg')
+          .send();
+
+        expect(response.statusCode).to.equal(400);
+        expect(response.body.code).to.equal('InvalidInputError');
+        expect(response.body.message).to.equal('Unsupported TLD');
+      });
     });
 
     it('should work with a subdomain', async () => {
@@ -580,6 +610,14 @@ describe('MetaDataController', () => {
   });
 
   describe('GET /image/:domainOrToken', () => {
+    it('should throw an error if invalid domainName is supplied', async () => {
+      const response = await supertest(api).get('/image/test.json').send();
+
+      expect(response.statusCode).to.equal(400);
+      expect(response.body.code).to.equal('InvalidInputError');
+      expect(response.body.message).to.equal('Unsupported TLD');
+    });
+
     it('should resolve image_data with provided domain', async () => {
       const { domain } = await DomainTestHelper.createTestDomain({});
       const res = await supertest(api)

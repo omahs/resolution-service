@@ -3,11 +3,8 @@ import sinon from 'sinon';
 import { env } from '../env';
 import { Domain, DomainsResolution, DomainsReverseResolution } from '../models';
 import { Blockchain } from '../types/common';
-import {
-  getDomainResolution,
-  getReverseResolution,
-  IsZilDomain,
-} from './Resolution';
+import { getDomainResolution, getReverseResolution } from './Resolution';
+import { IsZilDomain } from '../utils/domain';
 
 describe('Resolution service', () => {
   describe('isZilDomain', () => {

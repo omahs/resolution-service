@@ -6,7 +6,6 @@ import {
   Param,
   QueryParam,
   UseBefore,
-  BadRequestError,
 } from 'routing-controllers';
 import { ResponseSchema } from 'routing-controllers-openapi';
 import {
@@ -24,12 +23,11 @@ import {
 } from '../services/Resolution';
 import { MetadataService } from '../services/MetadataService';
 import { ImageResponse, OpenSeaMetadata } from './dto/Metadata';
-import {
-  belongsToTld,
-  findDomainByNameOrToken,
-  isDeprecatedTLD,
-  isSupportedTLD,
-} from '../utils/domain';
+
+import { belongsToTld, isDeprecatedTLD } from '../utils/domain';
+import { findDomainByNameOrToken } from '../services/DomainService';
+import { ValidateIsDomainNameParam } from '../middleware/inputValidators';
+
 import RateLimiter from '../middleware/RateLimiter';
 
 const INVALID_DOMAIN_IMAGE_URL =
@@ -75,15 +73,12 @@ export class MetaDataController {
   }
 
   @Get('/metadata/:domainOrToken')
+  @UseBefore(ValidateIsDomainNameParam('domainOrToken'))
   @ResponseSchema(OpenSeaMetadata)
   async getMetaData(
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
   ): Promise<OpenSeaMetadata> {
-    if (domainOrToken.includes('.') && !isSupportedTLD(domainOrToken)) {
-      throw new BadRequestError('Unsupported TLD');
-    }
-
     const domain = await findDomainByNameOrToken(domainOrToken);
     if (!domain) {
       return this.metadataService.defaultMetaResponse(domainOrToken);
@@ -146,14 +141,12 @@ export class MetaDataController {
   }
 
   @Get('/image/:domainOrToken')
+  @UseBefore(ValidateIsDomainNameParam('domainOrToken'))
   @ResponseSchema(ImageResponse)
   async getImage(
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
   ): Promise<ImageResponse> {
-    if (domainOrToken.includes('.') && !isSupportedTLD(domainOrToken)) {
-      throw new BadRequestError('Unsupported TLD');
-    }
     const domain = await findDomainByNameOrToken(domainOrToken);
     const resolution = domain ? getDomainResolution(domain) : undefined;
     const name = domain ? domain.name : domainOrToken;
@@ -193,6 +186,7 @@ export class MetaDataController {
 
   @Get('/image-src/:domainOrToken')
   @Header('Access-Control-Allow-Origin', '*')
+  @UseBefore(ValidateIsDomainNameParam('domainOrToken', ['svg']))
   @Header('Content-Type', 'image/svg+xml')
   async getImageSrc(
     @Param('domainOrToken') domainOrToken: string,
@@ -202,12 +196,7 @@ export class MetaDataController {
     const domainOrTokenSanitized = domainOrToken.endsWith(SVG_SUFFIX)
       ? domainOrToken.substring(0, domainOrToken.length - SVG_SUFFIX.length) // remove the .svg suffix
       : domainOrToken;
-    if (
-      domainOrTokenSanitized.includes('.') &&
-      !isSupportedTLD(domainOrTokenSanitized)
-    ) {
-      throw new BadRequestError('Unsupported TLD');
-    }
+
     const domain = await findDomainByNameOrToken(domainOrTokenSanitized);
     const resolution = domain ? getDomainResolution(domain) : undefined;
     const name = domain ? domain.name : domainOrTokenSanitized;

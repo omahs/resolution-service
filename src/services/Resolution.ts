@@ -6,15 +6,10 @@ import { Domain, DomainsResolution, DomainsReverseResolution } from '../models';
 import { Blockchain } from '../types/common';
 import { isSupportedTLD } from '../utils/domain';
 import { ETHAddressRegex } from '../utils/ethersUtils';
+import { IsZilDomain } from '../utils/domain';
 
 export function getTokenIdFromHash(hash: string): string {
   return BigNumber.from(hash).toString();
-}
-
-export function IsZilDomain(name: string): boolean {
-  const tokens = name.split('.');
-  const tld = tokens[tokens.length - 1];
-  return tld === 'zil';
 }
 
 function isNullAddress(address: string | null): boolean {

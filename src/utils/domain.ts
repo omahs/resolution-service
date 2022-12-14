@@ -1,5 +1,3 @@
-import { Domain } from '../models';
-import { IsZilDomain } from '../services/Resolution';
 import {
   AllDomainTlds,
   DeprecatedTld,
@@ -7,7 +5,13 @@ import {
   SupportedTld,
   SupportedTlds,
 } from '../types/common';
-import { eip137Namehash, znsNamehash } from './namehash';
+import { eip137Namehash } from './namehash';
+
+export function IsZilDomain(name: string): boolean {
+  const tokens = name.split('.');
+  const tld = tokens[tokens.length - 1];
+  return tld === 'zil';
+}
 
 const normalizeToken = (token: string): string => {
   return '0x' + BigInt(token).toString(16).padStart(64, '0');
@@ -35,27 +39,6 @@ export const normalizeDomainOrToken = (domainOrToken: string): string => {
   }
 
   return domainName;
-};
-
-export const findDomainByNameOrToken = async (
-  domainOrToken: string,
-): Promise<Domain | undefined> => {
-  const tokenName = normalizeDomainOrToken(domainOrToken);
-  const domainName = normalizeDomainName(domainOrToken);
-
-  let domain =
-    (await Domain.findByNode(tokenName, undefined, true)) ||
-    (await Domain.findOnChainNoSafe(tokenName));
-
-  if (!domain && IsZilDomain(domainName)) {
-    domain = await Domain.findByNode(znsNamehash(domainName), undefined, true);
-  }
-  const supportedTLD = domain ? isSupportedTLD(domain.name) : false;
-  if (!supportedTLD) {
-    return undefined;
-  }
-
-  return domain;
 };
 
 export const isSupportedTLD = (domainName: string): boolean => {
