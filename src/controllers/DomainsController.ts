@@ -7,7 +7,6 @@ import {
   Params,
   QueryParams,
   Res,
-  UseAfter,
   UseBefore,
 } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
@@ -27,7 +26,7 @@ import { getDomainResolution } from '../services/Resolution';
 import { IsZilDomain } from '../utils/domain';
 import { ConvertArrayQueryParams } from '../middleware/ConvertArrayQueryParams';
 import RateLimiter from '../middleware/RateLimiter';
-import { SendHeapEvent } from '../middleware/SendHeapEvent';
+import { AttachHeapTrackingMiddleware } from '../middleware/SendHeapEvent';
 import { In } from 'typeorm';
 import pick from 'lodash/pick';
 import {
@@ -47,17 +46,17 @@ import { ValidateAndTransformOnDomainName } from '../middleware/inputValidators'
 })
 @JsonController()
 @UseBefore(RateLimiter(), ApiKeyAuthMiddleware)
-@UseAfter(SendHeapEvent)
 export class DomainsController {
   @Get('/domains/:domainName')
-  @UseBefore(ValidateAndTransformOnDomainName('domainName'))
+  @UseBefore(
+    AttachHeapTrackingMiddleware(HeapEvents.GET_DOMAIN),
+    ValidateAndTransformOnDomainName('domainName'),
+  )
   @ResponseSchema(DomainResponse)
   async getDomain(
     @Res() res: Response,
     @Param('domainName') domainName: string,
   ): Promise<DomainResponse> {
-    res.locals.heapEventName = HeapEvents.GET_DOMAIN;
-
     const response = new DomainResponse();
 
     if (!isSupportedTLD(domainName.toLowerCase())) {
@@ -117,11 +116,21 @@ export class DomainsController {
   })
   @UseBefore(ConvertArrayQueryParams('owners'))
   @UseBefore(ConvertArrayQueryParams('tlds'))
+  @UseBefore(
+    AttachHeapTrackingMiddleware(HeapEvents.GET_DOMAINS, [
+      'resolution',
+      'tlds',
+      'owners',
+      'sortBy',
+      'sortDirection',
+      'perPage',
+      'startingAfter',
+    ]),
+  )
   async getDomainsList(
     @Res() res: Response,
     @QueryParams() query: DomainsListQuery,
   ): Promise<DomainsListResponse> {
-    res.locals.heapEventName = HeapEvents.GET_DOMAINS;
     // Use raw query becaues typeorm doesn't seem to handle multiple nested relations (e.g. resolution.domain.parent.name)
     const where = [];
     if (query.tlds) {
@@ -279,12 +288,14 @@ export class DomainsController {
       },
     },
   })
-  @UseBefore(ValidateAndTransformOnDomainName('domainName'))
+  @UseBefore(
+    AttachHeapTrackingMiddleware(HeapEvents.GET_LATEST_DOMAIN_TRANSFER),
+    ValidateAndTransformOnDomainName('domainName'),
+  )
   async getDomainsLastTransfer(
     @Res() res: Response,
     @Params() query: UnsDomainQuery,
   ): Promise<DomainLatestTransferResponse> {
-    res.locals.heapEventName = HeapEvents.GET_LATEST_DOMAIN_TRANSFER;
     const supportedTLD = isSupportedTLD(query.domainName);
 
     if (!supportedTLD) {
@@ -346,12 +357,17 @@ export class DomainsController {
       },
     },
   })
-  @UseBefore(ConvertArrayQueryParams('domains'))
+  @UseBefore(
+    AttachHeapTrackingMiddleware(HeapEvents.GET_DOMAIN_RECORDS, [
+      'domains',
+      'key',
+    ]),
+    ConvertArrayQueryParams('domains'),
+  )
   async getDomainsRecords(
     @Res() res: Response,
     @QueryParams() query: DomainsRecordsQuery,
   ): Promise<DomainsRecordsResponse> {
-    res.locals.heapEventName = HeapEvents.GET_DOMAIN_RECORDS;
     let domainNames = query.domains.map(normalizeDomainName);
     domainNames = domainNames.filter((domainName) => {
       return isSupportedTLD(domainName);

@@ -11,10 +11,16 @@ import sinon from 'sinon';
 
 describe('DomainsController', () => {
   let testApiKey: ApiKey;
+  let trackStub: sinon.SinonStub;
 
   beforeEach(async () => {
     testApiKey = await ApiKey.createApiKey('testing key');
+    trackStub = sinon.stub(heap, 'track');
     nockConfigure();
+  });
+
+  afterEach(async () => {
+    trackStub.restore();
   });
 
   describe('GET /records', () => {
@@ -27,16 +33,13 @@ describe('DomainsController', () => {
     });
 
     it('should NOT call the tracking event on an unsuccessful response', async () => {
-      const trackStub = sinon.stub(heap, 'track');
       const res = await supertest(api).get('/records?domains[]=one.x').send();
       expect(res.status).eq(403);
       expect(trackStub).to.not.be.called;
-      trackStub.restore();
     });
 
-    it('should call the tracking event on a successful response', async () => {
+    it('should call the tracking event on a response', async () => {
       const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
-      const trackStub = sinon.stub(heap, 'track');
       await DomainTestHelper.createTestDomainL2(
         {
           name: 'testb.crypto',
@@ -73,7 +76,47 @@ describe('DomainsController', () => {
           responseCode: 200,
         },
       });
-      trackStub.restore();
+    });
+
+    it('should not heap track any query event on a response', async () => {
+      const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
+      await DomainTestHelper.createTestDomainL2(
+        {
+          name: 'testb.crypto',
+          node: '0xe952ce3758282cce878760001be22370f4842793139518e119ae04ae24004206',
+        },
+        {
+          registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+          ownerAddress: Domain.NullAddress,
+        },
+        {
+          registry: '0xa9a6a3626993d487d2dbda3173cf58ca1a9d9e9f',
+          ownerAddress: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
+          resolution: {
+            'crypto.ETH.address': '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
+            'social.picture.value': 'yo',
+          },
+        },
+      );
+
+      const uri =
+        '/records?domains[]=testb.crypto&domains[]=test2.crypto&key=social.picture.value&extraParams=123';
+      const res = await supertest(api)
+        .get(uri)
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
+      expect(res.status).eq(200);
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_DOMAIN_RECORDS,
+        properties: {
+          domain_names: 'testb.crypto,test2.crypto',
+          key: 'social.picture.value',
+          apiKey: testApiKey.apiKey,
+          uri,
+          responseCode: 200,
+        },
+      });
     });
 
     it('should return empty response', async () => {

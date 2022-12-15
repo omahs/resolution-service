@@ -14,9 +14,15 @@ import * as heap from '../utils/heap';
 
 describe('DomainsController', () => {
   let testApiKey: ApiKey;
+  let trackStub: sinon.SinonStub;
 
   beforeEach(async () => {
     testApiKey = await ApiKey.createApiKey('testing key');
+    trackStub = sinon.stub(heap, 'track');
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   describe('GET /domains', () => {
@@ -41,9 +47,8 @@ describe('DomainsController', () => {
       expect(res.status).eq(200);
     });
 
-    it('should call the tracking event on a successful response', async () => {
+    it('should call the tracking event on response', async () => {
       const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
-      const trackStub = sinon.stub(heap, 'track');
       await Promise.all([
         await DomainTestHelper.createTestDomain({
           name: 'test1.crypto',
@@ -81,17 +86,58 @@ describe('DomainsController', () => {
           responseCode: 200,
         },
       });
-      trackStub.restore();
+    });
+
+    it('should not heap track extra query on response', async () => {
+      const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
+      await Promise.all([
+        await DomainTestHelper.createTestDomain({
+          name: 'test1.crypto',
+          node: '0x99cc72a0f40d092d1b8b3fa8f2da5b7c0c6a9726679112e3827173f8b2460502',
+          ownerAddress: '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2',
+          registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+        }),
+        await DomainTestHelper.createTestDomain({
+          name: 'test3.crypto',
+          node: '0xde3d1be3661eadd92290828d632e0dd25703b6008cd92d03f51be25795fe922d',
+          ownerAddress: '0x111115e932a88b2e7d0130712b3aa9fb7c522222',
+          registry: '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe',
+        }),
+      ]);
+
+      const owners =
+        'owners[]=0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2&owners[]=0x111115e932a88b2e7d0130712b3aa9fb7c522222';
+      const tlds = 'tlds=crypto';
+      const extraQuery =
+        'extraQuery[]=0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2&extraQuery[]=0x111115e932a88b2e7d0130712b3aa9fb7c522222';
+      const uri = `/domains?${owners}&${tlds}&${extraQuery}`;
+
+      const res = await supertest(api)
+        .get(uri)
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
+      expect(res.status).eq(200);
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_DOMAINS,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          uri,
+          owners_address:
+            '0x58ca45e932a88b2e7d0130712b3aa9fb7c5781e2,0x111115e932a88b2e7d0130712b3aa9fb7c522222',
+          tlds: 'crypto',
+          response_domain_names: 'test1.crypto,test3.crypto',
+          responseCode: 200,
+        },
+      });
     });
 
     it('should NOT call the tracking event on an unsuccessful response', async () => {
-      const trackStub = sinon.stub(heap, 'track');
       const res = await supertest(api)
         .get('/domains?owners[]=0xC47Ef814093eCefe330604D9E81e3940ae033c9a')
         .send();
       expect(res.status).eq(403);
       expect(trackStub).to.not.be.called;
-      trackStub.restore();
     });
 
     it('should return true for hasMore', async () => {

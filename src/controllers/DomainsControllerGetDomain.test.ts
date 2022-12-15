@@ -17,9 +17,15 @@ import { HeapEvents } from '../types/heap';
 
 describe('DomainsController', () => {
   let testApiKey: ApiKey;
+  let trackStub: sinon.SinonStub;
 
   beforeEach(async () => {
     testApiKey = await ApiKey.createApiKey('testing key');
+    trackStub = sinon.stub(heap, 'track');
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   describe('GET /domain/:domainName', () => {
@@ -534,8 +540,7 @@ describe('DomainsController', () => {
       });
     });
 
-    it('should call the tracking event on a successful response', async () => {
-      const trackStub = sinon.stub(heap, 'track');
+    it('should call the tracking event on response', async () => {
       const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
       let domainName = 'brad.crypto';
       let res = await supertest(api)
@@ -570,27 +575,46 @@ describe('DomainsController', () => {
         },
       });
 
-      // domainName = 'bobby.funnyrabbit';
-      // res = await supertest(api)
-      //   .get(`/domains/${domainName}`)
-      //   .auth(testApiKey.apiKey, { type: 'bearer' })
-      //   .send();
+      domainName = 'bobby.funnyrabbit';
+      res = await supertest(api)
+        .get(`/domains/${domainName}`)
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
 
-      // await expect(trackStub).to.be.calledWith({
-      //   identity: SUPERTEST_TESTING_IP,
-      //   eventName: HeapEvents.GET_DOMAIN,
-      //   properties: {
-      //     apiKey: testApiKey.apiKey,
-      //     domainName,
-      //     uri: `/domains/${domainName}`,
-      //     responseCode: 200,
-      //   },
-      // });
-      trackStub.restore();
+      await expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_DOMAIN,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          domainName,
+          uri: `/domains/${domainName}`,
+          responseCode: 400,
+        },
+      });
+    });
+
+    it('should not heap track extra queries on response', async () => {
+      const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
+      const domainName = 'brad.crypto';
+      const uri = `/domains/${domainName}?testQuery=123&anotherTest=abcd`;
+      const res = await supertest(api)
+        .get(uri)
+        .auth(testApiKey.apiKey, { type: 'bearer' })
+        .send();
+      expect(res.status).eq(200);
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_DOMAIN,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          domainName,
+          uri,
+          responseCode: 200,
+        },
+      });
     });
 
     it('should not call the tracking event on an unsuccessful response', async () => {
-      const trackStub = sinon.stub(heap, 'track');
       let res = await supertest(api).get('/domains/brad.crypto').send();
       expect(res.status).eq(403);
       expect(res.body).containSubset({
@@ -607,7 +631,6 @@ describe('DomainsController', () => {
       expect(res.status).eq(500);
       expect(trackStub).to.not.be.called;
       await connection.connect(); // restore the connection to the db;
-      trackStub.restore();
     });
   });
 
