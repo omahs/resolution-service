@@ -26,7 +26,7 @@ import { ImageResponse, OpenSeaMetadata } from './dto/Metadata';
 
 import { belongsToTld, isDeprecatedTLD } from '../utils/domain';
 import { findDomainByNameOrToken } from '../services/DomainService';
-import { ValidateIsDomainNameParam } from '../middleware/inputValidators';
+import { ValidateAndTransformOnDomainNameOrToken } from '../middleware/inputValidators';
 
 import RateLimiter from '../middleware/RateLimiter';
 
@@ -73,7 +73,7 @@ export class MetaDataController {
   }
 
   @Get('/metadata/:domainOrToken')
-  @UseBefore(ValidateIsDomainNameParam('domainOrToken'))
+  @UseBefore(ValidateAndTransformOnDomainNameOrToken('domainOrToken'))
   @ResponseSchema(OpenSeaMetadata)
   async getMetaData(
     @Param('domainOrToken') domainOrToken: string,
@@ -141,7 +141,7 @@ export class MetaDataController {
   }
 
   @Get('/image/:domainOrToken')
-  @UseBefore(ValidateIsDomainNameParam('domainOrToken'))
+  @UseBefore(ValidateAndTransformOnDomainNameOrToken('domainOrToken'))
   @ResponseSchema(ImageResponse)
   async getImage(
     @Param('domainOrToken') domainOrToken: string,
@@ -186,7 +186,7 @@ export class MetaDataController {
 
   @Get('/image-src/:domainOrToken')
   @Header('Access-Control-Allow-Origin', '*')
-  @UseBefore(ValidateIsDomainNameParam('domainOrToken', ['svg']))
+  @UseBefore(ValidateAndTransformOnDomainNameOrToken('domainOrToken', ['svg']))
   @Header('Content-Type', 'image/svg+xml')
   async getImageSrc(
     @Param('domainOrToken') domainOrToken: string,

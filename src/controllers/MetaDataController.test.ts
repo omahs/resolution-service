@@ -56,6 +56,39 @@ describe('MetaDataController', () => {
     sinon.restore();
   });
 
+  function commonValidatorTestSuite(options: { basePath: string }) {
+    const { basePath } = options;
+    describe(`Validation path: ${basePath}`, () => {
+      it('should throw an error if invalid domainName extension is supplied', async () => {
+        const response = await supertest(api)
+          .get(`${basePath}/test.json`)
+          .send();
+
+        expect(response.statusCode).to.equal(400);
+        expect(response.body.code).to.equal('InvalidInputError');
+        expect(response.body.message).to.equal('Unsupported TLD');
+      });
+
+      it('should throw an error if invalid domainName format is supplied', async () => {
+        const response = await supertest(api)
+          .get(`${basePath}/+name+.crypto`)
+          .send();
+
+        expect(response.statusCode).to.equal(400);
+        expect(response.body.code).to.equal('InvalidInputError');
+        expect(response.body.message).to.equal('Unsupported TLD');
+      });
+
+      it('should throw an error if invalid token is supplied', async () => {
+        const response = await supertest(api).get(`${basePath}/asdfgh`).send();
+
+        expect(response.statusCode).to.equal(400);
+        expect(response.body.code).to.equal('InvalidInputError');
+        expect(response.body.message).to.equal('Invalid token');
+      });
+    });
+  }
+
   describe('HEAD', () => {
     let dummyDomainName: string;
 
@@ -89,12 +122,8 @@ describe('MetaDataController', () => {
   });
 
   describe('GET /metadata/:domainOrToken', () => {
-    it('should throw an error if invalid domainName is supplied', async () => {
-      const response = await supertest(api).get('/metadata/test.json').send();
-
-      expect(response.statusCode).to.equal(400);
-      expect(response.body.code).to.equal('InvalidInputError');
-      expect(response.body.message).to.equal('Unsupported TLD');
+    commonValidatorTestSuite({
+      basePath: '/metadata',
     });
 
     it('should work', async () => {
@@ -153,14 +182,8 @@ describe('MetaDataController', () => {
     });
 
     describe('GET /image-src/:domainOrToken', () => {
-      it('should throw an error if invalid domainName is supplied', async () => {
-        const response = await supertest(api)
-          .get('/image-src/test.json')
-          .send();
-
-        expect(response.statusCode).to.equal(400);
-        expect(response.body.code).to.equal('InvalidInputError');
-        expect(response.body.message).to.equal('Unsupported TLD');
+      commonValidatorTestSuite({
+        basePath: '/image-src',
       });
 
       it('should throw an error if invalid image extension is supplied', async () => {
@@ -607,109 +630,105 @@ describe('MetaDataController', () => {
         },
       });
     });
-  });
 
-  describe('GET /image/:domainOrToken', () => {
-    it('should throw an error if invalid domainName is supplied', async () => {
-      const response = await supertest(api).get('/image/test.json').send();
-
-      expect(response.statusCode).to.equal(400);
-      expect(response.body.code).to.equal('InvalidInputError');
-      expect(response.body.message).to.equal('Unsupported TLD');
-    });
-
-    it('should resolve image_data with provided domain', async () => {
-      const { domain } = await DomainTestHelper.createTestDomain({});
-      const res = await supertest(api)
-        .get(`/image/${domain.name}`)
-        .send()
-        .then((r) => r.body);
-      const defaultImageData = DefaultImageData({
-        domain,
-        fontSize: 24,
-      });
-      expect(res.image_data).to.equal(defaultImageData);
-    });
-
-    it('should resolve image_data with provided tokenId', async () => {
-      const { domain } = await DomainTestHelper.createTestDomain({});
-      const res = await supertest(api)
-        .get(`/image/${domain.node}`)
-        .send()
-        .then((r) => r.body);
-      const defaultImageData = DefaultImageData({
-        domain,
-        fontSize: 24,
-      });
-      expect(res.image_data).to.equal(defaultImageData);
-    });
-
-    it(`should resolve image_data as animal domain`, async () => {
-      nock('https://storage.googleapis.com')
-        .get('/dot-crypto-metadata-api/images/animals/lemming.svg')
-        .reply(200, 'correct image data');
-
-      const { domain } = await DomainTestHelper.createTestDomain({
-        name: 'unstoppablelemming.crypto',
-        node: eip137Namehash('unstoppablelemming.crypto'),
+    describe('GET /image/:domainOrToken', () => {
+      commonValidatorTestSuite({
+        basePath: '/image',
       });
 
-      const res = await supertest(api)
-        .get(`/image/${domain.name}`)
-        .send()
-        .then((r) => r.body);
-
-      expect(res.image_data).to.equal('correct image data');
-    });
-
-    it('should return null value when no domain is found', async () => {
-      const response = await supertest(api)
-        .get('/image/unknown.crypto')
-        .send()
-        .then((r) => r.body);
-      expect(response).to.deep.eq({
-        image_data: DefaultImageData({
-          domain: new Domain({ name: 'unknown.crypto' }),
+      it('should resolve image_data with provided domain', async () => {
+        const { domain } = await DomainTestHelper.createTestDomain({});
+        const res = await supertest(api)
+          .get(`/image/${domain.name}`)
+          .send()
+          .then((r) => r.body);
+        const defaultImageData = DefaultImageData({
+          domain,
           fontSize: 24,
-        }),
+        });
+        expect(res.image_data).to.equal(defaultImageData);
       });
-      const token = eip137Namehash('unknown.crypto');
-      const responseWithNode = await supertest(api)
-        .get(`/image/${token}`)
-        .send()
-        .then((r) => r.body);
-      expect(responseWithNode).to.deep.eq({
-        image_data: '',
-      });
-    });
 
-    it('should query the newURI event and return image data for default domain if such exists', async () => {
-      const uns = getNSConfig('nft');
-      const owner = L2Fixture.networkHelper.owner().address;
-      await L2Fixture.prepareService(owner, uns);
-
-      const response = await supertest(api)
-        .get(`/image/${uns.node.toHexString()}`)
-        .send()
-        .then((r) => r.body);
-
-      const domain = new Domain({ name: uns.name });
-      expect(response).to.deep.eq({
-        image_data: DefaultImageData({
+      it('should resolve image_data with provided tokenId', async () => {
+        const { domain } = await DomainTestHelper.createTestDomain({});
+        const res = await supertest(api)
+          .get(`/image/${domain.node}`)
+          .send()
+          .then((r) => r.body);
+        const defaultImageData = DefaultImageData({
           domain,
-          fontSize: 16,
-        }),
+          fontSize: 24,
+        });
+        expect(res.image_data).to.equal(defaultImageData);
       });
 
-      const responseWithName = await supertest(api)
-        .get(`/image/${uns.name}`)
-        .send()
-        .then((r) => r.body);
-      expect(responseWithName).to.deep.eq({
-        image_data: DefaultImageData({
-          domain,
-          fontSize: 16,
-        }),
+      it(`should resolve image_data as animal domain`, async () => {
+        nock('https://storage.googleapis.com')
+          .get('/dot-crypto-metadata-api/images/animals/lemming.svg')
+          .reply(200, 'correct image data');
+
+        const { domain } = await DomainTestHelper.createTestDomain({
+          name: 'unstoppablelemming.crypto',
+          node: eip137Namehash('unstoppablelemming.crypto'),
+        });
+
+        const res = await supertest(api)
+          .get(`/image/${domain.name}`)
+          .send()
+          .then((r) => r.body);
+
+        expect(res.image_data).to.equal('correct image data');
+      });
+
+      it('should return null value when no domain is found', async () => {
+        const response = await supertest(api)
+          .get('/image/unknown.crypto')
+          .send()
+          .then((r) => r.body);
+        expect(response).to.deep.eq({
+          image_data: DefaultImageData({
+            domain: new Domain({ name: 'unknown.crypto' }),
+            fontSize: 24,
+          }),
+        });
+        const token = eip137Namehash('unknown.crypto');
+        const responseWithNode = await supertest(api)
+          .get(`/image/${token}`)
+          .send()
+          .then((r) => r.body);
+        expect(responseWithNode).to.deep.eq({
+          image_data: '',
+        });
+      });
+
+      it('should query the newURI event and return image data for default domain if such exists', async () => {
+        const uns = getNSConfig('nft');
+        const owner = L2Fixture.networkHelper.owner().address;
+        await L2Fixture.prepareService(owner, uns);
+
+        const response = await supertest(api)
+          .get(`/image/${uns.node.toHexString()}`)
+          .send()
+          .then((r) => r.body);
+
+        const domain = new Domain({ name: uns.name });
+        expect(response).to.deep.eq({
+          image_data: DefaultImageData({
+            domain,
+            fontSize: 16,
+          }),
+        });
+
+        const responseWithName = await supertest(api)
+          .get(`/image/${uns.name}`)
+          .send()
+          .then((r) => r.body);
+        expect(responseWithName).to.deep.eq({
+          image_data: DefaultImageData({
+            domain,
+            fontSize: 16,
+          }),
+        });
       });
     });
   });

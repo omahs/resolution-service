@@ -1,1 +1,4 @@
-export { ValidateIsDomainNameParam } from './validateDomainNameQuery';
+export {
+  ValidateAndTransformOnDomainNameOrToken,
+  ValidateAndTransformOnDomainName,
+} from './validateDomainNameQuery';

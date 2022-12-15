@@ -40,6 +40,7 @@ import { DeadAdresses } from '../types/common';
 import { HeapEvents } from '../types/heap';
 import { env } from '../env';
 import { getTokenIdFromHash } from '../services/Resolution';
+import { ValidateAndTransformOnDomainName } from '../middleware/inputValidators';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
@@ -49,6 +50,7 @@ import { getTokenIdFromHash } from '../services/Resolution';
 @UseAfter(SendHeapEvent)
 export class DomainsController {
   @Get('/domains/:domainName')
+  @UseBefore(ValidateAndTransformOnDomainName('domainName'))
   @ResponseSchema(DomainResponse)
   async getDomain(
     @Res() res: Response,
@@ -277,6 +279,7 @@ export class DomainsController {
       },
     },
   })
+  @UseBefore(ValidateAndTransformOnDomainName('domainName'))
   async getDomainsLastTransfer(
     @Res() res: Response,
     @Params() query: UnsDomainQuery,

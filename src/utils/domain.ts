@@ -7,6 +7,17 @@ import {
 } from '../types/common';
 import { eip137Namehash } from './namehash';
 
+const VALID_DOMAIN_LABEL_REGEX = /^[a-zA-Z\d]([a-zA-Z\d-]{1,252})?$/;
+const VALID_TOKEN_REGEX = /^[a-fA-F0-9]+$/;
+
+export const isValidDomainNameLabel = (domainName: string): boolean => {
+  return VALID_DOMAIN_LABEL_REGEX.test(domainName.split('.')[0]);
+};
+
+export const isValidToken = (token: string): boolean => {
+  return VALID_TOKEN_REGEX.test(token.replace('0x', ''));
+};
+
 export function IsZilDomain(name: string): boolean {
   const tokens = name.split('.');
   const tld = tokens[tokens.length - 1];
