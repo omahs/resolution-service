@@ -174,7 +174,9 @@ export class MetadataService {
     const description = name
       ? this.getDomainDescription(new Domain({ name }), {})
       : null;
-    const attributes = name ? this.getAttributeType(new Domain({ name })) : [];
+    const attributes = name
+      ? await this.getAttributeType(new Domain({ name }))
+      : [];
     const image = name ? this.generateDomainImageUrl(name) : null;
     const external_url = name
       ? `https://unstoppabledomains.com/search?searchTerm=${name}`
@@ -266,12 +268,12 @@ export class MetadataService {
     return Boolean(CustomImageDomains[name]);
   }
 
-  getAttributeType(
+  async getAttributeType(
     domain: Domain,
     meta?: {
       verifiedNftPicture?: boolean;
     },
-  ): OpenSeaMetadataAttribute[] {
+  ): Promise<OpenSeaMetadataAttribute[]> {
     const attributes: OpenSeaMetadataAttribute[] = [
       {
         trait_type: DomainAttributeTrait.Ending,
@@ -284,6 +286,10 @@ export class MetadataService {
       {
         trait_type: DomainAttributeTrait.Length,
         value: domain.label.length,
+      },
+      {
+        trait_type: DomainAttributeTrait.Subdomains,
+        value: await Domain.getSubdomainCountByParentName(domain.name),
       },
       {
         trait_type: DomainAttributeTrait.Type,

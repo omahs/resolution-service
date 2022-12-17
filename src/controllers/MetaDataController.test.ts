@@ -159,6 +159,7 @@ describe('MetaDataController', () => {
         { trait_type: DomainAttributeTrait.Level, value: 2 },
         { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
         { trait_type: DomainAttributeTrait.Length, value: 10 },
+        { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
         {
           trait_type: DomainAttributeTrait.Type,
           value: AttributeType.Standard,
@@ -233,6 +234,52 @@ describe('MetaDataController', () => {
           trait_type: DomainAttributeTrait.Type,
           value: AttributeType.Subdomain,
         },
+        { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
+
+        {
+          trait_type: DomainAttributeTrait.AttributeCharacterSet,
+          value: AttributeCharacterSet.Letter,
+        },
+      ];
+      expect(resWithName.attributes.length).eq(correctAttributes.length);
+      expect(resWithName.attributes).to.have.deep.members(correctAttributes);
+    });
+    it('should return subdomains count for parent', async () => {
+      const name = 'domain.crypto';
+      const node = eip137Namehash(name);
+      const { domain } = await DomainTestHelper.createTestDomain({
+        name,
+        node,
+      });
+      const subdomainName = 'sub.domain.crypto';
+      const { domain: subdomain } = await DomainTestHelper.createTestDomain({
+        name: subdomainName,
+        node: eip137Namehash(subdomainName),
+      });
+      subdomain.parent = domain;
+      await subdomain.save();
+      const resWithName = await supertest(api)
+        .get(`/metadata/${domain.name}`)
+        .send()
+        .then((r) => r.body);
+
+      const resWithToken = await supertest(api)
+        .get(`/metadata/${domain.node}`)
+        .send()
+        .then((r) => r.body);
+
+      expect(resWithName).to.be.deep.equal(resWithToken);
+      expect(resWithName.name).eq(domain.name);
+      const correctAttributes = [
+        { trait_type: DomainAttributeTrait.Level, value: 2 },
+        { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
+        { trait_type: DomainAttributeTrait.Length, value: 6 },
+        {
+          trait_type: DomainAttributeTrait.Type,
+          value: AttributeType.Standard,
+        },
+        { trait_type: DomainAttributeTrait.Subdomains, value: 1 },
+
         {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,
           value: AttributeCharacterSet.Letter,
@@ -284,6 +331,7 @@ describe('MetaDataController', () => {
           value: UnstoppableDomainTlds.Coin,
         },
         { trait_type: DomainAttributeTrait.Length, value: 10 },
+        { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
         {
           trait_type: DomainAttributeTrait.Type,
           value: AttributeType.Standard,
@@ -361,6 +409,10 @@ describe('MetaDataController', () => {
           value: AttributeType.Animal,
         },
         {
+          trait_type: DomainAttributeTrait.Subdomains,
+          value: 0,
+        },
+        {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,
           value: AttributeCharacterSet.Letter,
         },
@@ -397,6 +449,10 @@ describe('MetaDataController', () => {
         { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
         { trait_type: DomainAttributeTrait.Level, value: 2 },
         { trait_type: DomainAttributeTrait.Length, value: 9 },
+        {
+          trait_type: DomainAttributeTrait.Subdomains,
+          value: 0,
+        },
         { trait_type: DomainAttributeTrait.Type, value: AttributeType.Animal },
         {
           trait_type: DomainAttributeTrait.AttributeCharacterSet,
@@ -427,6 +483,7 @@ describe('MetaDataController', () => {
           { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
           { trait_type: DomainAttributeTrait.Level, value: 2 },
           { trait_type: DomainAttributeTrait.Length, value: 7 },
+          { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
           {
             trait_type: DomainAttributeTrait.Type,
             value: AttributeType.Standard,
@@ -481,6 +538,7 @@ describe('MetaDataController', () => {
           { trait_type: DomainAttributeTrait.Ending, value: 'wallet' },
           { trait_type: DomainAttributeTrait.Level, value: 2 },
           { trait_type: DomainAttributeTrait.Length, value: uns.label.length },
+          { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
           {
             trait_type: DomainAttributeTrait.Type,
             value: AttributeType.Standard,
@@ -566,6 +624,7 @@ describe('MetaDataController', () => {
             trait_type: DomainAttributeTrait.Length,
             value: domain.label.length,
           },
+          { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
           {
             trait_type: DomainAttributeTrait.Type,
             value: AttributeType.Standard,
