@@ -162,6 +162,9 @@ export class MetadataService {
         tokenId: null,
         namehash: null,
         description: null,
+        properties: {
+          records: {},
+        },
         external_url: null,
         attributes: [],
         image: null,
@@ -183,6 +186,9 @@ export class MetadataService {
       tokenId: null,
       namehash: null,
       description,
+      properties: {
+        records: {},
+      },
       external_url,
       attributes,
       image,
