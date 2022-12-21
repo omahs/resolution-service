@@ -226,9 +226,9 @@ describe('MetaDataController', () => {
       expect(resWithName.image).eq(
         'https://metadata.unstoppabledomains.com/image-src/sub.domain.crypto.svg',
       );
-      const correctAttributes = [
+      const correctAttributesForSubdomain = [
         { trait_type: DomainAttributeTrait.Level, value: 3 },
-        { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
+        { trait_type: DomainAttributeTrait.Ending, value: 'domain.crypto' },
         { trait_type: DomainAttributeTrait.Length, value: 10 },
         {
           trait_type: DomainAttributeTrait.Type,
@@ -241,8 +241,12 @@ describe('MetaDataController', () => {
           value: AttributeCharacterSet.Letter,
         },
       ];
-      expect(resWithName.attributes.length).eq(correctAttributes.length);
-      expect(resWithName.attributes).to.have.deep.members(correctAttributes);
+      expect(resWithName.attributes.length).eq(
+        correctAttributesForSubdomain.length,
+      );
+      expect(resWithName.attributes).to.have.deep.members(
+        correctAttributesForSubdomain,
+      );
     });
     it('should return subdomains count for parent', async () => {
       const name = 'domain.crypto';
@@ -270,7 +274,7 @@ describe('MetaDataController', () => {
 
       expect(resWithName).to.be.deep.equal(resWithToken);
       expect(resWithName.name).eq(domain.name);
-      const correctAttributes = [
+      const correctAttributesForParent = [
         { trait_type: DomainAttributeTrait.Level, value: 2 },
         { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
         { trait_type: DomainAttributeTrait.Length, value: 6 },
@@ -285,8 +289,12 @@ describe('MetaDataController', () => {
           value: AttributeCharacterSet.Letter,
         },
       ];
-      expect(resWithName.attributes.length).eq(correctAttributes.length);
-      expect(resWithName.attributes).to.have.deep.members(correctAttributes);
+      expect(resWithName.attributes.length).eq(
+        correctAttributesForParent.length,
+      );
+      expect(resWithName.attributes).to.have.deep.members(
+        correctAttributesForParent,
+      );
     });
 
     it.skip('should render a deprecated image placeholder for .coin domain', async () => {

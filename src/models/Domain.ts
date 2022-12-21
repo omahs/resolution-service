@@ -8,14 +8,7 @@ import {
   OneToMany,
   Repository,
 } from 'typeorm';
-import {
-  Allow,
-  IsOptional,
-  IsString,
-  Matches,
-  ValidateIf,
-  ValidateNested,
-} from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
 import ValidateWith from '../services/ValidateWith';
 import { Model } from '.';
 import { eip137Namehash, znsNamehash } from '../utils/namehash';
@@ -109,7 +102,14 @@ export default class Domain extends Model {
   }
 
   get extension(): string {
-    return this.getSplittedName().pop() || '';
+    const splittedName = this.getSplittedName();
+
+    if (splittedName.length > 2) {
+      splittedName.shift();
+      return splittedName.join('.');
+    }
+
+    return splittedName.pop() || '';
   }
 
   get level(): number {
