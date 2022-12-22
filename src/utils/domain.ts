@@ -43,7 +43,7 @@ export const getDomainNameLabel = (domainName: string): string => {
 export const normalizeDomainOrToken = (domainOrToken: string): string => {
   const domainName = normalizeDomainName(domainOrToken);
 
-  if (domainName.includes('.')) {
+  if (domainName.includes('.') || isSupportedTLD(domainName)) {
     return eip137Namehash(domainName);
   } else if (domainName.replace('0x', '').match(/^[a-fA-F0-9]+$/)) {
     return normalizeToken(domainName);

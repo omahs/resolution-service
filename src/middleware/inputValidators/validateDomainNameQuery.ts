@@ -18,7 +18,7 @@ export function ValidateAndTransformOnDomainNameOrToken(
     }
 
     if (!value.includes('.')) {
-      if (!isValidToken(value)) {
+      if (!isValidToken(value) && !isSupportedTLD(value)) {
         throw new InvalidInputError('Invalid token');
       }
     } else {
@@ -34,8 +34,12 @@ export function ValidateAndTransformOnDomainNameOrToken(
         }
       }
 
-      if (!isSupportedTLD(value) || !isValidDomainNameLabel(value)) {
+      if (!isSupportedTLD(value)) {
         throw new InvalidInputError('Unsupported TLD');
+      }
+
+      if (!isValidDomainNameLabel(value)) {
+        throw new InvalidInputError('Invalid domain name');
       }
     }
 
@@ -55,11 +59,15 @@ export function ValidateAndTransformOnDomainName(
       throw new InvalidInputError('Empty input');
     }
 
-    if (
-      !value.includes('.') ||
-      !isValidDomainNameLabel(value) ||
-      !isSupportedTLD(value)
-    ) {
+    if (!value.includes('.') && !isSupportedTLD(value)) {
+      throw new InvalidInputError('Unsupported TLD');
+    }
+
+    if (!isValidDomainNameLabel(value)) {
+      throw new InvalidInputError('Invalid domain name');
+    }
+
+    if (!isSupportedTLD(value)) {
       throw new InvalidInputError('Unsupported TLD');
     }
 

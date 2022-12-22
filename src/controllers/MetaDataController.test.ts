@@ -26,6 +26,7 @@ import {
   getAttributeCharacterSet,
 } from '../utils/metadata';
 import { toBase64DataURI } from '../utils/socialPicture';
+import { commonParamsValidatorTestSuite } from './CommonTestSuites.test';
 
 describe('MetaDataController', () => {
   const L1Fixture: LayerTestFixture = new LayerTestFixture();
@@ -55,39 +56,6 @@ describe('MetaDataController', () => {
   afterEach(() => {
     sinon.restore();
   });
-
-  function commonValidatorTestSuite(options: { basePath: string }) {
-    const { basePath } = options;
-    describe(`Validation path: ${basePath}`, () => {
-      it('should throw an error if invalid domainName extension is supplied', async () => {
-        const response = await supertest(api)
-          .get(`${basePath}/test.json`)
-          .send();
-
-        expect(response.statusCode).to.equal(400);
-        expect(response.body.code).to.equal('InvalidInputError');
-        expect(response.body.message).to.equal('Unsupported TLD');
-      });
-
-      it('should throw an error if invalid domainName format is supplied', async () => {
-        const response = await supertest(api)
-          .get(`${basePath}/+name+.crypto`)
-          .send();
-
-        expect(response.statusCode).to.equal(400);
-        expect(response.body.code).to.equal('InvalidInputError');
-        expect(response.body.message).to.equal('Unsupported TLD');
-      });
-
-      it('should throw an error if invalid token is supplied', async () => {
-        const response = await supertest(api).get(`${basePath}/asdfgh`).send();
-
-        expect(response.statusCode).to.equal(400);
-        expect(response.body.code).to.equal('InvalidInputError');
-        expect(response.body.message).to.equal('Invalid token');
-      });
-    });
-  }
 
   describe('HEAD', () => {
     let dummyDomainName: string;
@@ -122,8 +90,10 @@ describe('MetaDataController', () => {
   });
 
   describe('GET /metadata/:domainOrToken', () => {
-    commonValidatorTestSuite({
-      basePath: '/metadata',
+    commonParamsValidatorTestSuite({
+      getPath: (domainName: string) => `/metadata/${domainName}`,
+      includeDomainNameTests: true,
+      includeTokenTests: true,
     });
 
     it('should work', async () => {
@@ -183,8 +153,10 @@ describe('MetaDataController', () => {
     });
 
     describe('GET /image-src/:domainOrToken', () => {
-      commonValidatorTestSuite({
-        basePath: '/image-src',
+      commonParamsValidatorTestSuite({
+        getPath: (domainName: string) => `/image-src/${domainName}`,
+        includeDomainNameTests: true,
+        includeTokenTests: true,
       });
 
       it('should throw an error if invalid image extension is supplied', async () => {
@@ -699,8 +671,10 @@ describe('MetaDataController', () => {
     });
 
     describe('GET /image/:domainOrToken', () => {
-      commonValidatorTestSuite({
-        basePath: '/image',
+      commonParamsValidatorTestSuite({
+        getPath: (domainName: string) => `/image/${domainName}`,
+        includeDomainNameTests: true,
+        includeTokenTests: true,
       });
 
       it('should resolve image_data with provided domain', async () => {

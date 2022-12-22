@@ -8,6 +8,8 @@ import { HeapEvents } from '../types/heap';
 import { describe } from 'mocha';
 import sinon from 'sinon';
 
+import { commonParamsValidatorTestSuite } from './CommonTestSuites.test';
+
 describe('DomainsController', () => {
   let testApiKey: ApiKey;
   let trackStub: sinon.SinonStub;
@@ -22,7 +24,7 @@ describe('DomainsController', () => {
     trackStub.restore();
   });
 
-  describe('GET /domains/:domainName/transfers/latest', () => {
+  describe('GET /domains/:domainName/transfers/latest', async () => {
     type eventsTestData = { from: string; to: string }[];
     async function saveCnsEvents(
       tokenId: string,
@@ -56,6 +58,13 @@ describe('DomainsController', () => {
         }).save();
       }
     }
+
+    commonParamsValidatorTestSuite({
+      getPath: (domain: string) => `/domains/${domain}/transfers/latest`,
+      isAuthRequired: true,
+      includeDomainNameTests: true,
+      includeTokenTests: false,
+    });
 
     it('should return latest transfers from MATIC and ETH networks', async () => {
       const { domain: testDomain } = await DomainTestHelper.createTestDomainL2(

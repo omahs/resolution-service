@@ -14,6 +14,7 @@ import { Blockchain } from '../types/common';
 import { ETHContracts } from '../contracts';
 import * as heap from '../utils/heap';
 import { HeapEvents } from '../types/heap';
+import { commonParamsValidatorTestSuite } from './CommonTestSuites.test';
 
 describe('DomainsController', () => {
   let testApiKey: ApiKey;
@@ -28,7 +29,14 @@ describe('DomainsController', () => {
     sinon.restore();
   });
 
-  describe('GET /domain/:domainName', () => {
+  describe('GET /domains/:domainName', () => {
+    commonParamsValidatorTestSuite({
+      getPath: (domain: string) => `/domains/${domain}`,
+      isAuthRequired: true,
+      includeDomainNameTests: true,
+      includeTokenTests: false,
+    });
+
     it('should return correct domain resolution for L2 domain on L1', async () => {
       const { domain } = await DomainTestHelper.createTestDomain({
         name: 'brad.crypto',
