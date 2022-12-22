@@ -1,6 +1,9 @@
-export interface IEvent {
+export type Event = {
   type: string;
-  data: any;
-}
+  args: Record<string, string>;
+};
 
-export const UNNAMED_EVENT = 'UNNAMED_EVENT';
+export type Block = {
+  blockNumber: number;
+  blockHash: string;
+};

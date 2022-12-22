@@ -1,6 +1,12 @@
-import { IEvent } from './Types';
+import { Block } from './Types';
+import { Event } from 'ethers';
 
-export abstract class IWorkerStrategy {
-  abstract getEvents(fromBlock: number, toBlock: number): Promise<IEvent[]>;
-  abstract handleEvent(event: IEvent): Promise<void>;
+export interface IWorkerStrategy {
+  // blokchain state
+  getLatestNetworkBlock(): Promise<Block>;
+  getBlock(blockNumber: number): Promise<Block>;
+
+  // event processing
+  getEvents(fromBlock: number, toBlock: number): Promise<Event[]>;
+  processEvents(events: Event[]): Promise<void>;
 }
