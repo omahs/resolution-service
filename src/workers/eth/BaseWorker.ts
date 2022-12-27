@@ -11,7 +11,12 @@ import {
   WorkerStatus,
 } from '../../models';
 import { Blockchain } from '../../types/common';
-import { IWorker, IWorkerStrategy, Block } from '../workerFramework';
+import {
+  IWorker,
+  IWorkerStrategy,
+  Block,
+  WorkerRepository,
+} from '../workerFramework';
 
 export class BaseWorker implements IWorker {
   readonly blockchain: Blockchain;
@@ -23,15 +28,8 @@ export class BaseWorker implements IWorker {
   private currentSyncBlockHash = '';
 
   private logger: winston.Logger;
-
-  private manager: EntityManager;
-
-  private eventRepository: Repository<CnsRegistryEvent>;
-  private domainRepository: Repository<Domain>;
-  private domainReverseRepository: Repository<DomainsReverseResolution>;
-  private workerStatusRepository: Repository<WorkerStatus>;
-
   private workerStrategy: IWorkerStrategy;
+  private workerRepository: WorkerRepository;
 
   constructor(
     config: EthUpdaterConfig,
@@ -46,18 +44,12 @@ export class BaseWorker implements IWorker {
   }
 
   // reorg handling
-
-  private async findLastMatchingBlock(
-    repository: Repository<CnsRegistryEvent>,
-  ): Promise<{
+  private async findLastMatchingBlock(): Promise<{
     blockNumber: number;
     blockHash: string;
   }> {
-    const latestEventBlocks = await CnsRegistryEvent.latestEventBlocks(
+    const latestEventBlocks = await this.workerRepository.latestEventBlocks(
       this.config.MAX_REORG_SIZE,
-      this.blockchain,
-      this.networkId,
-      repository,
     );
 
     // Check first and last blocks as edge cases
@@ -101,17 +93,13 @@ export class BaseWorker implements IWorker {
   }
 
   private async rebuildDomainFromEvents(tokenId: string) {
-    const domain = await Domain.findByNode(
-      tokenId,
-      this.domainRepository,
-      false,
-    );
+    const domain = await this.workerRepository.findByNode(tokenId);
     if (!domain) {
       return;
     }
 
     this.logger.warn(`Rebuilding domain ${domain.name} from db events`);
-    const domainEvents = await this.eventRepository.find({
+    const domainEvents = await this.workerRepository.find(CnsRegistryEvent, {
       where: {
         node: tokenId,
         blockchain: this.blockchain,
@@ -135,35 +123,29 @@ export class BaseWorker implements IWorker {
 
     const resolution = domain.getResolution(this.blockchain, this.networkId);
     if (resolution.ownerAddress) {
-      await this.manager.remove(resolution);
+      await this.workerRepository.remove(resolution);
     }
     const reverseResolution = domain.getReverseResolution(
       this.blockchain,
       this.networkId,
     );
     if (reverseResolution) {
-      await this.manager.remove(reverseResolution);
+      await this.workerRepository.remove(reverseResolution);
     }
     await this.workerStrategy.processEvents(convertedEvents);
   }
 
   private async handleReorg(): Promise<number> {
-    const reorgStartingBlock = await this.findLastMatchingBlock(
-      this.eventRepository,
-    );
+    const reorgStartingBlock = await this.findLastMatchingBlock();
     await WorkerStatus.saveWorkerStatus(
       this.blockchain,
       reorgStartingBlock.blockNumber,
       reorgStartingBlock.blockHash,
       undefined,
-      this.workerStatusRepository,
     );
 
-    const cleanUp = await CnsRegistryEvent.cleanUpEvents(
+    const cleanUp = await this.workerRepository.cleanUpEvents(
       reorgStartingBlock.blockNumber,
-      this.blockchain,
-      this.networkId,
-      this.eventRepository,
     );
 
     const promises: Promise<void>[] = [];
@@ -182,14 +164,14 @@ export class BaseWorker implements IWorker {
   private getLatestMirroredBlock(): Promise<number> {
     return WorkerStatus.latestMirroredBlockForWorker(
       this.blockchain,
-      this.workerStatusRepository,
+      this.workerRepository.context.workerStatusRepository,
     );
   }
 
   private getLatestMirroredBlockHash(): Promise<string | undefined> {
     return WorkerStatus.latestMirroredBlockHashForWorker(
       this.blockchain,
-      this.workerStatusRepository,
+      this.workerRepository.context.workerStatusRepository,
     );
   }
 
@@ -238,88 +220,94 @@ export class BaseWorker implements IWorker {
     return { fromBlock: reorgStartingBlock, toBlock: latestNetBlock };
   }
 
-  // running functions
-
-  private async runInTransaction(func: () => Promise<void>): Promise<void> {
-    this.manager = getConnection().createQueryRunner().manager;
-    this.eventRepository = this.manager.getRepository(CnsRegistryEvent);
-    this.domainRepository = this.manager.getRepository(Domain);
-    this.domainReverseRepository = this.manager.getRepository(
-      DomainsReverseResolution,
-    );
-
-    // TODO: separate out a DB manager
-    (this.workerStrategy as any).eventRepository = this.eventRepository;
-    (this.workerStrategy as any).domainRepository = this.domainRepository;
-    (this.workerStrategy as any).domainReverseRepository =
-      this.domainReverseRepository;
-
-    this.workerStatusRepository = this.manager.getRepository(WorkerStatus);
-    await this.manager.queryRunner?.startTransaction('REPEATABLE READ');
-    try {
-      await WorkerStatus.lockBlockchainStatus(this.blockchain, this.manager);
-      await func();
-      await this.manager.queryRunner?.commitTransaction();
-    } catch (error) {
-      this.logger.error(
-        `Unhandled error occured while processing ${this.blockchain} events: ${error}`,
+  // saving events
+  private async saveEvents(events: Event[]): Promise<void> {
+    const preparedEvents: CnsRegistryEvent[] = [];
+    for (const event of events) {
+      const values: Record<string, string> = {};
+      Object.entries(event?.args || []).forEach(([key, value]) => {
+        values[key] = BigNumber.isBigNumber(value)
+          ? value.toHexString()
+          : value;
+      });
+      const contractAddress = event.address.toLowerCase();
+      preparedEvents.push(
+        new CnsRegistryEvent(
+          {
+            contractAddress,
+            type: event.event,
+            blockNumber: event.blockNumber,
+            blockHash: event.blockHash,
+            logIndex: event.logIndex,
+            transactionHash: event.transactionHash,
+            returnValues: values,
+            blockchain: this.blockchain,
+            networkId: this.networkId,
+            node: event.args?.[0],
+          },
+          this.workerRepository.context.eventRepository,
+        ),
       );
-      await this.manager.queryRunner?.rollbackTransaction();
-    } finally {
-      await this.manager.release();
     }
+    await this.workerRepository.save(preparedEvents);
   }
 
-  public async run(): Promise<void> {
-    return this.runInTransaction(() => this.runWorkerSync());
-  }
-
+  // running functions
   private async saveLastMirroredBlock(): Promise<void> {
     return WorkerStatus.saveWorkerStatus(
       this.blockchain,
       this.currentSyncBlock,
       this.currentSyncBlockHash,
       undefined,
-      this.workerStatusRepository,
+      this.workerRepository.context.workerStatusRepository,
     );
   }
 
-  public async runWorkerSync(): Promise<void> {
-    this.logger.info(`EthUpdater is pulling updates from ${this.blockchain}`);
-
-    const { fromBlock, toBlock } = await this.syncBlockRanges();
-
-    this.logger.info(
-      `Current network block ${toBlock}: Syncing mirror from ${fromBlock} to ${toBlock}`,
-    );
-
-    this.currentSyncBlock = fromBlock;
-
-    while (this.currentSyncBlock < toBlock) {
-      const fetchBlock = Math.min(
-        this.currentSyncBlock + this.config.BLOCK_FETCH_LIMIT,
-        toBlock,
+  public async run(): Promise<void> {
+    try {
+      this.workerRepository = await WorkerRepository.startTransaction(
+        this.blockchain,
+        this.networkId,
       );
 
-      const events = await this.workerStrategy.getEvents(
-        this.currentSyncBlock + 1,
-        fetchBlock,
-      );
-      await this.workerStrategy.processEvents(events);
+      this.logger.info(`EthUpdater is pulling updates from ${this.blockchain}`);
 
-      this.currentSyncBlock = fetchBlock;
-      this.currentSyncBlockHash = (
-        await this.workerStrategy.getBlock(this.currentSyncBlock)
-      )?.blockHash;
-      await this.saveLastMirroredBlock();
+      const { fromBlock, toBlock } = await this.syncBlockRanges();
+
+      this.logger.info(
+        `Current network block ${toBlock}: Syncing mirror from ${fromBlock} to ${toBlock}`,
+      );
+
+      this.currentSyncBlock = fromBlock;
+
+      while (this.currentSyncBlock < toBlock) {
+        const fetchBlock = Math.min(
+          this.currentSyncBlock + this.config.BLOCK_FETCH_LIMIT,
+          toBlock,
+        );
+
+        const events = await this.workerStrategy.getEvents(
+          this.currentSyncBlock + 1,
+          fetchBlock,
+        );
+        await this.saveEvents(events);
+        await this.workerStrategy.processEvents(events);
+
+        this.currentSyncBlock = fetchBlock;
+        this.currentSyncBlockHash = (
+          await this.workerStrategy.getBlock(this.currentSyncBlock)
+        )?.blockHash;
+        await this.saveLastMirroredBlock();
+
+        await WorkerRepository.commitTransaction(this.blockchain);
+      }
+    } catch (error) {
+      this.logger.error(error);
+      await WorkerRepository.rollbackTransaction(this.blockchain);
     }
   }
 
   public async resync(): Promise<void> {
-    return this.runInTransaction(() => this.runWorkerReync());
-  }
-
-  public async runWorkerReync(): Promise<void> {
     if (this.config.RESYNC_FROM === undefined) {
       return;
     }
@@ -338,14 +326,14 @@ export class BaseWorker implements IWorker {
       this.config.RESYNC_FROM,
       netBlock.blockHash,
       undefined,
-      this.workerStatusRepository,
+      this.workerRepository.context.workerStatusRepository,
     );
 
     ({ deleted: cleanUp } = await CnsRegistryEvent.cleanUpEvents(
       this.config.RESYNC_FROM,
       this.blockchain,
       this.networkId,
-      this.eventRepository,
+      this.workerRepository.context.eventRepository,
     ));
 
     this.logger.info(

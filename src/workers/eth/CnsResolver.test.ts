@@ -12,6 +12,8 @@ import supportedKeysJson from 'uns/resolver-keys.json';
 import * as ethersUtils from '../../utils/ethersUtils';
 import { DomainTestHelper } from '../../utils/testing/DomainTestHelper';
 import { Blockchain } from '../../types/common';
+import { WorkerRepository } from '../workerFramework';
+import { EthereumProvider } from '../EthereumProvider';
 
 describe('CnsResolver', () => {
   let service: CnsResolver;
@@ -105,7 +107,13 @@ describe('CnsResolver', () => {
       .then((receipt) => receipt.wait());
     await EthereumHelper.mineBlocksForConfirmation();
 
-    service = new CnsResolver(ETHContracts);
+    service = new CnsResolver(
+      ETHContracts,
+      WorkerRepository.getRepository(
+        Blockchain.ETH,
+        env.APPLICATION.ETHEREUM.NETWORK_ID,
+      ),
+    );
   });
 
   afterEach(() => {
@@ -118,7 +126,7 @@ describe('CnsResolver', () => {
         name: testDomainName,
         node: testDomainNode,
       });
-      await service.fetchResolver(domain, resolution, Domain.getRepository());
+      await service.fetchResolver(domain, resolution);
       expect(resolution.resolver).to.equal(resolver.address.toLowerCase());
     });
 
@@ -138,7 +146,7 @@ describe('CnsResolver', () => {
         node: testDomainNode,
       });
 
-      await service.fetchResolver(domain, resolution, Domain.getRepository());
+      await service.fetchResolver(domain, resolution);
 
       expect(resolution.resolution).to.deep.equal({
         'crypto.BTC.address': 'qp3gu0flg7tehyv73ua5nznlw8s040nz3uqnyffrcn',
@@ -160,7 +168,7 @@ describe('CnsResolver', () => {
           resolutions: [resolution],
         });
 
-      await service.fetchResolver(domain, resolution, Domain.getRepository());
+      await service.fetchResolver(domain, resolution);
 
       expect(domain.resolutions[0].resolution).to.be.empty;
     });
@@ -319,6 +327,24 @@ describe('CnsResolver', () => {
         PredefinedRecordKeys,
         testDomainNode,
       );
+    });
+  });
+
+  describe('.normalizeResolver', () => {
+    it('should normalize the resolver address', () => {
+      const resolver = '0xb66DcE2DA6afAAa98F2013446dBCB0f4B0ab2842';
+      const expected = '0xb66dce2da6afaaa98f2013446dbcb0f4b0ab2842';
+      expect(CnsResolver.normalizeResolver(resolver)).to.be.equal(expected);
+    });
+
+    it('should return null for zero address', () => {
+      const resolver = Domain.NullAddress;
+      expect(CnsResolver.normalizeResolver(resolver)).to.be.null;
+    });
+
+    it('should return null for undefined resolver address', () => {
+      const resolver = undefined;
+      expect(CnsResolver.normalizeResolver(resolver)).to.be.null;
     });
   });
 });

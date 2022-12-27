@@ -78,12 +78,4 @@ export default class DomainsResolution extends Model {
 
     return true;
   }
-
-  static normalizeResolver(resolver: string | null | undefined): string | null {
-    if (!resolver) {
-      return null;
-    }
-    resolver = resolver.toLowerCase();
-    return resolver === DomainsResolution.NullAddress ? null : resolver;
-  }
 }

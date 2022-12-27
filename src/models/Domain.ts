@@ -291,14 +291,6 @@ export default class Domain extends Model {
     return removed;
   }
 
-  static normalizeResolver(resolver: string | null | undefined): string | null {
-    if (!resolver) {
-      return null;
-    }
-    resolver = resolver.toLowerCase();
-    return resolver === Domain.NullAddress ? null : resolver;
-  }
-
   static async findOrCreateByName(
     name: string,
     blockchain: Blockchain,

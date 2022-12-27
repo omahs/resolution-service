@@ -1,7 +1,5 @@
 import { env } from '../../env';
 import { Contract, Event, BigNumber, EventFilter, ethers } from 'ethers';
-import { Domain } from '../../models';
-import { Repository } from 'typeorm';
 import { CryptoConfig } from '../../contracts';
 import supportedKeysJson from 'uns/resolver-keys.json';
 import {
@@ -11,6 +9,8 @@ import {
 } from './BlockchainErrors';
 import { CnsResolverError } from '../../errors/CnsResolverError';
 import DomainsResolution from '../../models/DomainsResolution';
+import { WorkerRepository } from '../workerFramework';
+import { Domain } from '../../models';
 
 const RecordsPerPage = env.APPLICATION.ETHEREUM.RECORDS_PER_PAGE;
 
@@ -25,11 +25,13 @@ export class CnsResolver {
     },
     {} as Record<string, string>,
   );
+  private workerRepository: WorkerRepository;
 
-  constructor(config: CryptoConfig) {
+  constructor(config: CryptoConfig, workerRepository: WorkerRepository) {
     this.config = config;
     this.registry = config.CNSRegistry.getContract();
     this.resolver = config.Resolver.getContract();
+    this.workerRepository = workerRepository;
   }
 
   private isNotLegacyResolver(resolver: string) {
@@ -167,10 +169,18 @@ export class CnsResolver {
     return records;
   }
 
+  static normalizeResolver(resolver: string | null | undefined): string | null {
+    if (!resolver) {
+      return null;
+    }
+    resolver = resolver.toLowerCase();
+    return resolver === DomainsResolution.NullAddress ? null : resolver;
+  }
+
   async getResolverAddress(node: string): Promise<string | null> {
     try {
       const resolverAddress = await this.registry.callStatic.resolverOf(node);
-      return Domain.normalizeResolver(resolverAddress);
+      return CnsResolver.normalizeResolver(resolverAddress);
     } catch (error: any) {
       if (
         !error.message.includes(InvalidValuesError) &&
@@ -208,7 +218,6 @@ export class CnsResolver {
   async fetchResolver(
     domain: Domain,
     resolution: DomainsResolution,
-    domainRepository: Repository<Domain>,
   ): Promise<void> {
     const resolverAddress = await this.getResolverAddress(domain.node);
     if (resolution.resolver === resolverAddress) {
@@ -217,6 +226,6 @@ export class CnsResolver {
     resolution.resolver = resolverAddress;
     resolution.resolution = await this.getDomainResolution(domain, resolution);
     domain.setResolution(resolution);
-    await domainRepository.save(domain);
+    await this.workerRepository.save(domain);
   }
 }
