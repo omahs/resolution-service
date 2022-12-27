@@ -13,7 +13,7 @@ import {
   parsePictureRecord,
   SocialPictureOptions,
 } from '../utils/socialPicture';
-import { EthereumProvider } from '../workers/EthereumProvider';
+import { EthereumProvider } from '../workers/eth/EthereumProvider';
 import Moralis from 'moralis/node';
 import { logger } from '../logger';
 import fetch from 'node-fetch';

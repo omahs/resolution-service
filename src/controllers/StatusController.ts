@@ -12,7 +12,10 @@ import { Domain, WorkerStatus } from '../models';
 import ZilProvider from '../workers/zil/ZilProvider';
 import { env } from '../env';
 import * as ethersUtils from '../utils/ethersUtils';
-import { EthereumProvider, MaticProvider } from '../workers/EthereumProvider';
+import {
+  EthereumProvider,
+  MaticProvider,
+} from '../workers/eth/EthereumProvider';
 import { Blockchain, SupportedTld, SupportedTlds } from '../types/common';
 import RateLimiter from '../middleware/RateLimiter';
 

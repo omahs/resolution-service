@@ -13,7 +13,7 @@ import { EthUpdaterError } from '../../errors/EthUpdaterError';
 import {
   GetProviderForConfig,
   StaticJsonRpcProvider,
-} from '../../workers/EthereumProvider';
+} from './EthereumProvider';
 import { unwrap } from '../../utils/option';
 import { CnsResolverError } from '../../errors/CnsResolverError';
 import { ExecutionRevertedError } from './BlockchainErrors';

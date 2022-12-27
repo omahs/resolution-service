@@ -2,7 +2,7 @@ import { logger } from '../../logger';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
 import { Blockchain } from '../../types/common';
 import { EthUpdaterConfig } from '../../env';
-import { BaseWorker } from './BaseWorker';
+import { BaseWorker } from '../workerFramework/BaseWorker';
 import { UNSWorkerStrategy } from './UnsWorker';
 import { Block, IWorkerStrategy } from '../workerFramework';
 

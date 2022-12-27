@@ -12,7 +12,7 @@ import {
   EthereumProvider,
   MaticProvider,
   StaticJsonRpcProvider,
-} from '../workers/EthereumProvider';
+} from '../workers/eth/EthereumProvider';
 import { env } from '../env';
 
 const abiMap = {

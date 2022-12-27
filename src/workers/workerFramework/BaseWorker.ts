@@ -11,12 +11,16 @@ import {
   WorkerStatus,
 } from '../../models';
 import { Blockchain } from '../../types/common';
-import {
-  IWorker,
-  IWorkerStrategy,
-  Block,
-  WorkerRepository,
-} from '../workerFramework';
+import { IWorker, IWorkerStrategy, Block, WorkerRepository } from '.';
+
+// TODO:
+//  [x] extract db repositories
+//  [x] save events in base worker
+//  [] get rid of EthUpdater
+//  [] cleanup files structure, add modules
+//  [] change event to generic struct
+//  [] organise configs
+//  [] redo tests
 
 export class BaseWorker implements IWorker {
   readonly blockchain: Blockchain;

@@ -9,7 +9,7 @@ import { EthUpdater } from '../../workers/eth/EthUpdater';
 import {
   GetProviderForConfig,
   StaticJsonRpcProvider,
-} from '../../workers/EthereumProvider';
+} from '../../workers/eth/EthereumProvider';
 import { eip137Namehash } from '../namehash';
 import { EthereumNetworkHelper } from './EthereumTestsHelper';
 

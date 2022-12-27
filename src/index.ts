@@ -7,7 +7,7 @@ import './apm';
 const runningMode = env.APPLICATION.RUNNING_MODE;
 import connect from './database/connect';
 import { startWorker as startEthWorker } from './workers/eth/EthUpdater';
-import startZilUpdater from './workers/ZilUpdater';
+import startZilUpdater from './workers/zil/ZilUpdater';
 import { Blockchain } from './types/common';
 
 void connect().then(async () => {

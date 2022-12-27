@@ -13,7 +13,7 @@ import * as ethersUtils from '../../utils/ethersUtils';
 import { DomainTestHelper } from '../../utils/testing/DomainTestHelper';
 import { Blockchain } from '../../types/common';
 import { WorkerRepository } from '../workerFramework';
-import { EthereumProvider } from '../EthereumProvider';
+import { EthereumProvider } from './EthereumProvider';
 
 describe('CnsResolver', () => {
   let service: CnsResolver;

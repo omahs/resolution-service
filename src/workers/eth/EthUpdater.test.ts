@@ -7,7 +7,7 @@ import {
   DomainsReverseResolution,
   WorkerStatus,
 } from '../../models';
-import { EthereumProvider } from '../EthereumProvider';
+import { EthereumProvider } from './EthereumProvider';
 import { EthereumHelper } from '../../utils/testing/EthereumTestsHelper';
 import { EthUpdater } from './EthUpdater';
 import * as sinon from 'sinon';

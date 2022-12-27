@@ -1,7 +1,7 @@
-import { logger } from '../logger';
+import { logger } from '../../logger';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
-import ZilWorker from './zil/ZilWorker';
-import { env } from '../env';
+import ZilWorker from './ZilWorker';
+import { env } from '../../env';
 
 const runWorker = async (worker: ZilWorker): Promise<void> => {
   try {

@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import nock from 'nock';
 import { WorkerStatus } from '../models';
 import * as sinon from 'sinon';
-import * as ProviderModule from '../workers/EthereumProvider';
+import * as ProviderModule from '../workers/eth/EthereumProvider';
 import { Blockchain } from '../types/common';
 
 const mockEthJsonRpcProviderUrl = 'http://test.jsonrpc.provider:8545';

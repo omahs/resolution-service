@@ -2,7 +2,7 @@ import { ethers, Wallet, BigNumber } from 'ethers';
 import {
   EthereumProvider,
   StaticJsonRpcProvider,
-} from '../../workers/EthereumProvider';
+} from '../../workers/eth/EthereumProvider';
 import { env } from '../../env';
 import Sandbox from 'uns/sandbox';
 
