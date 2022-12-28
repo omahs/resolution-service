@@ -57,6 +57,30 @@ describe('MetaDataController', () => {
     sinon.restore();
   });
 
+  function commonCacheHeaderSuite(options: { basePath: string }) {
+    const { basePath } = options;
+
+    describe(`Cache header path: ${basePath}`, () => {
+      it('should set cache header on valid request', async () => {
+        const response = await supertest(api)
+          .get(`${basePath}/test.crypto`)
+          .send();
+
+        expect(response.statusCode).to.equal(200);
+        expect(response.headers['surrogate-control']).to.equal('max-age=1800');
+      });
+
+      it('should not set cache header on invalid request', async () => {
+        const response = await supertest(api)
+          .get(`${basePath}/test.json`)
+          .send();
+
+        expect(response.headers['surrogate-control']).to.not.exist;
+        expect(response.statusCode).to.equal(400);
+      });
+    });
+  }
+
   describe('HEAD', () => {
     let dummyDomainName: string;
 
@@ -94,6 +118,10 @@ describe('MetaDataController', () => {
       getPath: (domainName: string) => `/metadata/${domainName}`,
       includeDomainNameTests: true,
       includeTokenTests: true,
+    });
+
+    commonCacheHeaderSuite({
+      basePath: '/metadata',
     });
 
     it('should work', async () => {
@@ -157,6 +185,10 @@ describe('MetaDataController', () => {
         getPath: (domainName: string) => `/image-src/${domainName}`,
         includeDomainNameTests: true,
         includeTokenTests: true,
+      });
+
+      commonCacheHeaderSuite({
+        basePath: '/image-src',
       });
 
       it('should throw an error if invalid image extension is supplied', async () => {
@@ -675,6 +707,10 @@ describe('MetaDataController', () => {
         getPath: (domainName: string) => `/image/${domainName}`,
         includeDomainNameTests: true,
         includeTokenTests: true,
+      });
+
+      commonCacheHeaderSuite({
+        basePath: '/image',
       });
 
       it('should resolve image_data with provided domain', async () => {

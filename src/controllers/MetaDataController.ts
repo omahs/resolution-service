@@ -27,7 +27,6 @@ import { ImageResponse, OpenSeaMetadata } from './dto/Metadata';
 import { belongsToTld, isDeprecatedTLD } from '../utils/domain';
 import { findDomainByNameOrToken } from '../services/DomainService';
 import { ValidateAndTransformOnDomainNameOrToken } from '../middleware/inputValidators';
-
 import RateLimiter from '../middleware/RateLimiter';
 
 const INVALID_DOMAIN_IMAGE_URL =
@@ -64,6 +63,7 @@ export class MetaDataController {
   }
 
   @Head('/metadata/:domainOrToken')
+  @Header('Surrogate-Control', 'max-age=1800')
   @ResponseSchema(OpenSeaMetadata)
   async headMetaData(
     @Param('domainOrToken') domainOrToken: string,
@@ -74,6 +74,7 @@ export class MetaDataController {
 
   @Get('/metadata/:domainOrToken')
   @UseBefore(ValidateAndTransformOnDomainNameOrToken('domainOrToken'))
+  @Header('Surrogate-Control', 'max-age=1800')
   @ResponseSchema(OpenSeaMetadata)
   async getMetaData(
     @Param('domainOrToken') domainOrToken: string,
@@ -135,6 +136,7 @@ export class MetaDataController {
   }
 
   @Head('/image/:domainOrToken')
+  @Header('Surrogate-Control', 'max-age=1800')
   @ResponseSchema(OpenSeaMetadata)
   async headImage(
     @Param('domainOrToken') domainOrToken: string,
@@ -145,6 +147,7 @@ export class MetaDataController {
 
   @Get('/image/:domainOrToken')
   @UseBefore(ValidateAndTransformOnDomainNameOrToken('domainOrToken'))
+  @Header('Surrogate-Control', 'max-age=1800')
   @ResponseSchema(ImageResponse)
   async getImage(
     @Param('domainOrToken') domainOrToken: string,
@@ -191,6 +194,7 @@ export class MetaDataController {
   @Header('Access-Control-Allow-Origin', '*')
   @UseBefore(ValidateAndTransformOnDomainNameOrToken('domainOrToken', ['svg']))
   @Header('Content-Type', 'image/svg+xml')
+  @Header('Surrogate-Control', 'max-age=1800')
   async getImageSrc(
     @Param('domainOrToken') domainOrToken: string,
     @QueryParam('withOverlay') withOverlay = true,
