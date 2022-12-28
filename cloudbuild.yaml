@@ -27,14 +27,11 @@ steps:
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     args:
       - run
-      - services
-      - update
+      - deploy
       - $_SERVICE_NAME-api
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
-      # need to set via UI for new services
-      #- "--allow-unauthenticated"
-      - "--tag=commit-$SHORT_SHA"
+      - "--allow-unauthenticated"
       - "--cpu=2000m"
       - "--memory=1024Mi"
       - "--min-instances=5"
@@ -87,14 +84,11 @@ steps:
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     args:
       - run
-      - services
-      - update
+      - deploy
       - $_SERVICE_NAME-meta
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
-      # need to set via UI for new services
-      #- "--allow-unauthenticated"
-      - "--tag=commit-$SHORT_SHA"
+      - "--allow-unauthenticated"
       - "--cpu=2000m"
       - "--memory=1024Mi"
       - "--min-instances=5"
@@ -150,9 +144,8 @@ steps:
         #!/usr/bin/env bash
         if [ "$_SKIP_DEPLOY_WORKER" != "true" ]
         then
-          gcloud run services update $_SERVICE_NAME-workers --platform=managed --quiet \
+          gcloud run deploy $_SERVICE_NAME-workers --platform=managed --quiet \
           --image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
-          --tag=commit-$SHORT_SHA \
           --cpu=2000m \
           --memory=1024Mi \
           --min-instances=1 \
