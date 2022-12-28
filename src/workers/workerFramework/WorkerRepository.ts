@@ -1,4 +1,3 @@
-import { cond } from 'lodash';
 import {
   EntityManager,
   EntityTarget,
@@ -22,7 +21,7 @@ import {
   WorkerStatus,
   ZnsTransaction,
 } from '../../models';
-import { Blockchain } from '../../types/common';
+import { Attributes, Blockchain } from '../../types/common';
 import { eip137Namehash, znsNamehash } from '../../utils/namehash';
 
 // A db connection with its own manager and repositories
@@ -53,7 +52,7 @@ export class WorkerRepository {
     this.networkId = networkId;
   }
 
-  public get context(): WorkerRepositoryTxContext {
+  private get context(): WorkerRepositoryTxContext {
     const context = WorkerRepository.txContexts[this.blockchain];
     if (!context) {
       throw Error('transaction closed');
@@ -62,6 +61,15 @@ export class WorkerRepository {
   }
 
   // generic save/remove/find methods
+  public create<T extends Model>(
+    type:
+      | { new (a: Attributes<T> | undefined): T }
+      | { new (a: Attributes<T> | undefined, r: Repository<T> | undefined): T },
+    attributes?: Attributes<T>,
+  ) {
+    return new type(attributes, this.context.manager.getRepository(type));
+  }
+
   public async remove<T extends Model>(
     entity: T,
     options?: RemoveOptions | undefined,
@@ -113,108 +121,73 @@ export class WorkerRepository {
     block: number,
   ): Promise<{ deleted: number; affected: Set<string> }> {
     const repository = this.context.eventRepository;
-    const eventsToDelete = await repository.find({
-      where: {
-        blockNumber: MoreThan(block),
-        blockchain: this.blockchain,
-        networkId: this.networkId,
-      },
-    });
-    const affectedTokenIds = new Set<string>();
-    for (const event of eventsToDelete) {
-      affectedTokenIds.add(event.returnValues['tokenId']);
-    }
-    await repository.remove(eventsToDelete);
-    return { deleted: eventsToDelete.length, affected: affectedTokenIds };
+    return CnsRegistryEvent.cleanUpEvents(
+      block,
+      this.blockchain,
+      this.networkId,
+      repository,
+    );
   }
 
   public async latestEventBlocks(
     count: number,
   ): Promise<{ blockNumber: number; blockHash: string }[]> {
     const repository = this.context.eventRepository;
-    const res = await repository
-      .createQueryBuilder()
-      .select('block_number, block_hash')
-      .where('blockchain = :blockchain', { blockchain: this.blockchain })
-      .andWhere('network_id = :networkId', { networkId: this.networkId })
-      .groupBy('block_number, block_hash')
-      .orderBy('block_number', 'DESC')
-      .limit(count)
-      .getRawMany();
-    return res
-      .map((value) => {
-        return {
-          blockNumber: value?.block_number as number,
-          blockHash: value?.block_hash as string,
-        };
-      })
-      .reverse();
+    return CnsRegistryEvent.latestEventBlocks(
+      count,
+      this.blockchain,
+      this.networkId,
+      repository,
+    );
   }
 
   // domain repository
   public async findAllByNodes(nodes: string[]): Promise<Domain[]> {
-    if (!nodes.length) {
-      return [];
-    }
-
-    return this.context.domainRepository.find({
-      where: { node: In(nodes) },
-      relations: ['resolutions', 'parent'],
-    });
+    return Domain.findAllByNodes(nodes, this.context.domainRepository);
   }
 
   public async findByNode(node?: string): Promise<Domain | undefined> {
-    return node
-      ? await this.context.domainRepository.findOne({
-          where: { node },
-          relations: ['resolutions', 'reverseResolutions', 'parent'],
-        })
-      : undefined;
+    return Domain.findByNode(node, this.context.domainRepository);
   }
 
   public async findOrBuildByNode(node: string): Promise<Domain> {
-    return (
-      (await this.context.domainRepository.findOne({
-        where: { node },
-        relations: ['resolutions', 'reverseResolutions', 'parent'],
-      })) || new Domain({ node }, this.context.domainRepository)
-    );
+    return Domain.findOrBuildByNode(node, this.context.domainRepository);
   }
 
   public async findOrCreateByName(name: string): Promise<Domain> {
-    const domain = await this.context.domainRepository.findOne({
-      where: { name },
-      relations: ['resolutions', 'reverseResolutions', 'parent'],
-    });
-    if (domain) {
-      return domain;
-    }
-
-    const node =
-      this.blockchain === Blockchain.ZIL
-        ? znsNamehash(name)
-        : eip137Namehash(name);
-
-    const newDomain = new Domain(
-      {
-        name: name,
-        node: node,
-      },
+    return Domain.findOrCreateByName(
+      name,
+      this.blockchain,
       this.context.domainRepository,
     );
-    await this.context.domainRepository.save(newDomain);
-    return newDomain;
   }
 
-  // private methods
-  private getEventRepository() {
-    switch (this.blockchain) {
-      case Blockchain.ETH:
-      case Blockchain.MATIC:
-        return this.context.eventRepository;
-      case Blockchain.ZIL:
-        return this.context.znsTransactionRepository;
-    }
+  // worker status
+  public getLatestMirroredBlock(): Promise<number> {
+    return WorkerStatus.latestMirroredBlockForWorker(
+      this.blockchain,
+      this.context.workerStatusRepository,
+    );
+  }
+
+  public getLatestMirroredBlockHash(): Promise<string | undefined> {
+    return WorkerStatus.latestMirroredBlockHashForWorker(
+      this.blockchain,
+      this.context.workerStatusRepository,
+    );
+  }
+
+  public saveLastMirroredBlock(
+    currentSyncBlock: number,
+    currentSyncBlockHash: string,
+  ) {
+    return WorkerStatus.saveWorkerStatus(
+      this.blockchain,
+      currentSyncBlock,
+      currentSyncBlockHash,
+      undefined,
+      this.context.workerStatusRepository,
+    );
   }
 
   // static tx management methods

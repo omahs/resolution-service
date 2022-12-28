@@ -165,25 +165,11 @@ export class BaseWorker implements IWorker {
     return reorgStartingBlock.blockNumber;
   }
 
-  private getLatestMirroredBlock(): Promise<number> {
-    return WorkerStatus.latestMirroredBlockForWorker(
-      this.blockchain,
-      this.workerRepository.context.workerStatusRepository,
-    );
-  }
-
-  private getLatestMirroredBlockHash(): Promise<string | undefined> {
-    return WorkerStatus.latestMirroredBlockHashForWorker(
-      this.blockchain,
-      this.workerRepository.context.workerStatusRepository,
-    );
-  }
-
   private async syncBlockRanges(): Promise<{
     fromBlock: number;
     toBlock: number;
   }> {
-    const latestMirrored = await this.getLatestMirroredBlock();
+    const latestMirrored = await this.workerRepository.getLatestMirroredBlock();
     const latestNetBlock = (await this.workerStrategy.getLatestNetworkBlock())
       .blockNumber;
     if (latestMirrored === 0) {
@@ -196,7 +182,8 @@ export class BaseWorker implements IWorker {
       };
     }
 
-    const latestMirroredHash = await this.getLatestMirroredBlockHash();
+    const latestMirroredHash =
+      await this.workerRepository.getLatestMirroredBlockHash();
     const networkHash = (await this.workerStrategy.getBlock(latestMirrored))
       ?.blockHash;
 
@@ -236,37 +223,24 @@ export class BaseWorker implements IWorker {
       });
       const contractAddress = event.address.toLowerCase();
       preparedEvents.push(
-        new CnsRegistryEvent(
-          {
-            contractAddress,
-            type: event.event,
-            blockNumber: event.blockNumber,
-            blockHash: event.blockHash,
-            logIndex: event.logIndex,
-            transactionHash: event.transactionHash,
-            returnValues: values,
-            blockchain: this.blockchain,
-            networkId: this.networkId,
-            node: event.args?.[0],
-          },
-          this.workerRepository.context.eventRepository,
-        ),
+        this.workerRepository.create(CnsRegistryEvent, {
+          contractAddress,
+          type: event.event,
+          blockNumber: event.blockNumber,
+          blockHash: event.blockHash,
+          logIndex: event.logIndex,
+          transactionHash: event.transactionHash,
+          returnValues: values,
+          blockchain: this.blockchain,
+          networkId: this.networkId,
+          node: event.args?.[0],
+        }),
       );
     }
     await this.workerRepository.save(preparedEvents);
   }
 
   // running functions
-  private async saveLastMirroredBlock(): Promise<void> {
-    return WorkerStatus.saveWorkerStatus(
-      this.blockchain,
-      this.currentSyncBlock,
-      this.currentSyncBlockHash,
-      undefined,
-      this.workerRepository.context.workerStatusRepository,
-    );
-  }
-
   public async run(): Promise<void> {
     try {
       this.workerRepository = await WorkerRepository.startTransaction(
@@ -301,7 +275,10 @@ export class BaseWorker implements IWorker {
         this.currentSyncBlockHash = (
           await this.workerStrategy.getBlock(this.currentSyncBlock)
         )?.blockHash;
-        await this.saveLastMirroredBlock();
+        await this.workerRepository.saveLastMirroredBlock(
+          this.currentSyncBlock,
+          this.currentSyncBlockHash,
+        );
 
         await WorkerRepository.commitTransaction(this.blockchain);
       }
@@ -312,36 +289,43 @@ export class BaseWorker implements IWorker {
   }
 
   public async resync(): Promise<void> {
-    if (this.config.RESYNC_FROM === undefined) {
-      return;
+    try {
+      this.workerRepository = await WorkerRepository.startTransaction(
+        this.blockchain,
+        this.networkId,
+      );
+
+      if (this.config.RESYNC_FROM === undefined) {
+        return;
+      }
+      const latestMirrored =
+        await this.workerRepository.getLatestMirroredBlock();
+      this.logger.info(
+        `Latest mirrored block ${latestMirrored}. Resync requested from block ${this.config.RESYNC_FROM}.`,
+      );
+      const netBlock = await this.workerStrategy.getBlock(
+        this.config.RESYNC_FROM,
+      );
+
+      let cleanUp = 0;
+
+      await this.workerRepository.saveLastMirroredBlock(
+        this.config.RESYNC_FROM,
+        netBlock.blockHash,
+      );
+
+      ({ deleted: cleanUp } = await this.workerRepository.cleanUpEvents(
+        this.config.RESYNC_FROM,
+      ));
+
+      this.logger.info(
+        `Deleted ${cleanUp} events. Restart the service without RESYNC_FROM to sync again.`,
+      );
+
+      await WorkerRepository.commitTransaction(this.blockchain);
+    } catch (error) {
+      this.logger.error(error);
+      await WorkerRepository.rollbackTransaction(this.blockchain);
     }
-    const latestMirrored = await this.getLatestMirroredBlock();
-    this.logger.info(
-      `Latest mirrored block ${latestMirrored}. Resync requested from block ${this.config.RESYNC_FROM}.`,
-    );
-    const netBlock = await this.workerStrategy.getBlock(
-      this.config.RESYNC_FROM,
-    );
-
-    let cleanUp = 0;
-
-    await WorkerStatus.saveWorkerStatus(
-      this.blockchain,
-      this.config.RESYNC_FROM,
-      netBlock.blockHash,
-      undefined,
-      this.workerRepository.context.workerStatusRepository,
-    );
-
-    ({ deleted: cleanUp } = await CnsRegistryEvent.cleanUpEvents(
-      this.config.RESYNC_FROM,
-      this.blockchain,
-      this.networkId,
-      this.workerRepository.context.eventRepository,
-    ));
-
-    this.logger.info(
-      `Deleted ${cleanUp} events. Restart the service without RESYNC_FROM to sync again.`,
-    );
   }
 }

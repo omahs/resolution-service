@@ -4,8 +4,8 @@ import { Blockchain } from '../../types/common';
 import { EthUpdaterConfig } from '../../env';
 import { BaseWorker } from '../workerFramework/BaseWorker';
 import { UNSWorkerStrategy } from './UnsWorker';
-import { Block, IWorkerStrategy } from '../workerFramework';
 
+// Kept for tests compatibility
 export class EthUpdater {
   blockchain: Blockchain;
   config: EthUpdaterConfig;
