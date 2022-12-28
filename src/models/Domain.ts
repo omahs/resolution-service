@@ -76,11 +76,24 @@ export default class Domain extends Model {
 
   protected async beforeValidate(): Promise<void> {
     if (!this.parent) {
-      this.parent = this.validationRepository
-        ? (await this.validationRepository.findOne({ name: this.extension })) ||
-          null
-        : (await Domain.findOne({ name: this.extension })) || null;
+      this.parent = await this.setParent();
     }
+  }
+
+  private async setParent(): Promise<Domain | null> {
+    const splittedName = this.getSplittedName();
+    let parentName = splittedName[splittedName.length - 1];
+
+    if (splittedName.length > 2) {
+      splittedName.shift();
+      parentName = splittedName.join('.');
+    }
+
+    const parent = this.validationRepository
+      ? (await this.validationRepository.findOne({ name: parentName })) || null
+      : (await Domain.findOne({ name: parentName })) || null;
+
+    return parent;
   }
 
   nameMatchesNode(): boolean {
@@ -102,14 +115,7 @@ export default class Domain extends Model {
   }
 
   get extension(): string {
-    const splittedName = this.getSplittedName();
-
-    if (splittedName.length > 2) {
-      splittedName.shift();
-      return splittedName.join('.');
-    }
-
-    return splittedName.pop() || '';
+    return this.getSplittedName().pop() || '';
   }
 
   get level(): number {

@@ -200,7 +200,7 @@ describe('MetaDataController', () => {
       );
       const correctAttributesForSubdomain = [
         { trait_type: DomainAttributeTrait.Level, value: 3 },
-        { trait_type: DomainAttributeTrait.Ending, value: 'domain.crypto' },
+        { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },
         { trait_type: DomainAttributeTrait.Length, value: 10 },
         {
           trait_type: DomainAttributeTrait.Type,

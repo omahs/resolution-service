@@ -244,6 +244,15 @@ describe('Domain', () => {
         '0xb72f443a17edf4a55f766cf3c83469e6f96494b16823a41a4acb25800f303103',
       );
       expect(fromDb?.parent?.name).to.equal('crypto');
+      const subDomainMetaData = {
+        name: 'sub.test.crypto',
+        node: eip137Namehash('sub.test.crypto'),
+      };
+      await Domain.create(subDomainMetaData).save();
+      const subdomainfromDb = await Domain.findByNode(
+        eip137Namehash('sub.test.crypto'),
+      );
+      expect(subdomainfromDb?.parent?.name).to.equal('test.crypto');
     });
   });
 
