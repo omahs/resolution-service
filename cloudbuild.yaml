@@ -32,6 +32,8 @@ steps:
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
       - "--allow-unauthenticated"
+      - "--vpc-connector=$_VPC_SERVERLESS"
+      - "-—vpc-egress=private-ranges-only"
       - "--cpu=2000m"
       - "--memory=1024Mi"
       - "--min-instances=5"
@@ -89,6 +91,8 @@ steps:
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
       - "--allow-unauthenticated"
+      - "--vpc-connector=$_VPC_SERVERLESS"
+      - "-—vpc-egress=private-ranges-only"
       - "--cpu=2000m"
       - "--memory=1024Mi"
       - "--min-instances=5"
@@ -146,6 +150,8 @@ steps:
         then
           gcloud run deploy $_SERVICE_NAME-workers --platform=managed --quiet \
           --image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
+          --vpc-connector=$_VPC_SERVERLESS \
+          -—vpc-egress=private-ranges-only \
           --cpu=2000m \
           --memory=1024Mi \
           --min-instances=1 \
