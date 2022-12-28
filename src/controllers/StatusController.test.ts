@@ -313,6 +313,7 @@ describe('StatusController', () => {
         'dao',
         'zil',
         'klever',
+        'hi',
       ],
     };
     const response = await supertest(api).get('/supported_tlds').send();

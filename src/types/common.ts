@@ -71,6 +71,7 @@ export enum EvmUnstoppableDomainTlds {
   Wallet = 'wallet',
   X = 'x',
   Klever = 'klever',
+  Hi = 'hi',
 }
 
 export enum ZilliqaUnstoppableDomainTlds {
@@ -106,6 +107,7 @@ export const SupportedTlds = [
   UnstoppableDomainTlds.X,
   UnstoppableDomainTlds.Klever,
   UnstoppableDomainTlds.Zil,
+  UnstoppableDomainTlds.Hi,
 ];
 
 export const DeprecatedTlds = [UnstoppableDomainTlds.Coin];
