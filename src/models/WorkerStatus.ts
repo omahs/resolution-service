@@ -12,11 +12,10 @@ import { Attributes, Blockchain } from '../types/common';
 import Model from './Model';
 
 @Entity({ name: 'resolution_worker_status' })
-@Unique(['location'])
 export default class WorkerStatus extends Model {
   @IsEnum(Blockchain)
   @Column('text')
-  @Index()
+  @Index({ unique: true })
   location: Blockchain;
 
   @IsNumber()
@@ -30,7 +29,7 @@ export default class WorkerStatus extends Model {
 
   @IsOptional()
   @IsNumber()
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   @ValidateWith<WorkerStatus>('lastAtxuidIncreases', {
     message: 'the value of lastAtxuid should increase',
   })

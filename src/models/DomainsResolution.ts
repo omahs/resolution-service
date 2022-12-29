@@ -15,6 +15,8 @@ import { ETHAddressRegex } from '../utils/ethersUtils';
 @Entity({ name: 'domains_resolution' })
 @Unique(['domain', 'blockchain', 'networkId'])
 @Index(['domain', 'blockchain', 'networkId', 'ownerAddress'])
+// typeorm does not support custom indexes see 'src/database/migrations/1665435054447-AddGINIndexOnResolution.ts' for index definition
+@Index('resolutiongin', { synchronize: false })
 export default class DomainsResolution extends Model {
   static NullAddress = '0x0000000000000000000000000000000000000000';
 
@@ -56,7 +58,10 @@ export default class DomainsResolution extends Model {
   @Index()
   domainId: number;
 
-  @ManyToOne(() => Domain, (domain) => domain.resolutions)
+  @ManyToOne(() => Domain, (domain) => domain.resolutions, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'domain_id' })
   domain: Domain;
 

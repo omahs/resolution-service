@@ -38,6 +38,8 @@ export default class DomainsReverseResolution extends Model {
 
   @ManyToOne(() => Domain, (domain) => domain.reverseResolutions, {
     orphanedRowAction: 'delete',
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'domain_id' })
   domain: Domain;
