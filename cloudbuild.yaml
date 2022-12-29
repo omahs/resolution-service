@@ -73,6 +73,7 @@ steps:
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
       - "--vpc-connector=projects/unstoppable-domains-staging/locations/us-central1/connectors/vpc-serverless"
+#      - "--vpc-egress private-ranges-only"
       - "--vpc-egress private-ranges-only"
       - "--region=$_DEPLOY_REGION"
       - "--quiet"
