@@ -138,7 +138,7 @@ steps:
   # # deploy MIGRATIONS,ETH_WORKER,ZIL_WORKER,MATIC_WORKER"
   # ########
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
-    id: Deploy ETH ZIL MATIC workers
+    id: Deploy MIGRATIONS ETH ZIL MATIC workers
     entrypoint: bash
     args:
       - "-c"
