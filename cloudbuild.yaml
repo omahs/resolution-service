@@ -32,8 +32,6 @@ steps:
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
       - "--allow-unauthenticated"
-      - "--vpc-connector=$_VPC_SERVERLESS"
-      - "-—vpc-egress=private-ranges-only"
       - "--cpu=2000m"
       - "--memory=1024Mi"
       - "--min-instances=5"
@@ -74,6 +72,8 @@ steps:
 
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
+      - "--vpc-connector=projects/unstoppable-domains-staging/locations/us-central1/connectors/vpc-serverless"
+      - "--vpc-egress private-ranges-only"
       - "--region=$_DEPLOY_REGION"
       - "--quiet"
     id: Deploy API
@@ -91,8 +91,6 @@ steps:
       - "--platform=managed"
       - "--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA"
       - "--allow-unauthenticated"
-      - "--vpc-connector=$_VPC_SERVERLESS"
-      - "-—vpc-egress=private-ranges-only"
       - "--cpu=2000m"
       - "--memory=1024Mi"
       - "--min-instances=5"
@@ -150,8 +148,6 @@ steps:
         then
           gcloud run deploy $_SERVICE_NAME-workers --platform=managed --quiet \
           --image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
-          --vpc-connector=$_VPC_SERVERLESS \
-          -—vpc-egress=private-ranges-only \
           --cpu=2000m \
           --memory=1024Mi \
           --min-instances=1 \
