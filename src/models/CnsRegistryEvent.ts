@@ -9,33 +9,11 @@ import {
 } from 'class-validator';
 import { Column, Entity, Index, MoreThan, Not, Repository } from 'typeorm';
 import ValidateWith from '../services/ValidateWith';
-import { Attributes } from '../types/common';
+import { Attributes, DomainOperationTypes } from '../types/common';
 import Model from './Model';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Blockchain } from '../types/common';
 import { tokenIdToNode } from '../utils/domain';
-
-export const DomainOperationTypes = [
-  'Transfer',
-  'Resolve',
-  'NewURI',
-  'Sync',
-  'Set',
-  'ResetRecords',
-  'SetReverse',
-  'RemoveReverse',
-] as const;
-
-export const EventTypes = [
-  ...DomainOperationTypes,
-  'Approval',
-  'ApprovalForAll',
-  'NewURIPrefix',
-  'Upgraded',
-  'AdminChanged',
-] as const;
-
-export type EventType = typeof EventTypes[any];
 
 @Entity({ name: 'cns_registry_events' })
 @Index(['blockNumber', 'blockchain', 'networkId', 'logIndex'], { unique: true })

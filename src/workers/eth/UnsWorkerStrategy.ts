@@ -21,10 +21,12 @@ import {
 import { CnsResolverError } from '../../errors/CnsResolverError';
 import { ExecutionRevertedError } from './BlockchainErrors';
 import { CnsResolver } from './CnsResolver';
-import { Blockchain } from '../../types/common';
+import { Blockchain, DomainOperationTypes } from '../../types/common';
 import { EthUpdaterConfig } from '../../env';
 import { unwrap } from '../../utils/option';
 import { tokenIdToNode } from '../../utils/domain';
+
+import * as ethersUtils from '../../utils/ethersUtils';
 
 export class UNSWorkerStrategy implements IWorkerStrategy {
   private unsRegistry: Contract;
@@ -62,19 +64,22 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
   }
 
   public async getLatestNetworkBlock(): Promise<Block> {
-    const block = await this.provider.getBlock('latest');
+    const blockNumber = await ethersUtils.getLatestNetworkBlock(this.provider);
+    const latestBlock = await this.provider.getBlock(
+      blockNumber - this.config.CONFIRMATION_BLOCKS,
+    );
 
     return {
-      blockNumber: block.number - this.config.CONFIRMATION_BLOCKS,
-      blockHash: block.hash,
+      blockNumber: latestBlock.number,
+      blockHash: latestBlock.hash,
     };
   }
 
   public async getBlock(blockNumber: number): Promise<Block> {
     const block = await this.provider.getBlock(blockNumber);
     return {
-      blockNumber: block.number,
-      blockHash: block.hash,
+      blockNumber: block?.number,
+      blockHash: block?.hash,
     };
   }
 
@@ -122,15 +127,19 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
     });
 
     return events.map((e) => {
+      const node =
+        e.args?.['tokenId'] && BigNumber.isBigNumber(e.args?.['tokenId'])
+          ? tokenIdToNode(BigNumber.from(e.args?.['tokenId']))
+          : BigNumber.isBigNumber(e.args?.['0'])
+          ? tokenIdToNode(BigNumber.from(e.args?.['0']))
+          : undefined;
+
       const values: Record<string, string> = {};
       Object.entries(e?.args || []).forEach(([key, value]) => {
         values[key] = BigNumber.isBigNumber(value)
           ? value.toHexString()
           : value;
       });
-      const node = values['tokenId']
-        ? tokenIdToNode(BigNumber.from(values['tokenId']))
-        : tokenIdToNode(BigNumber.from(values['0']));
 
       return {
         node,
@@ -165,7 +174,8 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
               : ''
           }`,
         );
-        if (!event.node) {
+        if (event.type && event.type in DomainOperationTypes && !event.node) {
+          // verify that domain operations have a node
           throw new EthUpdaterError('Invalid event node.');
         }
         switch (event.type) {
@@ -239,7 +249,7 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
         await this.workerRepository.saveResolutions(resolution);
       }
     } else {
-      // this is a bridge
+      // this is probably a bridge
       // this will be a no-op for new uri as we will not save a resolution without a domain
       resolution.ownerAddress = event.args?.to?.toLowerCase();
       resolution.registry = this.cnsRegistry.address;

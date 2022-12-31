@@ -60,6 +60,16 @@ export class Resolution {
   registry?: string | null = null;
   resolution?: Record<string, string> = undefined;
 
+  get isUnchanged() {
+    return (
+      this.ownerAddress === undefined &&
+      this.resolver === undefined &&
+      this.registry === undefined &&
+      this.resolution &&
+      Object.keys(this.resolution).length == 0
+    );
+  }
+
   constructor({
     node,
     blockchain,

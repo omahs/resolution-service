@@ -60,9 +60,7 @@ export class WorkerRepository implements IWorkerRepository {
 
   public async saveDomains(domain: Domain | Domain[]): Promise<void> {
     // find all nodes in DB
-    const domains = this.convertToArray(domain).sort((a, b): number =>
-      a.node.localeCompare(b.node),
-    );
+    const domains = this.convertToArray(domain);
     const domainsToSave: DbDomain[] = [];
     for (const domain of domains) {
       const dbDomain = await DbDomain.findByNode(domain.node);
@@ -72,11 +70,17 @@ export class WorkerRepository implements IWorkerRepository {
         name = `${domain.label}.${parent?.name}`;
       }
       if (dbDomain) {
-        dbDomain.attributes({
-          name,
-          parent,
-        });
-        domainsToSave.push(dbDomain);
+        // if domain exists only update if something changed
+        if (
+          dbDomain.name !== name ||
+          (parent && dbDomain.parent?.id !== parent?.id)
+        ) {
+          dbDomain.attributes({
+            name: name || dbDomain.name,
+            parent: parent || dbDomain.parent,
+          });
+          domainsToSave.push(dbDomain);
+        }
       } else {
         domainsToSave.push(
           new DbDomain({
@@ -96,6 +100,9 @@ export class WorkerRepository implements IWorkerRepository {
     const resolutions = this.convertToArray(resolution);
     const domainsToSave: DbDomain[] = [];
     for (const resolution of resolutions) {
+      if (resolution.isUnchanged) {
+        continue;
+      }
       const domain = await DbDomain.findByNode(
         resolution.node,
         this.context.domainRepository,

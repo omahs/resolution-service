@@ -110,15 +110,12 @@ export class BaseWorker implements IWorker {
     fromBlock: number;
     toBlock: number;
   }> {
-    const latestMirrored = await this.workerRepository.getLatestMirroredBlock();
-    const latestNetBlock = (await this.workerStrategy.getLatestNetworkBlock())
-      .blockNumber;
-    if (latestMirrored === 0) {
-      return {
-        fromBlock: this.config.eventsStartingBlock,
-        toBlock: latestNetBlock,
-      };
-    }
+    const latestMirrored =
+      (await this.workerRepository.getLatestMirroredBlock()) ||
+      this.config.eventsStartingBlock;
+    const latestNetBlock = (
+      await this.workerStrategy.getLatestNetworkBlock(latestMirrored)
+    ).blockNumber;
 
     if (!this.config.handleReorgs) {
       return { fromBlock: latestMirrored, toBlock: latestNetBlock };
@@ -186,6 +183,9 @@ export class BaseWorker implements IWorker {
           this.currentSyncBlock + 1,
           fetchBlock,
         );
+        this.logger.info(
+          `Fetched ${events.length} events from ${this.blockchain}.`,
+        );
         await this.saveEvents(events);
         await this.workerStrategy.processEvents(events);
 
@@ -197,9 +197,9 @@ export class BaseWorker implements IWorker {
           this.currentSyncBlock,
           this.currentSyncBlockHash,
         );
-
-        await WorkerRepository.commitTransaction(this.blockchain);
       }
+
+      await WorkerRepository.commitTransaction(this.blockchain);
     } catch (error) {
       this.logger.error(error);
       await WorkerRepository.rollbackTransaction(this.blockchain);
