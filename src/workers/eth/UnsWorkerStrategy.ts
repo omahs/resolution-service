@@ -1,12 +1,16 @@
+import winston from 'winston';
 import { WorkerLogger } from '../../logger';
 import {
-  CnsRegistryEvent,
+  Block,
+  IWorkerStrategy,
+  WorkerEvent,
   Domain,
-  DomainsReverseResolution,
-  WorkerStatus,
-} from '../../models';
+  WorkerRepository,
+  ReverseResolution,
+  Resolution,
+  getWorkerRepository,
+} from '../workerFramework';
 import { Contract, Event, BigNumber } from 'ethers';
-import { EntityManager, Repository } from 'typeorm';
 import { CryptoConfig, getEthConfig } from '../../contracts';
 import { eip137Namehash } from '../../utils/namehash';
 import { EthUpdaterError } from '../../errors/EthUpdaterError';
@@ -14,15 +18,13 @@ import {
   GetProviderForConfig,
   StaticJsonRpcProvider,
 } from './EthereumProvider';
-import { unwrap } from '../../utils/option';
 import { CnsResolverError } from '../../errors/CnsResolverError';
 import { ExecutionRevertedError } from './BlockchainErrors';
 import { CnsResolver } from './CnsResolver';
 import { Blockchain } from '../../types/common';
 import { EthUpdaterConfig } from '../../env';
-import winston from 'winston';
-import { cacheSocialPictureInCDN } from '../../utils/socialPicture';
-import { Block, IWorkerStrategy, WorkerRepository } from '../workerFramework';
+import { unwrap } from '../../utils/option';
+import { tokenIdToNode } from '../../utils/domain';
 
 export class UNSWorkerStrategy implements IWorkerStrategy {
   private unsRegistry: Contract;
@@ -49,7 +51,7 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
     this.unsRegistry = this.cryptoConfig.UNSRegistry.getContract();
     this.cnsRegistry = this.cryptoConfig.CNSRegistry.getContract();
 
-    this.workerRepository = WorkerRepository.getRepository(
+    this.workerRepository = getWorkerRepository(
       this.blockchain,
       this.networkId,
     );
@@ -76,7 +78,10 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
     };
   }
 
-  public async getEvents(fromBlock: number, toBlock: number): Promise<Event[]> {
+  public async getEvents(
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<WorkerEvent[]> {
     let unsEvents: Event[] = [];
     if (this.unsRegistry.address != Domain.NullAddress) {
       unsEvents = await this.unsRegistry.queryFilter({}, fromBlock, toBlock);
@@ -116,19 +121,54 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
       return a.blockNumber < b.blockNumber ? -1 : 1;
     });
 
-    return events;
+    return events.map((e) => {
+      const values: Record<string, string> = {};
+      Object.entries(e?.args || []).forEach(([key, value]) => {
+        values[key] = BigNumber.isBigNumber(value)
+          ? value.toHexString()
+          : value;
+      });
+      const node = values['tokenId']
+        ? tokenIdToNode(BigNumber.from(values['tokenId']))
+        : tokenIdToNode(BigNumber.from(values['0']));
+
+      return {
+        node,
+        type: e.event,
+        source: {
+          blockchain: this.blockchain,
+          networkId: this.networkId,
+          blockNumber: e.blockNumber,
+          attributes: {
+            blockHash: e.blockHash,
+            transactionHash: e.transactionHash,
+            logIndex: e.logIndex,
+            contractAddress: e.address,
+          },
+        },
+        args: values,
+        innerEvent: e,
+      };
+    });
   }
 
-  public async processEvents(events: Event[]) {
-    let lastProcessedEvent: Event | undefined = undefined;
+  public async processEvents(events: WorkerEvent[]): Promise<void> {
+    let lastProcessedEvent: WorkerEvent | undefined = undefined;
     for (const event of events) {
       try {
         this.logger.info(
-          `Processing event: type - '${event.event}'; args - ${JSON.stringify(
+          `Processing event: type - '${event.type}'; args - ${JSON.stringify(
             event.args,
-          )};${event.decodeError ? ` error: ${event.decodeError}` : ''}`,
+          )};${
+            event.innerEvent?.decodeError
+              ? ` error: ${event.innerEvent?.decodeError}`
+              : ''
+          }`,
         );
-        switch (event.event) {
+        if (!event.node) {
+          throw new EthUpdaterError('Invalid event node.');
+        }
+        switch (event.type) {
           case 'Transfer': {
             await this.processTransfer(event);
             break;
@@ -177,50 +217,46 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
     }
   }
 
-  private async processTransfer(event: Event): Promise<void> {
-    const node = CnsRegistryEvent.tokenIdToNode(event.args?.tokenId);
-    const domain = await this.workerRepository.findByNode(node);
+  private async processTransfer(event: WorkerEvent): Promise<void> {
+    const node = unwrap(event.node);
+    const resolution = new Resolution({
+      node,
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+    });
+
     //Check if it's not a new URI
     if (event.args?.from !== Domain.NullAddress) {
-      if (!domain) {
-        throw new EthUpdaterError(
-          `Transfer event was not processed. Could not find domain for ${node}`,
-        );
-      }
-      const resolution = domain.getResolution(this.blockchain, this.networkId);
-
       //Check if it's a burn
       if (event.args?.to === Domain.NullAddress) {
         resolution.ownerAddress = Domain.NullAddress;
-        resolution.resolution = {};
+        resolution.resolution = undefined;
         resolution.resolver = null;
         resolution.registry = null;
-        domain.setResolution(resolution);
-        await this.workerRepository.save(domain);
+        await this.workerRepository.saveResolutions(resolution);
       } else {
         resolution.ownerAddress = event.args?.to?.toLowerCase();
-        await this.workerRepository.save(domain);
+        await this.workerRepository.saveResolutions(resolution);
       }
-    } else if (domain) {
-      // domain exists, so it's probably a bridge
-      const resolution = domain.getResolution(this.blockchain, this.networkId);
-
+    } else {
+      // this is a bridge
+      // this will be a no-op for new uri as we will not save a resolution without a domain
       resolution.ownerAddress = event.args?.to?.toLowerCase();
       resolution.registry = this.cnsRegistry.address;
-
-      const contractAddress = event.address.toLowerCase();
+      const contractAddress = (
+        event.source?.attributes?.contractAddress as string | undefined
+      )?.toLowerCase();
       if (contractAddress === this.unsRegistry.address.toLowerCase()) {
         resolution.resolver = contractAddress;
         resolution.registry = this.unsRegistry.address.toLowerCase();
       }
-      domain.setResolution(resolution); // create resolution for L2
-      await this.workerRepository.save(domain);
+      await this.workerRepository.saveResolutions(resolution);
     }
   }
 
   private async processNewUri(
-    event: Event,
-    lastProcessedEvent: Event | undefined,
+    event: WorkerEvent,
+    lastProcessedEvent: WorkerEvent | undefined,
   ): Promise<void> {
     if (!event.args) {
       throw new EthUpdaterError(
@@ -228,9 +264,9 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
       );
     }
 
-    const { uri, tokenId } = event.args;
+    const { uri } = event.args;
     const expectedNode = eip137Namehash(uri);
-    const producedNode = CnsRegistryEvent.tokenIdToNode(tokenId);
+    const producedNode = unwrap(event.node);
 
     //Check if the domain name matches tokenID
     if (expectedNode !== producedNode) {
@@ -242,105 +278,102 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
     //Check if the previous event is "mint" - transfer from 0x0
     if (
       !lastProcessedEvent ||
-      lastProcessedEvent.event !== 'Transfer' ||
+      lastProcessedEvent.type !== 'Transfer' ||
       lastProcessedEvent.args?.from !== Domain.NullAddress
     ) {
       throw new EthUpdaterError(
-        `NewUri event wasn't processed. Unexpected order of events. Expected last processed event to be 'Transfer', got :'${lastProcessedEvent?.event}'`,
+        `NewUri event wasn't processed. Unexpected order of events. Expected last processed event to be 'Transfer', got :'${lastProcessedEvent?.type}'`,
       );
     }
 
-    const domain = await this.workerRepository.findOrBuildByNode(producedNode);
-    const resolution = domain.getResolution(this.blockchain, this.networkId);
+    const domain: Domain = {
+      name: uri,
+      node: producedNode,
+    };
 
-    domain.name = uri;
+    const resolution = new Resolution({
+      node: producedNode,
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+    });
+
     resolution.ownerAddress = lastProcessedEvent.args?.to.toLowerCase();
     resolution.registry = this.cnsRegistry.address;
 
-    const contractAddress = event.address.toLowerCase();
+    const contractAddress = (
+      event.source?.attributes?.['contractAddress'] as string | undefined
+    )?.toLowerCase();
     if (contractAddress === this.unsRegistry.address.toLowerCase()) {
       resolution.resolver = contractAddress;
       resolution.registry = this.unsRegistry.address.toLowerCase();
     }
-    domain.setResolution(resolution);
-    await this.workerRepository.save(domain);
+    await this.workerRepository.saveDomains(domain);
+    await this.workerRepository.saveResolutions(resolution);
   }
 
-  private async processResetRecords(event: Event): Promise<void> {
-    const node = CnsRegistryEvent.tokenIdToNode(event.args?.tokenId);
-    const domain = await this.workerRepository.findByNode(node);
+  private async processResetRecords(event: WorkerEvent): Promise<void> {
+    const node = unwrap(event.node);
+    const resolution = new Resolution({
+      node,
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+    });
+    resolution.resolution = undefined;
+    await this.workerRepository.saveResolutions(resolution);
+  }
 
-    if (!domain) {
+  private async processSet(event: WorkerEvent): Promise<void> {
+    const node = unwrap(event.node);
+    // For some reason ethers does not parse this event correctly
+    const key = event.args?.['3'];
+    const value = event.args?.['4'];
+    if (key === undefined || value === undefined) {
       throw new EthUpdaterError(
-        `ResetRecords event was not processed. Could not find domain for ${node}`,
+        `Set event was not processed. Key or value not specified.`,
       );
     }
 
-    const resolution = domain.getResolution(this.blockchain, this.networkId);
-    resolution.resolution = {};
-    domain.setResolution(resolution);
-    await this.workerRepository.save(domain);
-  }
+    const resolution: Resolution = new Resolution({
+      node,
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+    });
 
-  private async processSet(event: Event): Promise<void> {
-    const args = unwrap(event.args);
-    // For some reason ethers got a problem with assigning names for this event.
-    const [, , , key, value] = args;
-    const tokenId = args[0];
-    const node = CnsRegistryEvent.tokenIdToNode(tokenId);
-    const domain = await this.workerRepository.findByNode(node);
-    if (!domain) {
-      throw new EthUpdaterError(
-        `Set event was not processed. Could not find domain for ${node}`,
-      );
-    }
-    const resolution = domain.getResolution(this.blockchain, this.networkId);
-    resolution.resolution[key] = value;
-    domain.setResolution(resolution);
-    await this.workerRepository.save(domain);
-    if (key === 'social.picture.value' && !!value) {
-      try {
-        await cacheSocialPictureInCDN(value, domain, resolution);
-      } catch (error) {
-        this.logger.error(`Failed to cache PFP for ${domain}: ${error}`);
-      }
+    if (key !== undefined && value !== undefined && resolution.resolution) {
+      resolution.resolution[key] = value;
+      await this.workerRepository.saveResolutions(resolution);
     }
   }
 
-  private async processResolve(event: Event): Promise<void> {
-    const node = CnsRegistryEvent.tokenIdToNode(event.args?.tokenId);
-    const domain = await this.workerRepository.findByNode(node);
-    if (!domain) {
-      throw new EthUpdaterError(
-        `Resolve event was not processed. Could not find domain for ${node}`,
-      );
-    }
-    const resolution = domain.getResolution(this.blockchain, this.networkId);
-    await this.cnsResolver.fetchResolver(domain, resolution);
+  private async processResolve(event: WorkerEvent): Promise<void> {
+    const node = unwrap(event.node);
+    const resolution: Resolution = new Resolution({
+      node,
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+    });
+    await this.cnsResolver.fetchResolver(resolution);
   }
 
-  private async processSync(event: Event): Promise<void> {
-    const node = CnsRegistryEvent.tokenIdToNode(event.args?.tokenId);
-    const domain = await this.workerRepository.findByNode(node);
-    if (!domain) {
-      throw new EthUpdaterError(
-        `Sync event was not processed. Could not find domain for node: ${node}`,
-      );
-    }
+  private async processSync(event: WorkerEvent): Promise<void> {
+    const node = unwrap(event.node);
     if (event.args?.updateId === undefined) {
       throw new EthUpdaterError(
         `Sync event was not processed. Update id not specified.`,
       );
     }
 
-    const resolution = domain.getResolution(this.blockchain, this.networkId);
+    const resolution: Resolution = new Resolution({
+      node,
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+    });
 
     const keyHash = event.args?.updateId.toString();
     const resolverAddress = await this.cnsResolver.getResolverAddress(node);
-    if (keyHash === '0' || !resolverAddress) {
-      resolution.resolution = {};
-      domain.setResolution(resolution);
-      await this.workerRepository.save(domain);
+    if (BigNumber.from(keyHash).eq(BigNumber.from(0)) || !resolverAddress) {
+      resolution.resolution = undefined;
+      await this.workerRepository.saveResolutions(resolution);
       return;
     }
 
@@ -351,7 +384,9 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
           keyHash,
           node,
         );
-      resolution.resolution[resolutionRecord.key] = resolutionRecord.value;
+      if (resolution.resolution) {
+        resolution.resolution[resolutionRecord.key] = resolutionRecord.value;
+      }
     } catch (error: unknown) {
       if (error instanceof CnsResolverError) {
         this.logger.warn(error);
@@ -359,73 +394,38 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
         error instanceof Error &&
         error.message.includes(ExecutionRevertedError)
       ) {
-        resolution.resolution = {};
+        resolution.resolution = undefined;
       } else {
         throw error;
       }
     }
 
-    domain.setResolution(resolution);
-    await this.workerRepository.save(domain);
+    await this.workerRepository.saveResolutions(resolution);
   }
 
-  private async processSetReverse(event: Event): Promise<void> {
-    const args = unwrap(event.args);
-    const { addr, tokenId } = args;
-    const node = CnsRegistryEvent.tokenIdToNode(tokenId);
-    const domain = await this.workerRepository.findByNode(node);
-    if (!domain) {
-      throw new EthUpdaterError(
-        `SetReverse event was not processed. Could not find domain for ${node}`,
-      );
-    }
-
-    let reverse = await this.workerRepository.findOne(
-      DomainsReverseResolution,
-      {
-        reverseAddress: addr,
-        blockchain: this.blockchain,
-        networkId: this.networkId,
-      },
-      {
-        relations: ['domain'],
-      },
-    );
-
-    if (!reverse) {
-      reverse = new DomainsReverseResolution({
-        reverseAddress: addr,
-        blockchain: this.blockchain,
-        networkId: this.networkId,
-        domain: domain,
-      });
-    } else {
-      const oldDomain = reverse.domain;
-      oldDomain.removeReverseResolution(this.blockchain, this.networkId);
-      await this.workerRepository.save(oldDomain);
-      reverse.domain = domain;
-    }
-    domain.setReverseResolution(reverse);
-    await this.workerRepository.save(domain);
-  }
-
-  private async processRemoveReverse(event: Event): Promise<void> {
+  private async processSetReverse(event: WorkerEvent): Promise<void> {
+    const node = unwrap(event.node);
     const args = unwrap(event.args);
     const { addr } = args;
 
-    const reverseResolution = await this.workerRepository.findOne(
-      DomainsReverseResolution,
-      {
-        reverseAddress: addr,
-        blockchain: this.blockchain,
-        networkId: this.networkId,
-      },
-    );
-    if (!reverseResolution) {
-      throw new EthUpdaterError(
-        `RemoveReverse event was not processed. Could not find reverse resolution for ${addr}`,
-      );
-    }
-    await this.workerRepository.remove(reverseResolution);
+    const reverse: ReverseResolution = {
+      node,
+      reverseAddress: addr,
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+    };
+    await this.workerRepository.saveReverseResolutions(reverse);
+  }
+
+  private async processRemoveReverse(event: WorkerEvent): Promise<void> {
+    const args = unwrap(event.args);
+    const { addr } = args;
+
+    const reverseResolution: ReverseResolution = {
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+      reverseAddress: addr,
+    };
+    await this.workerRepository.removeReverseResolutions(reverseResolution);
   }
 }

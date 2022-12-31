@@ -8,14 +8,7 @@ import {
   OneToMany,
   Repository,
 } from 'typeorm';
-import {
-  Allow,
-  IsOptional,
-  IsString,
-  Matches,
-  ValidateIf,
-  ValidateNested,
-} from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
 import ValidateWith from '../services/ValidateWith';
 import { Model } from '.';
 import { eip137Namehash, znsNamehash } from '../utils/namehash';
@@ -24,10 +17,10 @@ import punycode from 'punycode';
 import DomainsResolution from './DomainsResolution';
 import { Blockchain } from '../types/common';
 import { queryNewURIEvent } from '../utils/ethersUtils';
-import CnsRegistryEvent from './CnsRegistryEvent';
 import { logger } from '../logger';
 import DomainsReverseResolution from './DomainsReverseResolution';
 import { env } from '../env';
+import { tokenIdToNode } from '../utils/domain';
 
 @Entity({ name: 'domains' })
 export default class Domain extends Model {
@@ -191,7 +184,7 @@ export default class Domain extends Model {
 
       const { uri, tokenId } = newURIevent.args;
       const expectedNode = eip137Namehash(uri);
-      const producedNode = CnsRegistryEvent.tokenIdToNode(tokenId);
+      const producedNode = tokenIdToNode(tokenId);
 
       if (expectedNode !== producedNode) {
         return undefined;

@@ -71,8 +71,9 @@ export default class WorkerStatus extends Model {
 
   static async latestAtxuidForWorker(
     location: Blockchain,
+    repository: Repository<WorkerStatus> = WorkerStatus.getRepository(),
   ): Promise<number | undefined> {
-    const status = await WorkerStatus.findOne({ location });
+    const status = await repository.findOne({ location });
     return status?.lastAtxuid;
   }
 

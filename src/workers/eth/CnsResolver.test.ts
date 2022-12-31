@@ -1,7 +1,7 @@
 import { BigNumber, Contract } from 'ethers';
 import { randomBytes } from 'crypto';
 import { env } from '../../env';
-import { Domain, WorkerStatus } from '../../models';
+import { Domain, DomainsResolution, WorkerStatus } from '../../models';
 import { EthereumHelper } from '../../utils/testing/EthereumTestsHelper';
 import { CnsResolver } from './CnsResolver';
 import * as sinon from 'sinon';
@@ -12,8 +12,13 @@ import supportedKeysJson from 'uns/resolver-keys.json';
 import * as ethersUtils from '../../utils/ethersUtils';
 import { DomainTestHelper } from '../../utils/testing/DomainTestHelper';
 import { Blockchain } from '../../types/common';
-import { WorkerRepository } from '../workerFramework';
+import {
+  getWorkerRepository,
+  Resolution,
+  WorkerRepository,
+} from '../workerFramework';
 import { EthereumProvider } from './EthereumProvider';
+import { Res } from 'routing-controllers';
 
 describe('CnsResolver', () => {
   let service: CnsResolver;
@@ -109,10 +114,7 @@ describe('CnsResolver', () => {
 
     service = new CnsResolver(
       ETHContracts,
-      WorkerRepository.getRepository(
-        Blockchain.ETH,
-        env.APPLICATION.ETHEREUM.NETWORK_ID,
-      ),
+      getWorkerRepository(Blockchain.ETH, env.APPLICATION.ETHEREUM.NETWORK_ID),
     );
   });
 
@@ -126,8 +128,28 @@ describe('CnsResolver', () => {
         name: testDomainName,
         node: testDomainNode,
       });
-      await service.fetchResolver(domain, resolution);
-      expect(resolution.resolver).to.equal(resolver.address.toLowerCase());
+
+      await service.fetchResolver(
+        new Resolution({
+          node: domain.node,
+          blockchain: resolution.blockchain,
+          networkId: resolution.networkId,
+          ownerAddress: resolution.ownerAddress,
+          resolver: resolution.resolver,
+          registry: resolution.registry,
+          resolution: resolution.resolution,
+        }),
+      );
+
+      const updatedDomain = await Domain.findByNode(domain.node);
+      const updatedResolution = updatedDomain?.getResolution(
+        Blockchain.ETH,
+        env.APPLICATION.ETHEREUM.NETWORK_ID,
+      );
+
+      expect(updatedResolution?.resolver).to.equal(
+        resolver.address.toLowerCase(),
+      );
     });
 
     it('should fetch resolver with domain records', async () => {
@@ -146,9 +168,25 @@ describe('CnsResolver', () => {
         node: testDomainNode,
       });
 
-      await service.fetchResolver(domain, resolution);
+      await service.fetchResolver(
+        new Resolution({
+          node: domain.node,
+          blockchain: resolution.blockchain,
+          networkId: resolution.networkId,
+          ownerAddress: resolution.ownerAddress,
+          resolver: resolution.resolver,
+          registry: resolution.registry,
+          resolution: resolution.resolution,
+        }),
+      );
 
-      expect(resolution.resolution).to.deep.equal({
+      const updatedDomain = await Domain.findByNode(domain.node);
+      const updatedResolution = updatedDomain?.getResolution(
+        Blockchain.ETH,
+        env.APPLICATION.ETHEREUM.NETWORK_ID,
+      );
+
+      expect(updatedResolution?.resolution).to.deep.equal({
         'crypto.BTC.address': 'qp3gu0flg7tehyv73ua5nznlw8s040nz3uqnyffrcn',
         'crypto.ETH.address': '0x461781022A9C2De74f2171EB3c44F27320b13B8c',
       });
@@ -168,9 +206,21 @@ describe('CnsResolver', () => {
           resolutions: [resolution],
         });
 
-      await service.fetchResolver(domain, resolution);
+      await service.fetchResolver(
+        new Resolution({
+          node: domain.node,
+          blockchain: resolution.blockchain,
+          networkId: resolution.networkId,
+          ownerAddress: resolution.ownerAddress,
+          resolver: resolution.resolver,
+          registry: resolution.registry,
+          resolution: resolution.resolution,
+        }),
+      );
 
-      expect(domain.resolutions[0].resolution).to.be.empty;
+      const updatedDomain = await Domain.findByNode(domain.node);
+
+      expect(updatedDomain?.resolutions[0].resolution).to.be.empty;
     });
 
     it('should get all predefined resolver records', async () => {

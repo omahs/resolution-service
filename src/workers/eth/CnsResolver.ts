@@ -8,9 +8,8 @@ import {
   Revert,
 } from './BlockchainErrors';
 import { CnsResolverError } from '../../errors/CnsResolverError';
-import DomainsResolution from '../../models/DomainsResolution';
-import { WorkerRepository } from '../workerFramework';
-import { Domain } from '../../models';
+import { Domain, Resolution, WorkerRepository } from '../workerFramework';
+import { logger } from '../../logger';
 
 const RecordsPerPage = env.APPLICATION.ETHEREUM.RECORDS_PER_PAGE;
 
@@ -49,16 +48,15 @@ export class CnsResolver {
   }
 
   private async getDomainResolution(
-    domain: Domain,
-    resolution: DomainsResolution,
-  ): Promise<Record<string, string>> {
+    resolution: Resolution,
+  ): Promise<Record<string, string> | undefined> {
     if (!resolution.resolver) {
-      return {};
+      return undefined;
     }
     try {
       return await this._getAllDomainRecords(
         resolution.resolver,
-        BigNumber.from(domain.node),
+        BigNumber.from(resolution.node),
       );
     } catch (error: any) {
       if (!error.message.includes(InvalidValuesError)) {
@@ -66,7 +64,7 @@ export class CnsResolver {
       }
     }
 
-    return {};
+    return undefined;
   }
 
   private async findDomainKeys(
@@ -131,7 +129,7 @@ export class CnsResolver {
     resolverAddress: string,
     node: BigNumber,
     recordsPerPage: number = RecordsPerPage,
-  ): Promise<Record<string, string>> {
+  ): Promise<Record<string, string> | undefined> {
     const newKeysFromBlock = await this.findNewKeysStartingBlock(
       resolverAddress,
       node,
@@ -166,6 +164,9 @@ export class CnsResolver {
       }
     }, {} as Record<string, string>);
 
+    if (Object.keys(records).length === 0) {
+      return undefined;
+    }
     return records;
   }
 
@@ -174,7 +175,7 @@ export class CnsResolver {
       return null;
     }
     resolver = resolver.toLowerCase();
-    return resolver === DomainsResolution.NullAddress ? null : resolver;
+    return resolver === Domain.NullAddress ? null : resolver;
   }
 
   async getResolverAddress(node: string): Promise<string | null> {
@@ -215,17 +216,13 @@ export class CnsResolver {
     return { key, value };
   }
 
-  async fetchResolver(
-    domain: Domain,
-    resolution: DomainsResolution,
-  ): Promise<void> {
-    const resolverAddress = await this.getResolverAddress(domain.node);
+  async fetchResolver(resolution: Resolution): Promise<void> {
+    const resolverAddress = await this.getResolverAddress(resolution.node);
     if (resolution.resolver === resolverAddress) {
       return;
     }
     resolution.resolver = resolverAddress;
-    resolution.resolution = await this.getDomainResolution(domain, resolution);
-    domain.setResolution(resolution);
-    await this.workerRepository.save(domain);
+    resolution.resolution = await this.getDomainResolution(resolution);
+    await this.workerRepository.saveResolutions(resolution);
   }
 }

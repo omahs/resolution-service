@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers';
 import {
   AllDomainTlds,
   DeprecatedTld,
@@ -78,4 +79,9 @@ export const belongsToTld = (
 ): boolean => {
   const { extension } = splitDomain(domain);
   return domainSuffix === extension;
+};
+
+export const tokenIdToNode = (tokenId: BigNumber): string => {
+  const node = tokenId.toHexString().replace(/^(0x)?/, '');
+  return '0x' + node.padStart(64, '0');
 };

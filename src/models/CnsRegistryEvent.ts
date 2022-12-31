@@ -1,5 +1,4 @@
 import {
-  IsEnum,
   IsNumber,
   IsObject,
   IsString,
@@ -7,7 +6,6 @@ import {
   Min,
   ValidateIf,
   IsOptional,
-  Allow,
 } from 'class-validator';
 import { Column, Entity, Index, MoreThan, Not, Repository } from 'typeorm';
 import ValidateWith from '../services/ValidateWith';
@@ -15,6 +13,7 @@ import { Attributes } from '../types/common';
 import Model from './Model';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Blockchain } from '../types/common';
+import { tokenIdToNode } from '../utils/domain';
 
 export const DomainOperationTypes = [
   'Transfer',
@@ -98,11 +97,6 @@ export default class CnsRegistryEvent extends Model {
 
   private validationRepository?: Repository<CnsRegistryEvent>;
 
-  static tokenIdToNode(tokenId: BigNumber): string {
-    const node = tokenId.toHexString().replace(/^(0x)?/, '');
-    return '0x' + node.padStart(64, '0');
-  }
-
   constructor(
     attributes?: Attributes<CnsRegistryEvent>,
     validationRepository?: Repository<CnsRegistryEvent>,
@@ -161,10 +155,10 @@ export default class CnsRegistryEvent extends Model {
   }
 
   async beforeValidate(): Promise<void> {
-    const tokenId = this.tokenId();
-    this.node = tokenId
-      ? CnsRegistryEvent.tokenIdToNode(BigNumber.from(tokenId))
-      : null;
+    if (!this.node) {
+      const tokenId = this.tokenId();
+      this.node = tokenId ? tokenIdToNode(BigNumber.from(tokenId)) : null;
+    }
   }
 
   async consistentBlockNumberForHash(): Promise<boolean> {

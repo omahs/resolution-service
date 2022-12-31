@@ -1,5 +1,4 @@
-import { Block } from './Types';
-import { Event } from 'ethers';
+import { Block, WorkerEvent } from './Types';
 
 export interface IWorkerStrategy {
   // blokchain state
@@ -7,6 +6,6 @@ export interface IWorkerStrategy {
   getBlock(blockNumber: number): Promise<Block>;
 
   // event processing
-  getEvents(fromBlock: number, toBlock: number): Promise<Event[]>;
-  processEvents(events: Event[]): Promise<void>;
+  getEvents(fromBlock: number, toBlock: number): Promise<WorkerEvent[]>;
+  processEvents(events: WorkerEvent[]): Promise<void>;
 }

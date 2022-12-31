@@ -1,5 +1,15 @@
 export { IWorker } from './IWorker';
 export { IWorkerStrategy } from './IWorkerStrategy';
-export { Event, Block } from './Types';
-export { WorkerRepository } from './WorkerRepository';
+export {
+  Block,
+  WorkerConfig,
+  WorkerEvent,
+  Domain,
+  Resolution,
+  ReverseResolution,
+} from './Types';
+export {
+  IWorkerRepository as WorkerRepository,
+  getWorkerRepository,
+} from './IWorkerRepository';
 export { BaseWorker } from './BaseWorker';
