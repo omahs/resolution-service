@@ -6,14 +6,9 @@ export class ZNSStatusSwapAtxuidAndBlockNum1672504312180
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    const repo = queryRunner.manager.getRepository(WorkerStatus);
-    const status = await repo.findOne({
-      where: { blockchain: Blockchain.ZIL },
-    });
-    if (status) {
-      status.lastMirroredBlockNumber = status.lastAtxuid || 0;
-      await repo.save(status);
-    }
+    await queryRunner.query(
+      `UPDATE "resolution_worker_status" SET last_mirrored_block_number=last_atxuid WHERE location='ZIL'`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
