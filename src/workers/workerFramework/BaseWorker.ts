@@ -110,12 +110,19 @@ export class BaseWorker implements IWorker {
     fromBlock: number;
     toBlock: number;
   }> {
-    const latestMirrored =
-      (await this.workerRepository.getLatestMirroredBlock()) ||
-      this.config.eventsStartingBlock;
+    const latestMirrored = await this.workerRepository.getLatestMirroredBlock();
     const latestNetBlock = (
-      await this.workerStrategy.getLatestNetworkBlock(latestMirrored)
+      await this.workerStrategy.getLatestNetworkBlock(
+        latestMirrored === 0 ? this.config.eventsStartingBlock : latestMirrored,
+      )
     ).blockNumber;
+
+    if (latestMirrored === 0) {
+      return {
+        fromBlock: this.config.eventsStartingBlock,
+        toBlock: latestNetBlock,
+      };
+    }
 
     if (!this.config.handleReorgs) {
       return { fromBlock: latestMirrored, toBlock: latestNetBlock };

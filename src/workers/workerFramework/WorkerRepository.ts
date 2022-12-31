@@ -1,4 +1,3 @@
-import { del } from 'request-promise';
 import { EntityManager, getConnection, Repository } from 'typeorm';
 import winston from 'winston';
 import { WorkerLogger } from '../../logger';
@@ -227,18 +226,37 @@ export class WorkerRepository implements IWorkerRepository {
   // specific methods with custom logic for the base worker, not accessible to worker strategies
   public async saveEvents(event: WorkerEvent | WorkerEvent[]): Promise<void> {
     const events = this.convertToArray(event);
-    const znsEvents = events
-      .filter((e) => e.source?.blockchain == Blockchain.ZIL)
-      .map((e) => {
-        return new ZnsTransaction({
-          hash: e.source?.attributes?.transactionHash as string,
-          blockNumber: e.source?.blockNumber,
-          atxuid: e.source?.attributes?.atxuid as number,
-          events: [{ name: unwrap(e.type), params: unwrap(e.args) }],
-        });
-      });
+    const znsEvents = Object.values(
+      events
+        .filter((e) => e.source?.blockchain === Blockchain.ZIL) // filter out zil events
+        .map((e) => {
+          // map to zil transactions
+          return new ZnsTransaction({
+            hash: e.source?.attributes?.transactionHash as string,
+            blockNumber: e.source?.blockNumber,
+            atxuid: e.source?.attributes?.atxuid as number,
+            events: e.type
+              ? [{ name: unwrap(e.type), params: unwrap(e.args) }]
+              : [],
+          });
+        })
+        .reduce((events, event) => {
+          // merge events into one tx to follow legacy schema
+          if (event.hash) {
+            if (!events[event.hash]) {
+              events[event.hash] = event;
+            } else {
+              events[event.hash].events = [
+                ...events[event.hash].events,
+                ...event.events,
+              ];
+            }
+          }
+          return events;
+        }, {} as Record<string, ZnsTransaction>),
+    );
     const cnsEvents = events
-      .filter((e) => e.source?.blockchain != Blockchain.ZIL)
+      .filter((e) => e.source?.blockchain !== Blockchain.ZIL)
       .map((e) => {
         return new CnsRegistryEvent(
           {

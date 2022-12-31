@@ -125,7 +125,7 @@ describe('EthUpdater handles reorgs', () => {
   // 0----10b----d1----10b----d2----100b---->
   // Reorg timeline:
   // 0----10b----d1----10b----d2----100b----x->
-  it('should fix a reorg', async () => {
+  it('should just fix a reorg', async () => {
     await WorkerStatus.saveWorkerStatus(
       Blockchain.ETH,
       oldBlock.number,
