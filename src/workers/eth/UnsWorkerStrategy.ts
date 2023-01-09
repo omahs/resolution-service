@@ -28,6 +28,16 @@ import { tokenIdToNode } from '../../utils/domain';
 
 import * as ethersUtils from '../../utils/ethersUtils';
 
+const getNameHashFromEvent = (event: Event): string | undefined => {
+  const tokenId = event.args && (event.args['tokenId'] || event.args['0']);
+
+  if (tokenId && BigNumber.isBigNumber(tokenId)) {
+    return tokenIdToNode(tokenId);
+  }
+
+  return undefined;
+};
+
 export class UNSWorkerStrategy implements IWorkerStrategy {
   private unsRegistry: Contract;
   private cnsRegistry: Contract;
@@ -126,16 +136,11 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
       return a.blockNumber < b.blockNumber ? -1 : 1;
     });
 
-    return events.map((e) => {
-      const node =
-        e.args?.['tokenId'] && BigNumber.isBigNumber(e.args?.['tokenId'])
-          ? tokenIdToNode(BigNumber.from(e.args?.['tokenId']))
-          : BigNumber.isBigNumber(e.args?.['0'])
-          ? tokenIdToNode(BigNumber.from(e.args?.['0']))
-          : undefined;
+    return events.map((e: Event) => {
+      const node = getNameHashFromEvent(e);
 
       const values: Record<string, string> = {};
-      Object.entries(e?.args || []).forEach(([key, value]) => {
+      Object.entries(e.args || []).forEach(([key, value]) => {
         values[key] = BigNumber.isBigNumber(value)
           ? value.toHexString()
           : value;
@@ -211,8 +216,6 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
             await this.processRemoveReverse(event);
             break;
           }
-          case 'Approval':
-          case 'ApprovalForAll':
           default:
             break;
         }
