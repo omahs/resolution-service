@@ -1,9 +1,9 @@
 import winston from 'winston';
-import { EthUpdaterError } from '../../errors/EthUpdaterError';
 import { WorkerLogger } from '../../logger';
 import { Blockchain } from '../../types/common';
 import { IWorker, IWorkerStrategy, WorkerEvent, WorkerConfig } from '.';
 import { WorkerRepository } from './WorkerRepository';
+import { BaseWorkerError } from './WorkerError';
 
 export class BaseWorker implements IWorker {
   readonly blockchain: Blockchain;
@@ -45,7 +45,8 @@ export class BaseWorker implements IWorker {
 
     // If the oldest event block doesn't match, the reorg must be too long.
     if (firstNetBlock.blockHash !== latestEventBlocks[0].blockHash) {
-      throw new EthUpdaterError(
+      throw new BaseWorkerError(
+        this.blockchain,
         `Detected reorg that is larger than ${this.config.maxReorgSize} blocks. Manual resync is required.`,
       );
     }

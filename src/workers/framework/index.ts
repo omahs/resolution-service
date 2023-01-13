@@ -11,3 +11,4 @@ export {
 export { IWorkerRepository as WorkerRepository } from './IWorkerRepository';
 export { getWorkerRepository } from './WorkerRepository';
 export { BaseWorker } from './BaseWorker';
+export { WorkerError } from './WorkerError';

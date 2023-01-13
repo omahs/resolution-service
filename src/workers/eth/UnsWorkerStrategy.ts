@@ -9,11 +9,11 @@ import {
   ReverseResolution,
   Resolution,
   getWorkerRepository,
+  WorkerError,
 } from '../framework';
 import { Contract, Event, BigNumber } from 'ethers';
 import { CryptoConfig, getEthConfig } from '../../contracts';
 import { eip137Namehash } from '../../utils/namehash';
-import { EthUpdaterError } from '../../errors/EthUpdaterError';
 import {
   GetProviderForConfig,
   StaticJsonRpcProvider,
@@ -181,7 +181,7 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
         );
         if (event.type && event.type in DomainOperationTypes && !event.node) {
           // verify that domain operations have a node
-          throw new EthUpdaterError('Invalid event node.');
+          throw new WorkerError(this.blockchain, 'Invalid event node.');
         }
         switch (event.type) {
           case 'Transfer': {
@@ -272,7 +272,8 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
     lastProcessedEvent: WorkerEvent | undefined,
   ): Promise<void> {
     if (!event.args) {
-      throw new EthUpdaterError(
+      throw new WorkerError(
+        this.blockchain,
         `NewUri event wasn't processed. Invalid event args.`,
       );
     }
@@ -283,7 +284,8 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
 
     //Check if the domain name matches tokenID
     if (expectedNode !== producedNode) {
-      throw new EthUpdaterError(
+      throw new WorkerError(
+        this.blockchain,
         `NewUri event wasn't processed. Invalid domain name: ${uri}`,
       );
     }
@@ -294,7 +296,8 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
       lastProcessedEvent.type !== 'Transfer' ||
       lastProcessedEvent.args?.from !== Domain.NullAddress
     ) {
-      throw new EthUpdaterError(
+      throw new WorkerError(
+        this.blockchain,
         `NewUri event wasn't processed. Unexpected order of events. Expected last processed event to be 'Transfer', got :'${lastProcessedEvent?.type}'`,
       );
     }
@@ -341,7 +344,8 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
     const key = event.args?.['3'];
     const value = event.args?.['4'];
     if (key === undefined || value === undefined) {
-      throw new EthUpdaterError(
+      throw new WorkerError(
+        this.blockchain,
         `Set event was not processed. Key or value not specified.`,
       );
     }
@@ -371,7 +375,8 @@ export class UNSWorkerStrategy implements IWorkerStrategy {
   private async processSync(event: WorkerEvent): Promise<void> {
     const node = unwrap(event.node);
     if (event.args?.updateId === undefined) {
-      throw new EthUpdaterError(
+      throw new WorkerError(
+        this.blockchain,
         `Sync event was not processed. Update id not specified.`,
       );
     }

@@ -9,7 +9,6 @@ import {
 } from './BlockchainErrors';
 import { CnsResolverError } from '../../errors/CnsResolverError';
 import { Domain, Resolution, WorkerRepository } from '../framework';
-import { logger } from '../../logger';
 
 const RecordsPerPage = env.APPLICATION.ETHEREUM.RECORDS_PER_PAGE;
 
