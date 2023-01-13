@@ -11,7 +11,7 @@ import {
   IWorkerStrategy,
   WorkerRepository,
   Resolution,
-} from '../workerFramework';
+} from '../framework';
 import ZnsProvider from './ZilProvider';
 import { znsChildhash } from '../../utils/namehash';
 

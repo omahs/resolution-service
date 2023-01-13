@@ -60,8 +60,8 @@ export class Resolution {
   registry?: string | null = null;
   resolution?: Record<string, string> = undefined;
 
-  get isUnchanged() {
-    return (
+  get updated() {
+    return !(
       this.ownerAddress === undefined &&
       this.resolver === undefined &&
       this.registry === undefined &&

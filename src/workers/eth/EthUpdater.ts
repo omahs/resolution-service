@@ -2,9 +2,9 @@ import { logger } from '../../logger';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
 import { Blockchain } from '../../types/common';
 import { EthUpdaterConfig } from '../../env';
-import { BaseWorker } from '../workerFramework/BaseWorker';
+import { BaseWorker } from '../framework/BaseWorker';
 import { UNSWorkerStrategy } from './UnsWorkerStrategy';
-import { WorkerConfig } from '../workerFramework';
+import { WorkerConfig } from '../framework';
 
 // Keep for legacy tests compatibility
 export class EthUpdater {

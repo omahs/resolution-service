@@ -9,7 +9,7 @@ import {
   ReverseResolution,
   Resolution,
   getWorkerRepository,
-} from '../workerFramework';
+} from '../framework';
 import { Contract, Event, BigNumber } from 'ethers';
 import { CryptoConfig, getEthConfig } from '../../contracts';
 import { eip137Namehash } from '../../utils/namehash';

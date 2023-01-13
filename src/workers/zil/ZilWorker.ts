@@ -1,6 +1,6 @@
 import { Blockchain } from '../../types/common';
 import { env } from '../../env';
-import { BaseWorker, WorkerConfig } from '../workerFramework';
+import { BaseWorker, WorkerConfig } from '../framework';
 import { ZNSWorkerStrategy } from './ZilWorkerStrategy';
 
 type ZilWorkerOptions = {

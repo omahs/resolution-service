@@ -11,6 +11,7 @@ import {
 } from '../../models';
 import { Blockchain } from '../../types/common';
 import { unwrap } from '../../utils/option';
+import { convertToArray } from '../../utils/common';
 import { cacheSocialPictureInCDN } from '../../utils/socialPicture';
 import { IWorkerRepository } from './IWorkerRepository';
 import { Domain, Resolution, ReverseResolution, WorkerEvent } from './Types';
@@ -53,13 +54,9 @@ export class WorkerRepository implements IWorkerRepository {
     return context;
   }
 
-  convertToArray<T>(val: T | T[]): T[] {
-    return Array.isArray(val) ? val : [val];
-  }
-
   public async saveDomains(domain: Domain | Domain[]): Promise<void> {
     // find all nodes in DB
-    const domains = this.convertToArray(domain);
+    const domains = convertToArray(domain);
     const domainsToSave: DbDomain[] = [];
     for (const domain of domains) {
       const dbDomain = await DbDomain.findByNode(domain.node);
@@ -96,10 +93,10 @@ export class WorkerRepository implements IWorkerRepository {
   public async saveResolutions(
     resolution: Resolution | Resolution[],
   ): Promise<void> {
-    const resolutions = this.convertToArray(resolution);
+    const resolutions = convertToArray(resolution);
     const domainsToSave: DbDomain[] = [];
     for (const resolution of resolutions) {
-      if (resolution.isUnchanged) {
+      if (!resolution.updated) {
         continue;
       }
       const domain = await DbDomain.findByNode(
@@ -154,7 +151,7 @@ export class WorkerRepository implements IWorkerRepository {
   public async saveReverseResolutions(
     reverseResolution: ReverseResolution | ReverseResolution[],
   ): Promise<void> {
-    const resolutions = this.convertToArray(reverseResolution);
+    const resolutions = convertToArray(reverseResolution);
     const resolutionsToSave: DomainsReverseResolution[] = [];
     const resolutionsToRemove: DomainsReverseResolution[] = [];
     for (const resolution of resolutions) {
@@ -199,7 +196,7 @@ export class WorkerRepository implements IWorkerRepository {
   public async removeReverseResolutions(
     reverseResolution: ReverseResolution | ReverseResolution[],
   ): Promise<void> {
-    const resolutions = this.convertToArray(reverseResolution);
+    const resolutions = convertToArray(reverseResolution);
     const proms = [];
     for (const resolution of resolutions) {
       const deleteArgs: {
@@ -225,7 +222,7 @@ export class WorkerRepository implements IWorkerRepository {
 
   // specific methods with custom logic for the base worker, not accessible to worker strategies
   public async saveEvents(event: WorkerEvent | WorkerEvent[]): Promise<void> {
-    const events = this.convertToArray(event);
+    const events = convertToArray(event);
     const znsEvents = Object.values(
       events
         .filter((e) => e.source?.blockchain === Blockchain.ZIL) // filter out zil events
@@ -454,4 +451,17 @@ export class WorkerRepository implements IWorkerRepository {
       WorkerRepository.txContexts[blockchain] = undefined;
     }
   }
+}
+
+/**
+ * Returns a worker repository for a specific blockchain
+ * @param blockchain blockchain type
+ * @param networkId network id
+ * @returns a singleton repository for associated with the specified blockchain and network id
+ */
+export function getWorkerRepository(
+  blockchain: Blockchain,
+  networkId: number,
+): IWorkerRepository {
+  return WorkerRepository.getRepository(blockchain, networkId);
 }

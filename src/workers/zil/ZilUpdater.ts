@@ -2,7 +2,7 @@ import { logger } from '../../logger';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
 import { env } from '../../env';
 import { Blockchain } from '../../types/common';
-import { BaseWorker, IWorker, WorkerConfig } from '../workerFramework';
+import { BaseWorker, IWorker, WorkerConfig } from '../framework';
 import { ZNSWorkerStrategy } from './ZilWorkerStrategy';
 
 const runWorker = async (worker: IWorker): Promise<void> => {

@@ -8,8 +8,6 @@ export {
   Resolution,
   ReverseResolution,
 } from './Types';
-export {
-  IWorkerRepository as WorkerRepository,
-  getWorkerRepository,
-} from './IWorkerRepository';
+export { IWorkerRepository as WorkerRepository } from './IWorkerRepository';
+export { getWorkerRepository } from './WorkerRepository';
 export { BaseWorker } from './BaseWorker';

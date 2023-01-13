@@ -16,7 +16,7 @@ import {
   getWorkerRepository,
   Resolution,
   WorkerRepository,
-} from '../workerFramework';
+} from '../framework';
 import { EthereumProvider } from './EthereumProvider';
 import { Res } from 'routing-controllers';
 
