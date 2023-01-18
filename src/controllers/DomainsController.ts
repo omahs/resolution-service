@@ -49,7 +49,7 @@ import { ValidateAndTransformOnDomainName } from '../middleware/inputValidators'
 export class DomainsController {
   @Get('/domains/:domainName')
   @UseBefore(
-    AttachHeapTrackingMiddleware(HeapEvents.GET_DOMAIN),
+    AttachHeapTrackingMiddleware({ heapEventName: HeapEvents.GET_DOMAIN }),
     ValidateAndTransformOnDomainName('domainName'),
   )
   @ResponseSchema(DomainResponse)
@@ -117,15 +117,18 @@ export class DomainsController {
   @UseBefore(ConvertArrayQueryParams('owners'))
   @UseBefore(ConvertArrayQueryParams('tlds'))
   @UseBefore(
-    AttachHeapTrackingMiddleware(HeapEvents.GET_DOMAINS, [
-      'resolution',
-      'tlds',
-      'owners',
-      'sortBy',
-      'sortDirection',
-      'perPage',
-      'startingAfter',
-    ]),
+    AttachHeapTrackingMiddleware({
+      heapEventName: HeapEvents.GET_DOMAINS,
+      trackingQueryParams: [
+        'resolution',
+        'tlds',
+        'owners',
+        'sortBy',
+        'sortDirection',
+        'perPage',
+        'startingAfter',
+      ],
+    }),
   )
   async getDomainsList(
     @Res() res: Response,
@@ -289,7 +292,9 @@ export class DomainsController {
     },
   })
   @UseBefore(
-    AttachHeapTrackingMiddleware(HeapEvents.GET_LATEST_DOMAIN_TRANSFER),
+    AttachHeapTrackingMiddleware({
+      heapEventName: HeapEvents.GET_LATEST_DOMAIN_TRANSFER,
+    }),
     ValidateAndTransformOnDomainName('domainName'),
   )
   async getDomainsLastTransfer(
@@ -358,10 +363,10 @@ export class DomainsController {
     },
   })
   @UseBefore(
-    AttachHeapTrackingMiddleware(HeapEvents.GET_DOMAIN_RECORDS, [
-      'domains',
-      'key',
-    ]),
+    AttachHeapTrackingMiddleware({
+      heapEventName: HeapEvents.GET_DOMAIN_RECORDS,
+      trackingQueryParams: ['domains', 'key'],
+    }),
     ConvertArrayQueryParams('domains'),
   )
   async getDomainsRecords(

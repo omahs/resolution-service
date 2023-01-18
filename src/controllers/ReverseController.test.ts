@@ -1,6 +1,7 @@
 import supertest from 'supertest';
 import { BigNumber } from 'ethers';
 import { expect } from 'chai';
+import sinon from 'sinon';
 
 import { api } from '../api';
 import { env } from '../env';
@@ -8,15 +9,21 @@ import { ApiKey, DomainsReverseResolution } from '../models';
 import { Blockchain } from '../types/common';
 import { DomainTestHelper } from '../utils/testing/DomainTestHelper';
 import { eip137Namehash } from '../utils/namehash';
+import * as heap from '../utils/heap';
+import { HeapEvents } from '../types/heap';
 
+const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
 describe('ReverseController', () => {
   const ReverseAddress1 = '0x8aad44321a86b170879d7a244c1e8d360c99dda8';
   const ReverseAddress2 = '0xcea21f5a6afc11b3a4ef82e986d63b8b050b6910';
   const Registry = '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe';
   const Resolver = '0xd1e5b0ff1287aa9f9a268759062e4ab08b9dacbe';
   let testApiKey: ApiKey;
+  let trackStub: sinon.SinonStub;
 
   beforeEach(async () => {
+    trackStub = sinon.stub(heap, 'track');
+
     const { domain: domain1 } = await DomainTestHelper.createTestDomain({
       name: 'brad.crypto',
       node: '0x756e4e998dbffd803c21d23b06cd855cdc7a4b57706c95964a37e24b47c10fc9',
@@ -76,6 +83,10 @@ describe('ReverseController', () => {
     testApiKey = await ApiKey.createApiKey('testing key');
   });
 
+  afterEach(() => {
+    sinon.restore();
+  });
+
   describe('GET /reverse/:address', () => {
     it('should require api key', async () => {
       const res = await supertest(api)
@@ -108,6 +119,18 @@ describe('ReverseController', () => {
         },
         records: {
           'crypto.ETH.address': ReverseAddress1,
+        },
+      });
+
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.GET_REVERSE,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          address: ReverseAddress1,
+          response_domain_name: 'brad.crypto',
+          uri: `/reverse/${ReverseAddress1}`,
+          responseCode: 200,
         },
       });
     });
@@ -281,6 +304,18 @@ describe('ReverseController', () => {
             },
           },
         ],
+      });
+
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.POST_BULK_REVERSE,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          addresses: [ReverseAddress1, ReverseAddress2].join(','),
+          response_domain_names: 'brad.crypto,test.crypto',
+          uri: `/reverse/query`,
+          responseCode: 200,
+        },
       });
     });
   });

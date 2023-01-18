@@ -5,7 +5,7 @@ import { HttpMethods } from '../types/common';
 import {
   track,
   parseQueryParams,
-  normalizeResponseProperties,
+  normalizeHeapProperties,
 } from '../utils/heap';
 import { logger } from '../logger';
 import { HeapEvents } from '../types/heap';
@@ -18,12 +18,27 @@ const trackRequest = (
     originalParams: any;
     originalQuery: any;
     trackingQueryParams: string[];
+    trackingRequestBody: string[];
   },
 ) => {
-  const { originalParams, originalQuery, trackingQueryParams } =
-    originalRequestInfo;
+  const {
+    originalParams,
+    originalQuery,
+    trackingQueryParams,
+    trackingRequestBody,
+  } = originalRequestInfo;
+
+  const requestBodyProperties: { [key: string]: string } = {};
+
   switch (req.method) {
     case HttpMethods.GET:
+    case HttpMethods.POST:
+      if (req.method === HttpMethods.POST && trackingRequestBody.length > 0) {
+        trackingRequestBody.forEach((property: string) => {
+          requestBodyProperties[property] = req.body[property];
+        });
+      }
+
       try {
         if (!res.locals.heapEventName) {
           throw new Error('No Heap Event Name was set in controller logic');
@@ -41,12 +56,12 @@ const trackRequest = (
           eventName: res.locals.heapEventName,
           properties: {
             ...(res.locals.trackedResponseProperties
-              ? normalizeResponseProperties(
-                  res.locals.trackedResponseProperties,
-                )
+              ? normalizeHeapProperties(res.locals.trackedResponseProperties)
               : undefined),
+            ...normalizeHeapProperties(requestBodyProperties),
             ...parseQueryParams(trackingQueries),
             ...originalParams,
+
             apiKey: req.apiKey?.apiKey,
             uri: req.originalUrl,
             responseCode: res.statusCode,
@@ -56,17 +71,22 @@ const trackRequest = (
         logger.error(error);
       }
       break;
-    case HttpMethods.POST:
-      break;
     default:
       break;
   }
 };
 
-export function AttachHeapTrackingMiddleware(
-  heapEventName: HeapEvents,
-  trackingQueryParams: string[] = [],
-): (request: Request, response: Response, next: NextFunction) => void {
+export function AttachHeapTrackingMiddleware(options: {
+  heapEventName: HeapEvents;
+  trackingQueryParams?: string[];
+  trackingRequestBody?: string[];
+}): (request: Request, response: Response, next: NextFunction) => void {
+  const {
+    heapEventName,
+    trackingQueryParams = [],
+    trackingRequestBody = [],
+  } = options;
+
   return (req: Request, res: Response, next: NextFunction) => {
     res.locals.heapEventName = heapEventName;
     const originalParams = req.params;
@@ -76,6 +96,7 @@ export function AttachHeapTrackingMiddleware(
         originalParams,
         originalQuery,
         trackingQueryParams,
+        trackingRequestBody,
       }),
     );
     next();

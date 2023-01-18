@@ -103,7 +103,7 @@ export const normalizeHeapPropParam = (
   return;
 };
 
-export const normalizeResponseProperties = (trackedProperties: {
+export const normalizeHeapProperties = (trackedProperties: {
   [key: string]: string | string[];
 }): Partial<HeapEventsProperties> => {
   const result: Partial<HeapEventsProperties> = {};

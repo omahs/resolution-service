@@ -3,9 +3,11 @@ import {
   Post,
   JsonController,
   Param,
+  Res,
   Body,
   UseBefore,
 } from 'routing-controllers';
+import { Response } from 'express';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { DomainResponse, DomainBaseResponse } from './dto/Domains';
 import {
@@ -19,6 +21,8 @@ import {
 import { ApiKeyAuthMiddleware } from '../middleware/ApiKeyAuthMiddleware';
 import RateLimiter from '../middleware/RateLimiter';
 import { getTokenIdFromHash } from '../services/Resolution';
+import { AttachHeapTrackingMiddleware } from '../middleware/SendHeapEvent';
+import { HeapEvents } from '../types/heap';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
@@ -27,8 +31,14 @@ import { getTokenIdFromHash } from '../services/Resolution';
 @UseBefore(RateLimiter(), ApiKeyAuthMiddleware)
 export class ReverseController {
   @Get('/reverse/:address')
+  @UseBefore(
+    AttachHeapTrackingMiddleware({ heapEventName: HeapEvents.GET_REVERSE }),
+  )
   @ResponseSchema(DomainResponse)
-  async getReverse(@Param('address') address: string): Promise<DomainResponse> {
+  async getReverse(
+    @Res() res: Response,
+    @Param('address') address: string,
+  ): Promise<DomainResponse> {
     const [reverse] = await getReverseResolution([address]);
     const response = new DomainResponse();
     if (reverse) {
@@ -46,6 +56,10 @@ export class ReverseController {
         reverse: true,
       };
       response.records = resolution.resolution;
+
+      res.locals.trackedResponseProperties = {
+        response_domain_name: domain.name,
+      };
     }
 
     return response;
@@ -55,8 +69,15 @@ export class ReverseController {
   @OpenAPI({
     summary: 'Get bulk reverse resolution',
   })
+  @UseBefore(
+    AttachHeapTrackingMiddleware({
+      heapEventName: HeapEvents.POST_BULK_REVERSE,
+      trackingRequestBody: ['addresses'],
+    }),
+  )
   @ResponseSchema(BulkReverseQueryResponse)
   async getReverses(
+    @Res() res: Response,
     @Body() params: BulkReverseQueryParams,
   ): Promise<BulkReverseQueryResponse> {
     const { addresses } = params;
@@ -65,6 +86,10 @@ export class ReverseController {
       cache: true,
       withDomainResolutions: false,
     });
+
+    res.locals.trackedResponseProperties = {
+      response_domain_names: [],
+    };
 
     const data = reverses.map(({ domain, reverseAddress }) => {
       const response = new DomainBaseResponse();
@@ -75,6 +100,10 @@ export class ReverseController {
         owner: reverseAddress,
         reverse: true,
       };
+
+      res.locals.trackedResponseProperties.response_domain_names.push(
+        domain.name,
+      );
 
       return response;
     });
