@@ -7,11 +7,29 @@ export type Block = {
 };
 
 export type WorkerConfig = {
+  /**
+   * determines whether the worker should check and handle blockchain reorgs
+   */
   handleReorgs: boolean;
+  /**
+   * sets how many blocks to check at one time to avoid running into provider limits
+   */
   blockFetchLimit: number;
+  /**
+   * sets the block height from which to start looking for events
+   */
   eventsStartingBlock: number;
+  /**
+   * sets the maximum reorg size in blocks which may be handled by the worker
+   */
   maxReorgSize: number;
+  /**
+   * blockchain network id
+   */
   networkId: number;
+  /**
+   * blockchain type
+   */
   blockchain: Blockchain;
 };
 
@@ -60,7 +78,7 @@ export class Resolution {
   registry?: string | null = null;
   resolution?: Record<string, string> = undefined;
 
-  get updated() {
+  get updated(): boolean {
     return !(
       this.ownerAddress === undefined &&
       this.resolver === undefined &&

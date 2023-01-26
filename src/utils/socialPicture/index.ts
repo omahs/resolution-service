@@ -209,7 +209,7 @@ export const cacheSocialPictureInCDN = async (
       }
     } else {
       logger.error(
-        `Failed to generate image data for the domain: ${domain}, token URI: ${socialPic}`,
+        `Failed to generate image data for the domain: ${domain.name}, token URI: ${socialPic}`,
       );
     }
   }

@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { Blockchain } from './types/common';
 
 const requiredEnvNotSet = [];
 
@@ -74,6 +75,12 @@ type RunningMode =
   | 'ETH_WORKER'
   | 'MATIC_WORKER'
   | 'ZIL_WORKER';
+
+export const blockchainRunningModes: Record<Blockchain, RunningMode> = {
+  [Blockchain.ETH]: 'ETH_WORKER',
+  [Blockchain.MATIC]: 'MATIC_WORKER',
+  [Blockchain.ZIL]: 'ZIL_WORKER',
+};
 
 export const env = {
   APPLICATION: {
@@ -195,6 +202,9 @@ export const env = {
         process.env.ZILLIQA_CONFIRMATION_BLOCKS,
         0,
       ),
+      RESYNC_FROM: !isNaN(Number(process.env.ZILLIQA_RESYNC_FROM))
+        ? Number(process.env.ZILLIQA_RESYNC_FROM)
+        : undefined,
     },
     ERC721_METADATA: {
       GOOGLE_CLOUD_STORAGE_BASE_URL:

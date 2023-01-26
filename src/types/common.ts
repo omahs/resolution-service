@@ -59,6 +59,8 @@ export enum Blockchain {
   MATIC = 'MATIC',
 }
 
+export const Blockchains = Object.values(Blockchain);
+
 export enum EvmUnstoppableDomainTlds {
   Crypto = 'crypto',
   Bitcoin = 'bitcoin',

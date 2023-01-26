@@ -171,7 +171,7 @@ export class BaseWorker implements IWorker {
         this.networkId,
       );
 
-      this.logger.info(`EthUpdater is pulling updates from ${this.blockchain}`);
+      this.logger.info(`Worker is pulling updates from ${this.blockchain}`);
 
       const { fromBlock, toBlock } = await this.syncBlockRanges();
 

@@ -2,7 +2,7 @@ import { Block, WorkerEvent } from './Types';
 
 export interface IWorkerStrategy {
   /**
-   * Used to get the latest confirmed network block *till* which sync should happen
+   * Used to get the latest confirmed network block *up to* which sync should happen
    * @param fromBlock last synched block which will be the start of sync
    * @returns `Block` from the network
    */
