@@ -1,22 +1,23 @@
 import { expect } from 'chai';
 import ZilWorker from './ZilWorker';
-import ZnsTransaction from '../../models/ZnsTransaction';
-import { Domain, WorkerStatus } from '../../models';
+import ZnsTransaction from '../../../../models/ZnsTransaction';
+import { Domain, WorkerStatus } from '../../../../models';
 import nock from 'nock';
-import ChainStatsMockResponse from '../../../mocks/zns/chainStatsMockResponse.json';
-import FirstTwoTransactions from '../../../mocks/zns/firstTwoTransactions.json';
-import CorrectTransactions from '../../../mocks/zns/correctTransactions.json';
-import NewDomainEventsWithWrongLabel from '../../../mocks/zns/newDomainEventsWithWrongLabel.json';
-import CorrectNewDomainEvents from '../../../mocks/zns/correctNewDomainEvents.json';
+import ChainStatsMockResponse from '../../../../../mocks/zns/chainStatsMockResponse.json';
+import FirstTwoTransactions from '../../../../../mocks/zns/firstTwoTransactions.json';
+import CorrectTransactions from '../../../../../mocks/zns/correctTransactions.json';
+import NewDomainEventsWithWrongLabel from '../../../../../mocks/zns/newDomainEventsWithWrongLabel.json';
+import CorrectNewDomainEvents from '../../../../../mocks/zns/correctNewDomainEvents.json';
 
-import { env } from '../../env';
+import { env } from '../../../../env';
 import { isBech32 } from '@zilliqa-js/util/dist/validation';
 import { fromBech32Address } from '@zilliqa-js/crypto';
-import { Blockchain } from '../../types/common';
+import { Blockchain } from '../../../../types/common';
+import { describeIntegrationTest } from '../../../../utils/testing/IntegrationTestDescribe';
 
 let worker: ZilWorker;
 
-describe('ZilWorker', () => {
+describeIntegrationTest('ZilWorker', () => {
   beforeEach(async () => {
     await WorkerStatus.saveWorkerStatus(Blockchain.ZIL, -1, undefined, -1);
     worker = new ZilWorker();

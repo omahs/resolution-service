@@ -1,19 +1,20 @@
-import { env } from '../../env';
-import { CnsRegistryEvent, Domain, WorkerStatus } from '../../models';
-import { EthereumHelper } from '../../utils/testing/EthereumTestsHelper';
+import { env } from '../../../../env';
+import { CnsRegistryEvent, Domain, WorkerStatus } from '../../../../models';
+import { EthereumHelper } from '../../../../utils/testing/EthereumTestsHelper';
 
 import { expect } from 'chai';
-import * as ethersUtils from '../../utils/ethersUtils';
-import { Blockchain } from '../../types/common';
+import * as ethersUtils from '../../../../utils/ethersUtils';
+import { Blockchain } from '../../../../types/common';
 import {
   getNSConfig,
   LayerTestFixture,
   NSConfig,
-} from '../../utils/testing/LayerFixturesHelper';
+} from '../../../../utils/testing/LayerFixturesHelper';
 import { Block } from '@ethersproject/abstract-provider';
 import sinon from 'sinon';
+import { describeIntegrationTest } from '../../../../utils/testing/IntegrationTestDescribe';
 
-describe('EthUpdater l2 worker', () => {
+describeIntegrationTest('EthUpdater l2 worker', () => {
   const L1Fixture: LayerTestFixture = new LayerTestFixture();
   const L2Fixture: LayerTestFixture = new LayerTestFixture();
   let owner: string;

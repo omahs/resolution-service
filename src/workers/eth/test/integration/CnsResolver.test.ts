@@ -1,26 +1,21 @@
 import { BigNumber, Contract } from 'ethers';
 import { randomBytes } from 'crypto';
-import { env } from '../../env';
-import { Domain, DomainsResolution, WorkerStatus } from '../../models';
-import { EthereumHelper } from '../../utils/testing/EthereumTestsHelper';
-import { CnsResolver } from './CnsResolver';
+import { env } from '../../../../env';
+import { Domain, WorkerStatus } from '../../../../models';
+import { EthereumHelper } from '../../../../utils/testing/EthereumTestsHelper';
+import { CnsResolver } from '../../CnsResolver';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
-import { eip137Namehash } from '../../utils/namehash';
-import { ETHContracts } from '../../contracts';
+import { eip137Namehash } from '../../../../utils/namehash';
+import { ETHContracts } from '../../../../contracts';
 import supportedKeysJson from 'uns/resolver-keys.json';
-import * as ethersUtils from '../../utils/ethersUtils';
-import { DomainTestHelper } from '../../utils/testing/DomainTestHelper';
-import { Blockchain } from '../../types/common';
-import {
-  getWorkerRepository,
-  Resolution,
-  WorkerRepository,
-} from '../framework';
-import { EthereumProvider } from './EthereumProvider';
-import { Res } from 'routing-controllers';
+import * as ethersUtils from '../../../../utils/ethersUtils';
+import { DomainTestHelper } from '../../../../utils/testing/DomainTestHelper';
+import { Blockchain } from '../../../../types/common';
+import { getWorkerRepository, Resolution } from '../../../framework';
+import { describeIntegrationTest } from '../../../../utils/testing/IntegrationTestDescribe';
 
-describe('CnsResolver', () => {
+describeIntegrationTest('CnsResolver', () => {
   let service: CnsResolver;
   let registry: Contract;
   let resolver: Contract;

@@ -1,10 +1,10 @@
-import { logger } from '../../logger';
+import { logger } from '../../../../logger';
 import { setIntervalAsync } from 'set-interval-async/dynamic';
-import { Blockchain } from '../../types/common';
-import { EthUpdaterConfig } from '../../env';
-import { BaseWorker } from '../framework/BaseWorker';
-import { UNSWorkerStrategy } from './UnsWorkerStrategy';
-import { WorkerConfig } from '../framework';
+import { Blockchain } from '../../../../types/common';
+import { EthUpdaterConfig } from '../../../../env';
+import { BaseWorker } from '../../../framework/BaseWorker';
+import { UNSWorkerStrategy } from '../../UnsWorkerStrategy';
+import { WorkerConfig } from '../../../framework';
 
 // Keep for legacy tests compatibility
 export class EthUpdater {
@@ -43,24 +43,5 @@ export class EthUpdater {
         this.config.RESYNC_FROM,
       );
     }
-  }
-}
-
-export function startWorker(
-  blockchain: Blockchain,
-  config: EthUpdaterConfig,
-): void {
-  if (config.RESYNC_FROM !== undefined) {
-    void new EthUpdater(blockchain, config).resync().then(() => {
-      logger.info('Resync successful.');
-    });
-  } else {
-    setIntervalAsync(async () => {
-      try {
-        await new EthUpdater(blockchain, config).run();
-      } catch (error) {
-        logger.error(error);
-      }
-    }, config.FETCH_INTERVAL);
   }
 }

@@ -50,7 +50,7 @@ export class WorkerEvent {
   source?: EventSource;
   // parsed event args
   args?: Record<string, string>;
-  // for raw provider-specific event objects
+  // for raw provider-specific event objects not populated in case of reorg handling
   innerEvent?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
