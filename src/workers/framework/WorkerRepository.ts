@@ -1,4 +1,9 @@
-import { EntityManager, getConnection, Repository } from 'typeorm';
+import {
+  DeleteResult,
+  EntityManager,
+  getConnection,
+  Repository,
+} from 'typeorm';
 import winston from 'winston';
 import { WorkerLogger } from '../../logger';
 import {
@@ -197,7 +202,7 @@ export class WorkerRepository implements IWorkerRepository {
     reverseResolution: ReverseResolution | ReverseResolution[],
   ): Promise<void> {
     const resolutions = convertToArray(reverseResolution);
-    const proms = [];
+    const proms: Promise<DeleteResult>[] = [];
     for (const resolution of resolutions) {
       const deleteArgs: {
         blockchain: Blockchain;

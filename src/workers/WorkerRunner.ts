@@ -8,7 +8,7 @@ export default class WorkerRunner {
   workers: {
     worker: IWorker;
     options: RunOptions;
-  }[];
+  }[] = [];
 
   private runWorker(worker: IWorker, interval: number): void {
     setIntervalAsync(async () => {
