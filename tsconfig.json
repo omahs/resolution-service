@@ -1,14 +1,17 @@
 {
   "extends": "@tsconfig/node14/tsconfig.json",
   "compilerOptions": {
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
-      "allowJs": true,
-      "outDir": "build",
-      "resolveJsonModule": true,
-      "esModuleInterop": true,
-      "strictPropertyInitialization": false
-    },
+    "moduleResolution": "node",
+    "declaration": true,
+
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "allowJs": true,
+    "outDir": "build",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "strictPropertyInitialization": false
+  },
   "include": [
     "./src/**/*.ts",
     "./src/**/*.js", "ormconfig.ts",

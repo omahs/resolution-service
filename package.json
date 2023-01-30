@@ -1,8 +1,9 @@
 {
   "name": "resolution-service",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Service resolves .crypto and .zil domains",
-  "main": "index.js",
+  "main": "build/src/index.js",
+  "types": "./build/src/index.d.ts",
   "repository": "git@github.com:unstoppabledomains/resolution-service.git",
   "author": "Kirill Beresnev <derainberk@gmail.com>",
   "license": "UNLICENSED",
@@ -11,7 +12,14 @@
     "node": "=>14.16.1 <15"
   },
   "directories": {
-    "src": "./src"
+    "src": "./src",
+    "bin": "./src/bin"
+  },
+  "files": [
+    "build"
+  ],
+  "bin": {
+    "ud-worker": "./build/src/bin/ud-worker.js"
   },
   "scripts": {
     "test": "dotenv -e local.test.env -- mocha --exit",
@@ -19,7 +27,7 @@
     "test:debug": "dotenv -e local.test.env -- mocha --inspect-brk --exit",
     "test:coverage": "NODE_ENV=test nyc --reporter=text yarn test",
     "test:ci": "NODE_ENV=test nyc --reporter=text yarn test -- --bail --quiet",
-    "build": "tsc",
+    "build": "tsc -p .",
     "start:dev": "dotenv -e ./local.dev.env -- ts-node src/index.ts",
     "start:dev:watch": "dotenv -e ./local.dev.env -- nodemon --exec ts-node src/index.ts",
     "start:dev:debug": "dotenv -e ./local.dev.env -- nodemon --exec 'node --inspect --require ts-node/register ./src/index.ts'",
