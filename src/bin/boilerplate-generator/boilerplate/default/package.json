@@ -1,0 +1,22 @@
+{
+  "name": "create-ud-worker-default",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "scripts": {
+    "start": "dotenv -e ./local.dev.env -- ud-worker start",
+    "build": "tsc -p ."
+  },
+  "dependencies": {
+    "@types/node": "^15.0.2",
+    "@typescript-eslint/eslint-plugin": "^4.22.0",
+    "@typescript-eslint/parser": "^4.22.0",
+    "resolution-service": "https://github.com/unstoppabledomains/uns.git#51730ed2604e7b4cf7883b1946014d53f44229f2",
+    "eslint": "^7.25.0",
+    "eslint-plugin-import": "^2.22.1",
+    "typescript": "^4.2.4",
+    "ts-node": "^9.1.1",
+    "dotenv-cli": "^4.0.0"
+  }
+}
