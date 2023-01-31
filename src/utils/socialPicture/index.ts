@@ -7,7 +7,6 @@ import { env } from '../../env';
 import { Storage } from '@google-cloud/storage';
 import { logger } from '../../logger';
 import { MetadataService } from '../../services/MetadataService';
-import AnimalDomainHelper from '../AnimalDomainHelper/AnimalDomainHelper';
 
 export type SocialPictureOptions = {
   chainId: string;

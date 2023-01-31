@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { api } from './api';
+import { startServer } from './api';
 import { env } from './env';
 import { logger } from './logger';
 import './apm';
@@ -46,6 +46,5 @@ void connect().then(async () => {
 
   // We're running API on any case since we need to
   // expose status, readiness and health check endpoints even in workers mode
-  api.listen(env.APPLICATION.PORT);
-  logger.info(`API is enabled and running on port ${env.APPLICATION.PORT}`);
+  await startServer(env.APPLICATION.PORT);
 });

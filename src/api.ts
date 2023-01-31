@@ -19,6 +19,8 @@ import { RoutingControllersOptions } from 'routing-controllers';
 import * as oa from 'openapi3-ts';
 import { Request, Response } from 'express';
 import InMemoryCache from './database/TypeormInMemoryCache';
+import { logger } from './logger';
+import { experimentMetadata } from './database/experimentalMetadata';
 
 const enabledControllers = [];
 
@@ -124,3 +126,10 @@ api.use(
   swaggerUI.serveFiles(undefined, options),
   swaggerUI.setup(undefined, options),
 );
+
+export const startServer = async (port: string | number): Promise<void> => {
+  await experimentMetadata.loadData();
+
+  api.listen(port);
+  logger.info(`API is enabled and running on port ${port}`);
+};
