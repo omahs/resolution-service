@@ -48,6 +48,7 @@ jobs:
       RESOLUTION_APP_AUTH_KEY: 'test-app-key'
       RATE_LIMITER_DISABLED: true
       IN_MEMORY_CACHE_DISABLED: true
+      EXPERIMENTAL_DATA_FILE_NAME: 'experimentalMetadata.json'
 
     services:
       postgres:

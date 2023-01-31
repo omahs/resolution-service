@@ -72,6 +72,7 @@ steps:
       - "--update-secrets=HEAP_APP_ID=HEAP_APP_ID:latest"
       - "--update-secrets=IN_MEMORY_CACHE_DISABLED=IN_MEMORY_CACHE_DISABLED:latest"
       - "--update-secrets=IN_MEMORY_CACHE_EXPIRATION_TIME=IN_MEMORY_CACHE_EXPIRATION_TIME:latest"
+      - "--update-secrets=EXPERIMENTAL_DATA_FILE_NAME=EXPERIMENTAL_DATA_FILE_NAME:latest"
 
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID

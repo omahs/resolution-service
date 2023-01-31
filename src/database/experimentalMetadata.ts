@@ -25,7 +25,8 @@ export class ExperimentMetadata {
   }
 
   public loadData = async (): Promise<void> => {
-    const fileName = 'experimentMetadata.json';
+    const fileName =
+      env.CLOUD_STORAGE.CLIENT_ASSETS.EXPERIMENTAL_DATA_FILE_NAME;
     const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
     const bucket = storage.bucket(bucketName);
 

@@ -293,6 +293,8 @@ export const env = {
     CLIENT_ASSETS: {
       BUCKET_ID:
         process.env.CLOUD_STORAGE_BUCKET_ID || 'resolution-client-assets',
+      EXPERIMENTAL_DATA_FILE_NAME:
+        process.env.EXPERIMENTAL_DATA_FILE_NAME || 'experimentMetadata.json',
     },
     API_ENDPOINT_URL: process.env.CLOUD_STORAGE_ENDPONT_URL, // default is https://storage.googleapis.com/
   },
