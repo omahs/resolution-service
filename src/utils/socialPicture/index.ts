@@ -1,13 +1,15 @@
 import nodeFetch from 'node-fetch';
 import { Domain, DomainsResolution } from '../../models';
 import { createCanvas } from 'canvas';
-import createSVGfromTemplate, { simpleSVGTemplate } from './svgTemplate';
+import createSVGfromTemplate, {
+  simpleSVGTemplate,
+  offChainSVGTemplate,
+} from './svgTemplate';
 import btoa from 'btoa';
 import { env } from '../../env';
 import { Storage } from '@google-cloud/storage';
 import { logger } from '../../logger';
 import { MetadataService } from '../../services/MetadataService';
-import AnimalDomainHelper from '../AnimalDomainHelper/AnimalDomainHelper';
 
 export type SocialPictureOptions = {
   chainId: string;
@@ -16,6 +18,7 @@ export type SocialPictureOptions = {
   tokenId: string;
 };
 
+const DEFAULT_OVERLAY_FONTSIZE = 54;
 const storageOptions = env.CLOUD_STORAGE.API_ENDPOINT_URL
   ? { apiEndpoint: env.CLOUD_STORAGE.API_ENDPOINT_URL } // for development using local emulator
   : {}; // for production
@@ -90,7 +93,7 @@ const getFontSize = (name: string): number => {
   const fontSize = Math.floor(20 * ((360 - label.length) / text.width));
 
   if (fontSize > 58) {
-    return 54;
+    return DEFAULT_OVERLAY_FONTSIZE;
   }
 
   if (fontSize < 21) {
@@ -283,4 +286,60 @@ export const toBase64DataURI = (svg: string): string => {
 
 const isNotEmpty = (str: string) => {
   return Boolean(str?.trim());
+};
+
+export const getOffChainProfileImage = async (
+  domain: Domain,
+  overlay: boolean,
+): Promise<string | null> => {
+  const url = `${env.PROFILE_API_URL}/${domain.name}`;
+  let response;
+
+  try {
+    response = await (await fetch(url)).json();
+  } catch (error) {
+    logger.error(`Failed to fetch offchain profile for: ${domain.label}`);
+    return null;
+  }
+
+  if (response.profile.imageType !== 'offChain') {
+    return null;
+  }
+
+  let profileImageSVG = simpleSVGTemplate(response.profile?.imagePath);
+  if (overlay) {
+    profileImageSVG = offChainSVGTemplate(
+      response.profile?.imagePath,
+      domain,
+      DEFAULT_OVERLAY_FONTSIZE,
+    );
+  }
+
+  return profileImageSVG;
+};
+
+export const getOnChainProfileImage = async (
+  imagePathFromDomain: string | undefined,
+): Promise<string> => {
+  let profileImageSVG = '';
+  if (
+    imagePathFromDomain &&
+    imagePathFromDomain.startsWith(
+      'https://cdn.unstoppabledomains.com/bucket/',
+    ) &&
+    imagePathFromDomain.endsWith('.svg')
+  ) {
+    try {
+      const ret = await fetch(imagePathFromDomain);
+      profileImageSVG = await ret.text();
+    } catch (error) {
+      logger.error(
+        `Failed to generate image data from the following endpoint: ${imagePathFromDomain}`,
+      );
+      logger.error(error);
+      return profileImageSVG;
+    }
+  }
+
+  return profileImageSVG;
 };

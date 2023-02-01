@@ -129,6 +129,7 @@ steps:
       - "--update-secrets=RATE_LIMITER_WINDOW_MS=RATE_LIMITER_WINDOW_MS:latest"
       - "--update-secrets=IN_MEMORY_CACHE_DISABLED=IN_MEMORY_CACHE_DISABLED:latest"
       - "--update-secrets=IN_MEMORY_CACHE_EXPIRATION_TIME=IN_MEMORY_CACHE_EXPIRATION_TIME:latest"
+      - "--update-secrets=PROFILE_API_URL=PROFILE_API_URL:latest"
 
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID

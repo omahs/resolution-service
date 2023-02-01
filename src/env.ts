@@ -296,4 +296,5 @@ export const env = {
     },
     API_ENDPOINT_URL: process.env.CLOUD_STORAGE_ENDPONT_URL, // default is https://storage.googleapis.com/
   },
+  PROFILE_API_URL: process.env.PROFILE_API_URL,
 };

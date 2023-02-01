@@ -175,6 +175,7 @@ export class MetaDataController {
           (await this.metadataService.generateImageData(
             name,
             resolution?.resolution || {},
+            withOverlay,
           )),
       };
     }
@@ -183,6 +184,7 @@ export class MetaDataController {
       image_data: await this.metadataService.generateImageData(
         name,
         resolution?.resolution || {},
+        withOverlay,
       ),
     };
   }
@@ -230,6 +232,7 @@ export class MetaDataController {
           await this.metadataService.generateImageData(
             name,
             resolution?.resolution || {},
+            withOverlay,
           ),
         ))
       );
@@ -239,6 +242,7 @@ export class MetaDataController {
       await this.metadataService.generateImageData(
         name,
         resolution?.resolution || {},
+        withOverlay,
       ),
     );
   }

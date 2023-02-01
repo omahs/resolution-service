@@ -12,6 +12,8 @@ import {
   getNftPfpImageFromCDN,
   parsePictureRecord,
   SocialPictureOptions,
+  getOffChainProfileImage,
+  getOnChainProfileImage,
 } from '../utils/socialPicture';
 import { EthereumProvider } from '../workers/EthereumProvider';
 import Moralis from 'moralis/node';
@@ -138,7 +140,6 @@ export class MetadataService {
     }
 
     if (validNftPfp && !image && !!tokenIdMetadata?.token_uri) {
-      console.log('here');
       const response = await fetch(tokenIdMetadata.token_uri, {
         timeout: 5000,
       });
@@ -192,8 +193,10 @@ export class MetadataService {
   async generateImageData(
     name: string,
     resolution: Record<string, string>,
+    withOverlay: boolean,
   ): Promise<string> {
     const domain = new Domain({ name });
+    const defaultImage = this.generateDefaultImageData(domain);
 
     // TLD is deprecated, UD does not support record updates anymore
     if (isDeprecatedTLD(name)) {
@@ -209,26 +212,22 @@ export class MetadataService {
       return animalImage;
     }
 
-    const imagePathFromDomain = resolution['social.image.value'];
-    if (
-      imagePathFromDomain &&
-      imagePathFromDomain.startsWith(
-        'https://cdn.unstoppabledomains.com/bucket/',
-      ) &&
-      imagePathFromDomain.endsWith('.svg')
-    ) {
-      try {
-        const ret = await fetch(imagePathFromDomain);
-        return await ret.text();
-      } catch (error) {
-        logger.error(
-          `Failed to generate image data from the following endpoint: ${imagePathFromDomain}`,
-        );
-        logger.error(error);
-        return this.generateDefaultImageData(domain);
-      }
+    const onChainProfileImage = await getOnChainProfileImage(
+      resolution['social.image.value'],
+    );
+    if (onChainProfileImage) {
+      return onChainProfileImage;
     }
-    return this.generateDefaultImageData(domain);
+
+    const offChainProfileImage = await getOffChainProfileImage(
+      domain,
+      withOverlay,
+    );
+    if (offChainProfileImage) {
+      return offChainProfileImage;
+    }
+
+    return defaultImage;
   }
 
   async getOrCacheNowPfpNFT(
@@ -236,7 +235,7 @@ export class MetadataService {
     domain: Domain,
     resolution: DomainsResolution,
     withOverlay: boolean,
-  ) {
+  ): Promise<string | null> {
     const cachedPfpNFT = await getNftPfpImageFromCDN(
       socialPicture,
       withOverlay ? domain.name : undefined,
