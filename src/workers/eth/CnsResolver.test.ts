@@ -101,7 +101,13 @@ describe('CnsResolver', () => {
       await ethersUtils.getLatestNetworkBlock(),
     );
     await mintingManager.functions
-      .mintSLD(EthereumHelper.owner().address, cnsNamehash, testDomainLabel)
+      .issueWithRecords(
+        EthereumHelper.owner().address,
+        [testDomainLabel, 'crypto'],
+        [],
+        [],
+        true,
+      )
       .then((receipt) => receipt.wait());
     await EthereumHelper.mineBlocksForConfirmation();
 

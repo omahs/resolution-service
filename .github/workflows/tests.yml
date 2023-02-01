@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 14.16.1
+  NODE_VERSION: 14.21.2
 
 concurrency:
   group: resolution_tests_${{ github.sha }}

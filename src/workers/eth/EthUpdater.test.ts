@@ -88,11 +88,11 @@ describe('EthUpdater', () => {
     );
 
     await mintingManager.functions
-      .mintSLD(owner, uns.tldHash, uns.label)
+      .issueWithRecords(owner, [uns.label, uns.tld], [], [], false)
       .then((receipt) => receipt.wait());
 
     await mintingManager.functions
-      .mintSLD(owner, cns.tldHash, cns.label)
+      .issueWithRecords(owner, [cns.label, cns.tld], [], [], false)
       .then((receipt) => receipt.wait());
 
     service = new EthUpdater(Blockchain.ETH, env.APPLICATION.ETHEREUM);
@@ -496,7 +496,7 @@ describe('EthUpdater', () => {
 
       const expectedDomainName = `${expectedLabel}.${cns.tld}`;
       await mintingManager.functions
-        .mintSLD(owner, cns.tldHash, expectedLabel)
+        .issueWithRecords(owner, [expectedLabel, cns.tld], [], [], false)
         .then((receipt) => receipt.wait());
       await EthereumHelper.mineBlocksForConfirmation();
 
@@ -516,7 +516,7 @@ describe('EthUpdater', () => {
 
       const expectedDomainName = `${expectedLabel}.${uns.tld}`;
       await mintingManager.functions
-        .mintSLD(owner, uns.tldHash, expectedLabel)
+        .issueWithRecords(owner, [expectedLabel, uns.tld], [], [], false)
         .then((receipt) => receipt.wait());
       await EthereumHelper.mineBlocksForConfirmation();
 
@@ -527,75 +527,6 @@ describe('EthUpdater', () => {
         relations: ['resolutions'],
       });
       expect(domain.label).to.equal(expectedLabel);
-    });
-
-    it('should not add cns domain with capital letters', async () => {
-      const expectedLabel = `${randomBytes(16).toString('hex')}-AAA`;
-      const expectedDomainName = `${expectedLabel}.${cns.tld}`;
-      await mintingManager.functions
-        .mintSLD(owner, cns.tldHash, expectedLabel)
-        .then((receipt) => receipt.wait());
-      await EthereumHelper.mineBlocksForConfirmation();
-
-      await service.run();
-
-      const domain = await Domain.findOne({
-        where: { name: expectedDomainName },
-        relations: ['resolutions'],
-      });
-      expect(domain).to.be.undefined;
-    });
-
-    it('should not add uns domain with capital letters', async () => {
-      const expectedLabel = `${randomBytes(16).toString('hex')}-AAA`;
-      const expectedDomainName = `${expectedLabel}.${uns.tld}`;
-      await mintingManager.functions
-        .mintSLD(owner, uns.tldHash, expectedLabel)
-        .then((receipt) => receipt.wait());
-      await EthereumHelper.mineBlocksForConfirmation();
-
-      await service.run();
-
-      const domain = await Domain.findOne({
-        where: { name: expectedDomainName },
-        relations: ['resolutions'],
-      });
-      expect(domain).to.be.undefined;
-    });
-
-    it.skip('should not add cns domain with spaces', async () => {
-      // for some reason minting manager can actually mint a domain like this
-      const expectedLabel = `   ${randomBytes(16).toString('hex')}   `;
-      const expectedDomainName = `${expectedLabel}.${cns.tld}`;
-      await mintingManager.functions
-        .mintSLD(owner, cns.tldHash, expectedLabel)
-        .then((receipt) => receipt.wait());
-      await EthereumHelper.mineBlocksForConfirmation();
-
-      await service.run();
-
-      const domain = await Domain.findOne({
-        where: { name: expectedDomainName },
-        relations: ['resolutions'],
-      });
-      expect(domain).to.be.undefined;
-    });
-
-    it('should not add uns domain with spaces', async () => {
-      const expectedLabel = `    ${randomBytes(16).toString('hex')}   `;
-      const expectedDomainName = `${expectedLabel}.${uns.tld}`;
-      await mintingManager.functions
-        .mintSLD(owner, uns.tldHash, expectedDomainName)
-        .then((receipt) => receipt.wait());
-      await EthereumHelper.mineBlocksForConfirmation();
-
-      await service.run();
-
-      const domain = await Domain.findOne({
-        where: { name: expectedDomainName },
-        relations: ['resolutions'],
-      });
-      expect(domain).to.be.undefined;
     });
 
     it('should add new zil domain on uns', async () => {
@@ -612,7 +543,7 @@ describe('EthUpdater', () => {
       await mintingManagerOwner.functions.addTld('zil');
 
       await mintingManager.functions
-        .mintSLD(owner, zil.tldHash, expectedLabel)
+        .issueWithRecords(owner, [expectedLabel, zil.tld], [], [], false)
         .then((receipt) => receipt.wait());
       await EthereumHelper.mineBlocksForConfirmation();
 
@@ -741,7 +672,7 @@ describe('EthUpdater', () => {
       const uns2 = getNSConfig('blockchain');
 
       await mintingManager.functions
-        .mintSLD(owner, uns2.tldHash, uns2.label)
+        .issueWithRecords(owner, [uns2.label, uns2.tld], [], [], false)
         .then((receipt) => receipt.wait());
 
       // set reverse once

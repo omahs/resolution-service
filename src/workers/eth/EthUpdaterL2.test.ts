@@ -1,6 +1,10 @@
 import { env } from '../../env';
 import { CnsRegistryEvent, Domain, WorkerStatus } from '../../models';
-import { EthereumHelper } from '../../utils/testing/EthereumTestsHelper';
+import {
+  EthereumHelper,
+  injectNetworkHelperConfig,
+  resetNetworkHelperConfig,
+} from '../../utils/testing/EthereumTestsHelper';
 
 import { expect } from 'chai';
 import * as ethersUtils from '../../utils/ethersUtils';
@@ -21,7 +25,14 @@ describe('EthUpdater l2 worker', () => {
 
   before(async () => {
     await EthereumHelper.stopNetwork();
+
     await L1Fixture.setup(Blockchain.ETH, env.APPLICATION.ETHEREUM, {});
+
+    injectNetworkHelperConfig({
+      url: 'http://localhost:7546',
+      chainId: 1337,
+      dbPath: './.sandboxl2',
+    });
     await L2Fixture.setup(Blockchain.MATIC, env.APPLICATION.POLYGON, {
       network: {
         url: 'http://localhost:7546',
@@ -29,17 +40,24 @@ describe('EthUpdater l2 worker', () => {
         dbPath: './.sandboxl2',
       },
     });
+    resetNetworkHelperConfig();
   });
 
   afterEach(async () => {
-    await L1Fixture.networkHelper.stopNetwork();
     await L2Fixture.networkHelper.stopNetwork();
+    resetNetworkHelperConfig();
+    await L1Fixture.networkHelper.stopNetwork();
   });
 
   beforeEach(async () => {
     uns = getNSConfig('blockchain');
     owner = L1Fixture.networkHelper.owner().address;
     await L1Fixture.prepareService(owner, uns);
+    injectNetworkHelperConfig({
+      url: 'http://localhost:7546',
+      chainId: 1337,
+      dbPath: './.sandboxl2',
+    });
     await L2Fixture.prepareService(owner, uns);
   });
 
@@ -192,7 +210,7 @@ describe('EthUpdater l2 worker', () => {
       domain: NSConfig,
     ): Promise<DomainBlockInfo> {
       const tx = await fixture.mintingManager.functions
-        .mintSLD(owner, domain.tldHash, domain.label)
+        .issueWithRecords(owner, [domain.label, domain.tld], [], [], false)
         .then((receipt) => {
           return receipt.wait();
         });

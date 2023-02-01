@@ -61,7 +61,7 @@ describe('EthUpdater handles reorgs', () => {
   const mintDomain = async function (): Promise<DomainBlockInfo> {
     const domain = getNSConfig('blockchain');
     const tx = await mintingManager.functions
-      .mintSLD(owner, domain.tldHash, domain.label)
+      .issueWithRecords(owner, [domain.label, domain.tld], [], [], false)
       .then((receipt) => {
         return receipt.wait();
       });

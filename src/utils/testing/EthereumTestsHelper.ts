@@ -4,9 +4,39 @@ import {
   StaticJsonRpcProvider,
 } from '../../workers/EthereumProvider';
 import { env } from '../../env';
-import Sandbox from 'uns/sandbox';
+import { Sandbox } from 'uns';
+import { GANACHE_SERVER_CONFIG } from 'uns';
+import sinon from 'sinon';
 
 const FundingAmount: BigNumber = ethers.utils.parseUnits('100', 'ether');
+
+let networkOptionsStub: sinon.SinonStub | undefined = undefined;
+export function injectNetworkHelperConfig(opts: {
+  dbPath: string;
+  url: string;
+  chainId: number;
+}) {
+  // TODO: ask registry team to fix sandbox options
+  if (!networkOptionsStub) {
+    GANACHE_SERVER_CONFIG.database.dbPath = opts.dbPath;
+    networkOptionsStub = sinon
+      .stub(Sandbox, 'defaultNetworkOptions')
+      .callsFake(() => {
+        const defaultOpts = (
+          Sandbox.defaultNetworkOptions as sinon.SinonStub
+        ).wrappedMethod();
+        return { ...defaultOpts, ...opts };
+      });
+  }
+}
+
+export function resetNetworkHelperConfig() {
+  if (networkOptionsStub) {
+    networkOptionsStub.restore();
+    GANACHE_SERVER_CONFIG.database.dbPath = `./.sandbox`;
+    networkOptionsStub = undefined;
+  }
+}
 
 export class EthereumNetworkHelper {
   private sandbox: any;

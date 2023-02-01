@@ -2,7 +2,11 @@ import { expect } from 'chai';
 import { env } from '../env';
 import { Blockchain } from '../types/common';
 import { queryNewURIEvent } from './ethersUtils';
-import { EthereumHelper } from './testing/EthereumTestsHelper';
+import {
+  EthereumHelper,
+  injectNetworkHelperConfig,
+  resetNetworkHelperConfig,
+} from './testing/EthereumTestsHelper';
 import {
   getNSConfig,
   LayerTestFixture,
@@ -17,7 +21,13 @@ describe('Ethers Util functions', () => {
 
   before(async () => {
     await EthereumHelper.stopNetwork();
+
     await L1Fixture.setup(Blockchain.ETH, env.APPLICATION.ETHEREUM, {});
+    injectNetworkHelperConfig({
+      url: 'http://localhost:7546',
+      chainId: 1337,
+      dbPath: './.sandboxl2',
+    });
     await L2Fixture.setup(Blockchain.MATIC, env.APPLICATION.POLYGON, {
       network: {
         url: 'http://localhost:7546',
@@ -25,6 +35,7 @@ describe('Ethers Util functions', () => {
         dbPath: './.sandboxl2',
       },
     });
+    resetNetworkHelperConfig();
   });
 
   after(async () => {

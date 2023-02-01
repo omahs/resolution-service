@@ -83,10 +83,12 @@ export class LayerTestFixture {
       .value(block.number);
     await WorkerStatus.saveWorkerStatus(this.network, block.number, block.hash);
 
-    const receipt = await this.mintingManager.functions.mintSLD(
+    const receipt = await this.mintingManager.functions.issueWithRecords(
       owner,
-      uns.tldHash,
-      uns.label,
+      [uns.label, uns.tld],
+      [],
+      [],
+      false,
     );
     await receipt.wait();
 

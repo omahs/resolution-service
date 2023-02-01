@@ -246,7 +246,7 @@ password - secret).
 
 Additional pre-requirements that are necessary for development:
 
-- Node.JS 14.16.1 Can be installed using [NVM](https://github.com/nvm-sh/nvm)
+- Node.JS 14.21.2 Can be installed using [NVM](https://github.com/nvm-sh/nvm)
 - [yarn](https://yarnpkg.com/lang/en/docs/install)
 
 ### Running in dev mode
@@ -254,8 +254,8 @@ Additional pre-requirements that are necessary for development:
 1. Install project dependencies
 
 ```
-nvm install 14.16.1
-nvm use 14.16.1
+nvm install 14.21.2
+nvm use 14.21.2
 yarn install
 ```
 

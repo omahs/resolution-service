@@ -15,7 +15,11 @@ import {
   getNSConfig,
   LayerTestFixture,
 } from '../utils/testing/LayerFixturesHelper';
-import { EthereumHelper } from '../utils/testing/EthereumTestsHelper';
+import {
+  EthereumHelper,
+  injectNetworkHelperConfig,
+  resetNetworkHelperConfig,
+} from '../utils/testing/EthereumTestsHelper';
 import { Blockchain, UnstoppableDomainTlds } from '../types/common';
 import { env } from '../env';
 import Domain from '../models/Domain';
@@ -35,6 +39,13 @@ describe('MetaDataController', () => {
   before(async () => {
     await EthereumHelper.stopNetwork();
     await L1Fixture.setup(Blockchain.ETH, env.APPLICATION.ETHEREUM, {});
+
+    // TODO: ask registry team to fix sandbox options
+    injectNetworkHelperConfig({
+      url: 'http://localhost:7546',
+      chainId: 1337,
+      dbPath: './.sandboxl2',
+    });
     await L2Fixture.setup(Blockchain.MATIC, env.APPLICATION.POLYGON, {
       network: {
         url: 'http://localhost:7546',
@@ -42,6 +53,7 @@ describe('MetaDataController', () => {
         dbPath: './.sandboxl2',
       },
     });
+    resetNetworkHelperConfig();
   });
 
   beforeEach(() => {
