@@ -114,9 +114,6 @@ export class MetaDataController {
       tokenId: getTokenIdFromHash(domain.node),
       namehash: domain.node,
       description,
-      properties: {
-        records: resolution.resolution,
-      },
       external_url: `https://unstoppabledomains.com/search?searchTerm=${domain.name}`,
       image: imageUrl,
       image_url: imageUrl,

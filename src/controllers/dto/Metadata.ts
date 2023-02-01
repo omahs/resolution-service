@@ -1,10 +1,6 @@
 import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 import { OpenSeaMetadataAttribute } from '../../utils/AnimalDomainHelper/AnimalDomainHelper';
 
-export type DomainProperties = {
-  records: Record<string, string>;
-};
-
 export class Erc721Metadata {
   @IsString()
   name: string | null;
@@ -33,9 +29,6 @@ export class OpenSeaMetadata extends Erc721Metadata {
   @IsOptional()
   @IsString()
   image_url?: string;
-
-  @IsObject()
-  properties: DomainProperties;
 
   @IsArray()
   attributes: Array<OpenSeaMetadataAttribute>;

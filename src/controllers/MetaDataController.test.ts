@@ -169,14 +169,6 @@ describe('MetaDataController', () => {
       ];
       expect(resWithName.attributes.length).eq(correctAttributes.length);
       expect(resWithName.attributes).to.have.deep.members(correctAttributes);
-      const correctProperties = {
-        records: {
-          'crypto.BTC.address': 'beabbeabbeabeabeabeabeabeabeabeabeabeabeab',
-          'crypto.ETH.address': '0xdeadeadeadeadeadeadeadeadeadeadeadeadead',
-          'ipfs.html.value': 'QmdyBw5oTgCtTLQ18PbDvPL8iaLoEPhSyzD91q9XmgmAjb',
-        },
-      };
-      expect(resWithName.properties).to.deep.eq(correctProperties);
       expect(resWithName.background_color).eq(BackgroundColor);
     });
 
@@ -431,13 +423,6 @@ describe('MetaDataController', () => {
       ];
       expect(response.attributes.length).to.eq(correctAttributes.length);
       expect(response.attributes).to.have.deep.members(correctAttributes);
-
-      const correctProperties = {
-        records: {
-          'crypto.ETH.address': '0xe7474D07fD2FA286e7e0aa23cd107F8379085037',
-        },
-      };
-      expect(response.properties).to.deep.eq(correctProperties);
       expect(response.background_color).to.eq('4C47F7');
     });
 
@@ -482,9 +467,6 @@ describe('MetaDataController', () => {
         name: 'unknown.crypto',
         tokenId: null,
         namehash: null,
-        properties: {
-          records: {},
-        },
         description:
           'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.',
         external_url:
@@ -515,9 +497,6 @@ describe('MetaDataController', () => {
         name: null,
         tokenId: null,
         namehash: null,
-        properties: {
-          records: {},
-        },
         description: null,
         external_url: null,
         image: null,
@@ -537,9 +516,6 @@ describe('MetaDataController', () => {
         .then((r) => r.body);
       expect(responseWithNode).containSubset({
         name: uns.name,
-        properties: {
-          records: {},
-        },
         description:
           'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.',
         external_url: `https://unstoppabledomains.com/search?searchTerm=${uns.name}`,
@@ -676,29 +652,6 @@ describe('MetaDataController', () => {
       expect(dwebHashResponse.attributes).to.deep.contain({
         trait_type: DomainAttributeTrait.Ending,
         value: 'crypto',
-      });
-
-      expect(dwebHashResponse.properties).to.deep.equals({
-        records: { 'dweb.ipfs.hash': 'ipfs hash content' },
-      });
-      expect(htmlValueResponse.properties).to.deep.equals({
-        records: { 'ipfs.html.value': 'ipfs hash content' },
-      });
-    });
-
-    it('should return the dweb.ipfs.hash record when ipfs.html.value is also set', async () => {
-      const { domain } = await DomainTestHelper.createTestDomain({
-        resolution: { 'dweb.ipfs.hash': 'correct', 'ipfs.html.value': 'wrong' },
-      });
-      const response = await supertest(api)
-        .get(`/metadata/${domain.name}`)
-        .send()
-        .then((r) => r.body);
-      expect(response.properties).to.deep.eq({
-        records: {
-          'dweb.ipfs.hash': 'correct',
-          'ipfs.html.value': 'wrong',
-        },
       });
     });
 
