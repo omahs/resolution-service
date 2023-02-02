@@ -296,7 +296,7 @@ export const getOffChainProfileImage = async (
   let response;
 
   try {
-    response = await (await fetch(url)).json();
+    response = await (await nodeFetch(url)).json();
   } catch (error) {
     logger.error(`Failed to fetch offchain profile for: ${domain.label}`);
     return null;
@@ -330,7 +330,7 @@ export const getOnChainProfileImage = async (
     imagePathFromDomain.endsWith('.svg')
   ) {
     try {
-      const ret = await fetch(imagePathFromDomain);
+      const ret = await nodeFetch(imagePathFromDomain);
       profileImageSVG = await ret.text();
     } catch (error) {
       logger.error(
