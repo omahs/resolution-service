@@ -16,7 +16,7 @@
     "./src/**/*.ts",
     "./src/**/*.js", "ormconfig.ts",
   ],
-  "exclude": ["node_modules", "build"],
+  "exclude": ["node_modules", "build", "src/bin/boilerplate-generator"],
   "ts-node": {
     "files": true
   }
