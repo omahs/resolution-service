@@ -21,7 +21,7 @@ steps:
   #########################################
 
   ########
-  # deploy API for none all endpoints that are not /metadata
+  # deploy API for all endpoints that are not /metadata
   # fastly will direct traffic based upon the endpoint
   ########
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
@@ -72,6 +72,7 @@ steps:
       - "--update-secrets=HEAP_APP_ID=HEAP_APP_ID:latest"
       - "--update-secrets=IN_MEMORY_CACHE_DISABLED=IN_MEMORY_CACHE_DISABLED:latest"
       - "--update-secrets=IN_MEMORY_CACHE_EXPIRATION_TIME=IN_MEMORY_CACHE_EXPIRATION_TIME:latest"
+      - "--update-secrets=PROFILE_API_URL=PROFILE_API_URL:latest"
 
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
@@ -81,7 +82,7 @@ steps:
     entrypoint: gcloud
 
   # ########
-  # # deploy API for /metadata requests
+  # # deploy API for ONLY just the /metadata request
   # # fastly will direct traffic based upon the endpoint
   # ########
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
@@ -129,7 +130,6 @@ steps:
       - "--update-secrets=RATE_LIMITER_WINDOW_MS=RATE_LIMITER_WINDOW_MS:latest"
       - "--update-secrets=IN_MEMORY_CACHE_DISABLED=IN_MEMORY_CACHE_DISABLED:latest"
       - "--update-secrets=IN_MEMORY_CACHE_EXPIRATION_TIME=IN_MEMORY_CACHE_EXPIRATION_TIME:latest"
-      - "--update-secrets=PROFILE_API_URL=PROFILE_API_URL:latest"
 
       - >-
         --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
