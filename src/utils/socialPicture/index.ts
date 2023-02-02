@@ -298,7 +298,8 @@ export const getOffChainProfileImage = async (
   try {
     response = await (await nodeFetch(url)).json();
   } catch (error) {
-    logger.error(`Failed to fetch offchain profile for: ${domain.label}`);
+    logger.error(`Failed to fetch offchain profile for: ${url}`);
+    logger.error(`Profile Fetching error: ${error}`);
     return null;
   }
 
