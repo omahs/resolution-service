@@ -211,9 +211,11 @@ export const cacheSocialPictureInCDN = async (
         await uploadSVG(file.fname, file.data);
       }
     } else {
-      logger.error(
-        `Failed to generate image data for the domain: ${domain}, token URI: ${socialPic}`,
-      );
+      logger.error(`Failed to generate image data for the domain: ${JSON.stringify(
+        domain,
+      )}, 
+        token URI: ${socialPic}
+      `);
     }
   }
 
@@ -309,11 +311,25 @@ export const getOffChainProfileImage = async (
 
   let profileImageSVG = simpleSVGTemplate(response.profile?.imagePath);
   if (overlay) {
-    profileImageSVG = offChainSVGTemplate(
-      response.profile?.imagePath,
-      domain,
-      DEFAULT_OVERLAY_FONTSIZE,
-    );
+    try {
+      const [base64, mimeType] = await getNFTSocialPicture(
+        response.profile?.imagePath,
+      );
+      if (!mimeType) {
+        logger.error('Unable to determine image mime type');
+        return null;
+      }
+
+      profileImageSVG = offChainSVGTemplate(
+        base64,
+        mimeType,
+        domain,
+        DEFAULT_OVERLAY_FONTSIZE,
+      );
+    } catch (error) {
+      logger.error(error);
+      return null;
+    }
   }
 
   return profileImageSVG;

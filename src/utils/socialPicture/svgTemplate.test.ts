@@ -75,13 +75,18 @@ describe('svgTemplates', () => {
   describe('offChainSVGTemplate', () => {
     it('should create an off chain svg template', () => {
       const domain = new Domain({ name: 'test.crypto' });
-      const offchainTemplate = offChainSVGTemplate('test.crypto', domain, 10);
+      const offchainTemplate = offChainSVGTemplate(
+        'base64test',
+        'mimeTypeTest',
+        domain,
+        10,
+      );
       expect(offchainTemplate.replace(/\s+/g, '')).to.be.equal(
         `
       <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="backImg" patternUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
-            <image width="512" height="512" preserveAspectRatio="none" href="test.crypto"/>
+            <image width="512" height="512" preserveAspectRatio="none" href="data:mimeTypeTest;base64,base64test"/>
           </pattern>
             
           <filter id="shadowy">

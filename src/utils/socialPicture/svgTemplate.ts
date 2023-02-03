@@ -79,7 +79,8 @@ export const simpleSVGTemplate = (href: string) => `
 `;
 
 export const offChainSVGTemplate = (
-  href: string,
+  base64Image: string,
+  mimeType: string,
   domain: Domain,
   fontSize: number,
 ): string => {
@@ -88,7 +89,7 @@ export const offChainSVGTemplate = (
     <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="backImg" patternUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
-          <image width="512" height="512" preserveAspectRatio="none" href="${href}"/>
+          <image width="512" height="512" preserveAspectRatio="none" href="data:${mimeType};base64,${base64Image}"/>
         </pattern>
         ${shadowyFilterDefinition}
       </defs>

@@ -85,7 +85,7 @@ export class MetadataService {
         contractAddress = parsedPicture.contractAddress;
         tokenId = parsedPicture.tokenId;
       } catch (error) {
-        console.log(error);
+        logger.error(`Unable to parse the picture: ${error}`);
       }
     }
 
