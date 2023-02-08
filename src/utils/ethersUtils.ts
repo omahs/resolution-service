@@ -1,3 +1,4 @@
+import { Event } from 'ethers';
 import {
   EthereumProvider,
   StaticJsonRpcProvider,
@@ -7,7 +8,7 @@ import { getEthConfig } from '../contracts/eth';
 import { env } from '../env';
 import WorkerStatus from '../models/WorkerStatus';
 import { Blockchain } from '../types/common';
-import { Event } from 'ethers';
+import { withPromiseTimeout } from '../utils/promiseUtils';
 
 export const ETHAddressRegex = /^0x[a-fA-F0-9]{40}$/;
 
@@ -43,15 +44,15 @@ export async function queryNewURIEvent(
     },
   };
 
-  const events = (
-    await Promise.all(
-      Object.values(chains).map(async (chain) => {
-        const contract = chain.contract;
-        const filter = contract.filters.NewURI(token);
-        return contract.queryFilter(filter, chain.latestMirroredBlock);
-      }),
-    )
-  )
+  const queryEventsPromise = Promise.all(
+    Object.values(chains).map(async (chain) => {
+      const contract = chain.contract;
+      const filter = contract.filters.NewURI(token);
+      return contract.queryFilter(filter, chain.latestMirroredBlock);
+    }),
+  );
+
+  const events = (await withPromiseTimeout(queryEventsPromise, 1500))
     .filter((arr) => arr.length !== 0)
     .flat();
 

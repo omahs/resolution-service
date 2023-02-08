@@ -22,6 +22,8 @@ import { logger } from '../logger';
 import DomainsReverseResolution from './DomainsReverseResolution';
 import { env } from '../env';
 
+const ON_CHAIN_LOG_PREFIX = 'On Chain Data Lookup';
+
 @Entity({ name: 'domains' })
 export default class Domain extends Model {
   static NullAddress = '0x0000000000000000000000000000000000000000';
@@ -196,6 +198,11 @@ export default class Domain extends Model {
       }
 
       const { uri, tokenId } = newURIevent.args;
+
+      logger.info(
+        `${ON_CHAIN_LOG_PREFIX} - Found new event for token ${token}`,
+      );
+
       const expectedNode = eip137Namehash(uri);
       const producedNode = CnsRegistryEvent.tokenIdToNode(tokenId);
 
@@ -209,7 +216,9 @@ export default class Domain extends Model {
       // domain will be parsed and stored by workers eventually
       return domain;
     } catch (error) {
-      logger.error(`Couldn't query NewURI event: ${error}`);
+      logger.error(
+        `${ON_CHAIN_LOG_PREFIX} - Couldn't query NewURI event: ${error}`,
+      );
       return undefined;
     }
   }
