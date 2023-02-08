@@ -115,6 +115,7 @@ export const createSocialPictureImage = (
       ? domain.name.substring(0, 45)
       : domain.name,
   );
+
   const svg = createSVGfromTemplate({
     background_color: backgroundColor,
     background_image: data,
@@ -211,11 +212,11 @@ export const cacheSocialPictureInCDN = async (
         await uploadSVG(file.fname, file.data);
       }
     } else {
-      logger.error(`Failed to generate image data for the domain: ${JSON.stringify(
-        domain,
-      )}, 
-        token URI: ${socialPic}
-      `);
+      logger.error(
+        `Failed to generate image data for the domain: ${JSON.stringify(
+          domain,
+        )}, token URI: ${socialPic}`,
+      );
     }
   }
 
@@ -305,31 +306,38 @@ export const getOffChainProfileImage = async (
     return null;
   }
 
-  if (response.profile.imageType !== 'offChain') {
+  if (response.profile?.imageType !== 'offChain') {
     return null;
   }
 
-  let profileImageSVG = simpleSVGTemplate(response.profile?.imagePath);
-  if (overlay) {
-    try {
-      const [base64, mimeType] = await getNFTSocialPicture(
-        response.profile?.imagePath,
-      );
-      if (!mimeType) {
-        logger.error('Unable to determine image mime type');
-        return null;
-      }
+  let base64,
+    mimeType = null;
+  try {
+    [base64, mimeType] = await getNFTSocialPicture(response.profile?.imagePath);
 
-      profileImageSVG = offChainSVGTemplate(
-        base64,
-        mimeType,
-        domain,
-        DEFAULT_OVERLAY_FONTSIZE,
-      );
-    } catch (error) {
-      logger.error(error);
+    if (!mimeType || !base64) {
+      logger.error('Unable to determine image data');
       return null;
     }
+  } catch (error) {
+    logger.error(error);
+    return null;
+  }
+
+  let profileImageSVG = offChainSVGTemplate(
+    base64,
+    mimeType,
+    domain,
+    DEFAULT_OVERLAY_FONTSIZE,
+  );
+  if (!overlay) {
+    profileImageSVG = offChainSVGTemplate(
+      base64,
+      mimeType,
+      domain,
+      DEFAULT_OVERLAY_FONTSIZE,
+      false,
+    );
   }
 
   return profileImageSVG;

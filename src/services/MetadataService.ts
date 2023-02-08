@@ -111,6 +111,7 @@ export class MetadataService {
           tokenIdMetadata = await this.fetchMoralisMetadata(options);
         }
       } catch (error: any) {
+        logger.error(`Unable to fetch image metadata: ${error}`);
         if (!error.message.includes('No metadata found')) {
           logger.error(error);
         }
@@ -390,7 +391,7 @@ export class MetadataService {
         ? response.imageUrl.split('=s250')[0]
         : response.imageUrl,
       background_color: response.backgroundColor,
-      owner_of: response.owner.address,
+      owner_of: response.owner?.address,
     };
   }
 
