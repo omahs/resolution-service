@@ -1,11 +1,12 @@
 import { expect } from 'chai';
-import ZilProvider from './ZilProvider';
-import firstTwoTransactions from '../../../mocks/zns/firstTwoTransactions.json';
+import ZilProvider from '../../ZilProvider';
+import firstTwoTransactions from '../../../../../mocks/zns/firstTwoTransactions.json';
 import nock from 'nock';
+import { describeIntegrationTest } from '../../../../utils/testing/IntegrationTestDescribe';
 
 let provider: ZilProvider;
 
-describe('ZilProvider', () => {
+describeIntegrationTest('ZilProvider', () => {
   beforeEach(() => {
     provider = new ZilProvider();
   });

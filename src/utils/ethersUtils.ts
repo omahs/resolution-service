@@ -3,7 +3,7 @@ import {
   EthereumProvider,
   StaticJsonRpcProvider,
   GetProviderForConfig,
-} from '../workers/EthereumProvider';
+} from '../workers/eth/EthereumProvider';
 import { getEthConfig } from '../contracts/eth';
 import { env } from '../env';
 import WorkerStatus from '../models/WorkerStatus';

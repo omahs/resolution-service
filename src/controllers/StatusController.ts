@@ -12,7 +12,10 @@ import { Domain, WorkerStatus } from '../models';
 import ZilProvider from '../workers/zil/ZilProvider';
 import { env } from '../env';
 import * as ethersUtils from '../utils/ethersUtils';
-import { EthereumProvider, MaticProvider } from '../workers/EthereumProvider';
+import {
+  EthereumProvider,
+  MaticProvider,
+} from '../workers/eth/EthereumProvider';
 import { Blockchain, SupportedTld, SupportedTlds } from '../types/common';
 import RateLimiter from '../middleware/RateLimiter';
 
@@ -61,13 +64,14 @@ export class StatusController {
       ACCEPTABLE_DELAY_IN_BLOCKS: number;
       CONFIRMATION_BLOCKS: number;
     },
-    latestBlockCallback: () => Promise<number>,
+    latestBlockCallback: (from: number) => Promise<number>,
   ): Promise<BlockchainStatus> {
+    const latestMirroredBlock = await WorkerStatus.latestMirroredBlockForWorker(
+      blockchain,
+    );
     const status: BlockchainStatus = {
-      latestMirroredBlock: await WorkerStatus.latestMirroredBlockForWorker(
-        blockchain,
-      ),
-      latestNetworkBlock: await latestBlockCallback(),
+      latestMirroredBlock,
+      latestNetworkBlock: await latestBlockCallback(latestMirroredBlock),
       networkId: config.NETWORK_ID,
       acceptableDelayInBlocks: config.ACCEPTABLE_DELAY_IN_BLOCKS,
       isUpToDate: false,
@@ -111,8 +115,8 @@ export class StatusController {
     blockchain.ZIL = await StatusController.blockchainStatusForNetwork(
       Blockchain.ZIL,
       env.APPLICATION.ZILLIQA,
-      async () => {
-        return (await this.zilProvider.getChainStats()).txHeight;
+      (from: number) => {
+        return this.zilProvider.getLastAtxuid(from);
       },
     );
 

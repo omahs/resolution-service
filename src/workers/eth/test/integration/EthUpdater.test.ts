@@ -1,21 +1,22 @@
 import { BigNumber, Contract } from 'ethers';
 import { randomBytes } from 'crypto';
-import { env } from '../../env';
+import { env } from '../../../../env';
 import {
   CnsRegistryEvent,
   Domain,
   DomainsReverseResolution,
   WorkerStatus,
-} from '../../models';
-import { EthereumProvider } from '../EthereumProvider';
-import { EthereumHelper } from '../../utils/testing/EthereumTestsHelper';
+} from '../../../../models';
+import { EthereumProvider } from '../../EthereumProvider';
+import { EthereumHelper } from '../../../../utils/testing/EthereumTestsHelper';
 import { EthUpdater } from './EthUpdater';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
-import { eip137Namehash } from '../../utils/namehash';
-import { ETHContracts } from '../../contracts';
-import * as ethersUtils from '../../utils/ethersUtils';
-import { Blockchain } from '../../types/common';
+import { eip137Namehash } from '../../../../utils/namehash';
+import { ETHContracts } from '../../../../contracts';
+import * as ethersUtils from '../../../../utils/ethersUtils';
+import { Blockchain } from '../../../../types/common';
+import { describeIntegrationTest } from '../../../../utils/testing/IntegrationTestDescribe';
 
 type NSConfig = {
   tld: string;
@@ -42,7 +43,7 @@ const getNSConfig = (tld: string): NSConfig => {
   return config;
 };
 
-describe('EthUpdater', () => {
+describeIntegrationTest('EthUpdater', () => {
   let service: EthUpdater;
   let unsRegistry: Contract;
   let cnsRegistry: Contract;

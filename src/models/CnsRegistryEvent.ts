@@ -1,5 +1,4 @@
 import {
-  IsEnum,
   IsNumber,
   IsObject,
   IsString,
@@ -7,36 +6,14 @@ import {
   Min,
   ValidateIf,
   IsOptional,
-  Allow,
 } from 'class-validator';
 import { Column, Entity, Index, MoreThan, Not, Repository } from 'typeorm';
 import ValidateWith from '../services/ValidateWith';
-import { Attributes } from '../types/common';
+import { Attributes, DomainOperationTypes } from '../types/common';
 import Model from './Model';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Blockchain } from '../types/common';
-
-export const DomainOperationTypes = [
-  'Transfer',
-  'Resolve',
-  'NewURI',
-  'Sync',
-  'Set',
-  'ResetRecords',
-  'SetReverse',
-  'RemoveReverse',
-] as const;
-
-export const EventTypes = [
-  ...DomainOperationTypes,
-  'Approval',
-  'ApprovalForAll',
-  'NewURIPrefix',
-  'Upgraded',
-  'AdminChanged',
-] as const;
-
-export type EventType = typeof EventTypes[any];
+import { tokenIdToNode } from '../utils/domain';
 
 @Entity({ name: 'cns_registry_events' })
 @Index(['blockNumber', 'blockchain', 'networkId', 'logIndex'], { unique: true })
@@ -98,11 +75,6 @@ export default class CnsRegistryEvent extends Model {
 
   private validationRepository?: Repository<CnsRegistryEvent>;
 
-  static tokenIdToNode(tokenId: BigNumber): string {
-    const node = tokenId.toHexString().replace(/^(0x)?/, '');
-    return '0x' + node.padStart(64, '0');
-  }
-
   constructor(
     attributes?: Attributes<CnsRegistryEvent>,
     validationRepository?: Repository<CnsRegistryEvent>,
@@ -161,10 +133,10 @@ export default class CnsRegistryEvent extends Model {
   }
 
   async beforeValidate(): Promise<void> {
-    const tokenId = this.tokenId();
-    this.node = tokenId
-      ? CnsRegistryEvent.tokenIdToNode(BigNumber.from(tokenId))
-      : null;
+    if (!this.node) {
+      const tokenId = this.tokenId();
+      this.node = tokenId ? tokenIdToNode(BigNumber.from(tokenId)) : null;
+    }
   }
 
   async consistentBlockNumberForHash(): Promise<boolean> {

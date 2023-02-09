@@ -1,14 +1,14 @@
 import 'reflect-metadata';
 import { api } from './api';
-import { env } from './env';
+import { blockchainRunningModes, env } from './env';
 import { logger } from './logger';
 import './apm';
 
 const runningMode = env.APPLICATION.RUNNING_MODE;
 import connect from './database/connect';
-import { startWorker as startEthWorker } from './workers/eth/EthUpdater';
-import startZilUpdater from './workers/ZilUpdater';
-import { Blockchain } from './types/common';
+import { Blockchains } from './types/common';
+import { getRunnerOptions, getWorker } from './workers/WorkerFactory';
+import WorkerRunner from './workers/WorkerRunner';
 
 void connect().then(async () => {
   /**
@@ -28,21 +28,15 @@ void connect().then(async () => {
   //   }
   //   logger.info('Db snapshot loaded');
   // }
+  const runner: WorkerRunner = new WorkerRunner();
 
-  if (runningMode.includes('ETH_WORKER')) {
-    startEthWorker(Blockchain.ETH, env.APPLICATION.ETHEREUM);
-    logger.info('ETH worker is enabled and running');
+  for (const blockchain of Blockchains) {
+    if (runningMode.includes(blockchainRunningModes[blockchain])) {
+      runner.addWorker(getWorker(blockchain), getRunnerOptions(blockchain));
+    }
   }
 
-  if (runningMode.includes('MATIC_WORKER')) {
-    startEthWorker(Blockchain.MATIC, env.APPLICATION.POLYGON);
-    logger.info('MATIC worker is enabled and running');
-  }
-
-  if (runningMode.includes('ZIL_WORKER')) {
-    startZilUpdater();
-    logger.info(`ZIL worker is enabled and running`);
-  }
+  runner.run();
 
   // We're running API on any case since we need to
   // expose status, readiness and health check endpoints even in workers mode

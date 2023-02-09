@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, Min, IsOptional } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 import ValidateWith from '../services/ValidateWith';
 import {
   Column,
@@ -19,7 +19,6 @@ export default class WorkerStatus extends Model {
   location: Blockchain;
 
   @IsNumber()
-  @Min(0)
   @Column({ type: 'int' })
   lastMirroredBlockNumber = 0;
 
@@ -70,8 +69,9 @@ export default class WorkerStatus extends Model {
 
   static async latestAtxuidForWorker(
     location: Blockchain,
+    repository: Repository<WorkerStatus> = WorkerStatus.getRepository(),
   ): Promise<number | undefined> {
-    const status = await WorkerStatus.findOne({ location });
+    const status = await repository.findOne({ location });
     return status?.lastAtxuid;
   }
 

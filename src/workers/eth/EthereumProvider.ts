@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
-import { logger } from '../logger';
-import { env, EthUpdaterConfig } from '../env';
+import { logger } from '../../logger';
+import { env, EthUpdaterConfig } from '../../env';
 
 export class StaticJsonRpcProvider extends ethers.providers.JsonRpcProvider {
   async getNetwork(): Promise<ethers.providers.Network> {

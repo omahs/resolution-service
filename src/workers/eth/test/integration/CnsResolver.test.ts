@@ -1,19 +1,21 @@
 import { BigNumber, Contract } from 'ethers';
 import { randomBytes } from 'crypto';
-import { env } from '../../env';
-import { Domain, WorkerStatus } from '../../models';
-import { EthereumHelper } from '../../utils/testing/EthereumTestsHelper';
-import { CnsResolver } from './CnsResolver';
+import { env } from '../../../../env';
+import { Domain, WorkerStatus } from '../../../../models';
+import { EthereumHelper } from '../../../../utils/testing/EthereumTestsHelper';
+import { CnsResolver } from '../../CnsResolver';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
-import { eip137Namehash } from '../../utils/namehash';
-import { ETHContracts } from '../../contracts';
+import { eip137Namehash } from '../../../../utils/namehash';
+import { ETHContracts } from '../../../../contracts';
 import supportedKeysJson from 'uns/resolver-keys.json';
-import * as ethersUtils from '../../utils/ethersUtils';
-import { DomainTestHelper } from '../../utils/testing/DomainTestHelper';
-import { Blockchain } from '../../types/common';
+import * as ethersUtils from '../../../../utils/ethersUtils';
+import { DomainTestHelper } from '../../../../utils/testing/DomainTestHelper';
+import { Blockchain } from '../../../../types/common';
+import { getWorkerRepository, Resolution } from '../../../framework';
+import { describeIntegrationTest } from '../../../../utils/testing/IntegrationTestDescribe';
 
-describe('CnsResolver', () => {
+describeIntegrationTest('CnsResolver', () => {
   let service: CnsResolver;
   let registry: Contract;
   let resolver: Contract;
@@ -111,7 +113,10 @@ describe('CnsResolver', () => {
       .then((receipt) => receipt.wait());
     await EthereumHelper.mineBlocksForConfirmation();
 
-    service = new CnsResolver(ETHContracts);
+    service = new CnsResolver(
+      ETHContracts,
+      getWorkerRepository(Blockchain.ETH, env.APPLICATION.ETHEREUM.NETWORK_ID),
+    );
   });
 
   afterEach(() => {
@@ -124,8 +129,28 @@ describe('CnsResolver', () => {
         name: testDomainName,
         node: testDomainNode,
       });
-      await service.fetchResolver(domain, resolution, Domain.getRepository());
-      expect(resolution.resolver).to.equal(resolver.address.toLowerCase());
+
+      await service.fetchResolver(
+        new Resolution({
+          node: domain.node,
+          blockchain: resolution.blockchain,
+          networkId: resolution.networkId,
+          ownerAddress: resolution.ownerAddress,
+          resolver: resolution.resolver,
+          registry: resolution.registry,
+          resolution: resolution.resolution,
+        }),
+      );
+
+      const updatedDomain = await Domain.findByNode(domain.node);
+      const updatedResolution = updatedDomain?.getResolution(
+        Blockchain.ETH,
+        env.APPLICATION.ETHEREUM.NETWORK_ID,
+      );
+
+      expect(updatedResolution?.resolver).to.equal(
+        resolver.address.toLowerCase(),
+      );
     });
 
     it('should fetch resolver with domain records', async () => {
@@ -144,9 +169,25 @@ describe('CnsResolver', () => {
         node: testDomainNode,
       });
 
-      await service.fetchResolver(domain, resolution, Domain.getRepository());
+      await service.fetchResolver(
+        new Resolution({
+          node: domain.node,
+          blockchain: resolution.blockchain,
+          networkId: resolution.networkId,
+          ownerAddress: resolution.ownerAddress,
+          resolver: resolution.resolver,
+          registry: resolution.registry,
+          resolution: resolution.resolution,
+        }),
+      );
 
-      expect(resolution.resolution).to.deep.equal({
+      const updatedDomain = await Domain.findByNode(domain.node);
+      const updatedResolution = updatedDomain?.getResolution(
+        Blockchain.ETH,
+        env.APPLICATION.ETHEREUM.NETWORK_ID,
+      );
+
+      expect(updatedResolution?.resolution).to.deep.equal({
         'crypto.BTC.address': 'qp3gu0flg7tehyv73ua5nznlw8s040nz3uqnyffrcn',
         'crypto.ETH.address': '0x461781022A9C2De74f2171EB3c44F27320b13B8c',
       });
@@ -166,9 +207,21 @@ describe('CnsResolver', () => {
           resolutions: [resolution],
         });
 
-      await service.fetchResolver(domain, resolution, Domain.getRepository());
+      await service.fetchResolver(
+        new Resolution({
+          node: domain.node,
+          blockchain: resolution.blockchain,
+          networkId: resolution.networkId,
+          ownerAddress: resolution.ownerAddress,
+          resolver: resolution.resolver,
+          registry: resolution.registry,
+          resolution: resolution.resolution,
+        }),
+      );
 
-      expect(domain.resolutions[0].resolution).to.be.empty;
+      const updatedDomain = await Domain.findByNode(domain.node);
+
+      expect(updatedDomain?.resolutions[0].resolution).to.be.empty;
     });
 
     it('should get all predefined resolver records', async () => {
@@ -325,6 +378,24 @@ describe('CnsResolver', () => {
         PredefinedRecordKeys,
         testDomainNode,
       );
+    });
+  });
+
+  describe('.normalizeResolver', () => {
+    it('should normalize the resolver address', () => {
+      const resolver = '0xb66DcE2DA6afAAa98F2013446dBCB0f4B0ab2842';
+      const expected = '0xb66dce2da6afaaa98f2013446dbcb0f4b0ab2842';
+      expect(CnsResolver.normalizeResolver(resolver)).to.be.equal(expected);
+    });
+
+    it('should return null for zero address', () => {
+      const resolver = Domain.NullAddress;
+      expect(CnsResolver.normalizeResolver(resolver)).to.be.null;
+    });
+
+    it('should return null for undefined resolver address', () => {
+      const resolver = undefined;
+      expect(CnsResolver.normalizeResolver(resolver)).to.be.null;
     });
   });
 });

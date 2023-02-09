@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { getEthConfig, CryptoConfig } from './eth';
 import NetworkConfig from 'uns/uns-config.json';
-import { EthereumProvider } from '../workers/EthereumProvider';
+import { EthereumProvider } from '../workers/eth/EthereumProvider';
 
 describe('eth', () => {
   const contractKeys: (keyof typeof NetworkConfig.networks['1']['contracts'])[] =

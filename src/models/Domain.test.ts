@@ -92,24 +92,6 @@ describe('Domain', () => {
     });
   });
 
-  describe('.normalizeResolver', () => {
-    it('should normalize the resolver address', () => {
-      const resolver = '0xb66DcE2DA6afAAa98F2013446dBCB0f4B0ab2842';
-      const expected = '0xb66dce2da6afaaa98f2013446dbcb0f4b0ab2842';
-      expect(Domain.normalizeResolver(resolver)).to.be.equal(expected);
-    });
-
-    it('should return null for zero address', () => {
-      const resolver = Domain.NullAddress;
-      expect(Domain.normalizeResolver(resolver)).to.be.null;
-    });
-
-    it('should return null for undefined resolver address', () => {
-      const resolver = undefined;
-      expect(Domain.normalizeResolver(resolver)).to.be.null;
-    });
-  });
-
   describe('.findOrCreateByName', () => {
     it('should create a domain', async () => {
       const expectedDomain = {

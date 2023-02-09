@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { Blockchain } from './types/common';
 
 const requiredEnvNotSet = [];
 
@@ -74,6 +75,12 @@ type RunningMode =
   | 'ETH_WORKER'
   | 'MATIC_WORKER'
   | 'ZIL_WORKER';
+
+export const blockchainRunningModes: Record<Blockchain, RunningMode> = {
+  [Blockchain.ETH]: 'ETH_WORKER',
+  [Blockchain.MATIC]: 'MATIC_WORKER',
+  [Blockchain.ZIL]: 'ZIL_WORKER',
+};
 
 export const env = {
   APPLICATION: {
@@ -189,12 +196,15 @@ export const env = {
       FETCH_INTERVAL: parseNumberFromEnv(process.env.ZNS_FETCH_INTERVAL, 5000),
       ACCEPTABLE_DELAY_IN_BLOCKS: parseNumberFromEnv(
         process.env.ZILLIQA_ACCEPTABLE_DELAY_IN_BLOCKS,
-        200,
+        20,
       ),
       CONFIRMATION_BLOCKS: parseNumberFromEnv(
         process.env.ZILLIQA_CONFIRMATION_BLOCKS,
         0,
       ),
+      RESYNC_FROM: !isNaN(Number(process.env.ZILLIQA_RESYNC_FROM))
+        ? Number(process.env.ZILLIQA_RESYNC_FROM)
+        : undefined,
     },
     ERC721_METADATA: {
       GOOGLE_CLOUD_STORAGE_BASE_URL:
@@ -297,4 +307,7 @@ export const env = {
     API_ENDPOINT_URL: process.env.CLOUD_STORAGE_ENDPONT_URL, // default is https://storage.googleapis.com/
   },
   PROFILE_API_URL: process.env.PROFILE_API_URL,
+  TEST: {
+    INTEGRATION: parseBooleanFromEnv(process.env.RUN_INTEGRATION_TESTS, false),
+  },
 };

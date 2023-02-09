@@ -4,8 +4,10 @@ import { expect } from 'chai';
 import nock from 'nock';
 import { WorkerStatus } from '../models';
 import * as sinon from 'sinon';
-import * as ProviderModule from '../workers/EthereumProvider';
+import * as ProviderModule from '../workers/eth/EthereumProvider';
 import { Blockchain } from '../types/common';
+import { env } from '../env';
+import ZilProvider from '../workers/zil/ZilProvider';
 
 const mockEthJsonRpcProviderUrl = 'http://test.jsonrpc.provider:8545';
 const mockMaticJsonRpcProviderUrl = 'http://test.jsonrpc.provider:8546';
@@ -75,9 +77,9 @@ describe('StatusController', () => {
           isUpToDate: false,
         },
         ZIL: {
-          acceptableDelayInBlocks: 200,
+          acceptableDelayInBlocks: 20,
           latestMirroredBlock: 171102,
-          latestNetworkBlock: 171303,
+          latestNetworkBlock: 171127,
           networkId: 333,
           isUpToDate: false,
         },
@@ -85,6 +87,7 @@ describe('StatusController', () => {
     };
 
     const viewBlockInterceptor = createViewBlockInterceptor(
+      expectedStatus.blockchain.ZIL.latestMirroredBlock,
       expectedStatus.blockchain.ZIL.latestNetworkBlock,
     );
     const jsonRpcInterceptor = createEthereumInterceptor(
@@ -125,7 +128,10 @@ describe('StatusController', () => {
   it("should return isUpToDate = false if ETH and ZIL mirror aren't up to date", async () => {
     const latestNetworkBlock = 301;
     const latestMirroredBlock = 100;
-    const viewBlockInterceptor = createViewBlockInterceptor(latestNetworkBlock);
+    const viewBlockInterceptor = createViewBlockInterceptor(
+      latestMirroredBlock,
+      latestNetworkBlock,
+    );
     const jsonRpcInterceptor = createEthereumInterceptor(latestNetworkBlock);
     const maticRpcInterceptor = createMaticInterceptor(latestNetworkBlock);
     await WorkerStatus.saveWorkerStatus(
@@ -159,7 +165,10 @@ describe('StatusController', () => {
   it('should return isUpToDate = true if ZNS and ETH mirror are up to date', async () => {
     const latestNetworkBlock = 200;
     const latestMirroredBlock = 123;
-    const viewBlockInterceptor = createViewBlockInterceptor(latestNetworkBlock);
+    const viewBlockInterceptor = createViewBlockInterceptor(
+      latestMirroredBlock,
+      latestMirroredBlock,
+    );
     const jsonRpcInterceptor = createEthereumInterceptor(latestNetworkBlock);
     const maticRpcInterceptor = createMaticInterceptor(latestNetworkBlock);
     await WorkerStatus.saveWorkerStatus(
@@ -193,7 +202,10 @@ describe('StatusController', () => {
   it("should return isUpToDate = false if ETH mirror isn't up to date", async () => {
     const latestNetworkBlock = 200;
     const latestMirroredBlock = 120;
-    const viewBlockInterceptor = createViewBlockInterceptor(latestNetworkBlock);
+    const viewBlockInterceptor = createViewBlockInterceptor(
+      latestMirroredBlock,
+      latestMirroredBlock,
+    );
     const jsonRpcInterceptor = createEthereumInterceptor(latestNetworkBlock);
     const maticRpcInterceptor = createMaticInterceptor(latestNetworkBlock);
     await WorkerStatus.saveWorkerStatus(
@@ -227,7 +239,10 @@ describe('StatusController', () => {
   it("should return isUpToDate = false if ZNS mirror isn't up to date", async () => {
     const latestNetworkBlock = 300;
     const latestMirroredBlock = 220;
-    const viewBlockInterceptor = createViewBlockInterceptor(latestNetworkBlock);
+    const viewBlockInterceptor = createViewBlockInterceptor(
+      latestMirroredBlock,
+      latestNetworkBlock,
+    );
     const jsonRpcInterceptor = createEthereumInterceptor(latestNetworkBlock);
     const maticRpcInterceptor = createMaticInterceptor(latestNetworkBlock);
     await WorkerStatus.saveWorkerStatus(
@@ -244,7 +259,7 @@ describe('StatusController', () => {
     );
     await WorkerStatus.saveWorkerStatus(
       Blockchain.ZIL,
-      latestMirroredBlock - 200,
+      latestMirroredBlock,
       undefined,
       undefined,
     );
@@ -261,7 +276,10 @@ describe('StatusController', () => {
   it("should return isUpToDate = false if MATIC mirror isn't up to date", async () => {
     const latestNetworkBlock = 300;
     const latestMirroredBlock = 220;
-    const viewBlockInterceptor = createViewBlockInterceptor(latestNetworkBlock);
+    const viewBlockInterceptor = createViewBlockInterceptor(
+      latestMirroredBlock,
+      latestMirroredBlock,
+    );
     const jsonRpcInterceptor = createEthereumInterceptor(latestNetworkBlock);
     const maticRpcInterceptor = createMaticInterceptor(latestNetworkBlock);
     await WorkerStatus.saveWorkerStatus(
@@ -321,11 +339,19 @@ describe('StatusController', () => {
   });
 });
 
-function createViewBlockInterceptor(networkBlockNumber: number) {
+function createViewBlockInterceptor(
+  mirroredBlockNumber: number,
+  networkBlockNumber: number,
+) {
   return nock('https://api.viewblock.io')
-    .get('/v1/zilliqa/stats')
+    .get(
+      `/v1/zilliqa/addresses/${env.APPLICATION.ZILLIQA.ZNS_REGISTRY_CONTRACT}/txs`,
+    )
     .query({
       network: 'testnet',
+      events: true,
+      atxuidFrom: mirroredBlockNumber,
+      atxuidTo: mirroredBlockNumber + 24,
     })
     .reply(200, generateViewBlockResponse(networkBlockNumber));
 }
@@ -353,9 +379,11 @@ function createMaticInterceptor(networkBlockNumber: number) {
 }
 
 function generateViewBlockResponse(networkBlockNumber: number) {
-  return {
-    txHeight: networkBlockNumber,
-  };
+  return [
+    {
+      atxuid: networkBlockNumber,
+    },
+  ];
 }
 
 function generateEthRpcResponse(networkBlockNumber: number) {

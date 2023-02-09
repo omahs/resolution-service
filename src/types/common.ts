@@ -59,6 +59,8 @@ export enum Blockchain {
   MATIC = 'MATIC',
 }
 
+export const Blockchains = Object.values(Blockchain);
+
 export enum EvmUnstoppableDomainTlds {
   Crypto = 'crypto',
   Bitcoin = 'bitcoin',
@@ -131,3 +133,33 @@ export enum HttpMethods {
   PUT = 'PUT',
   TRACE = 'TRACE',
 }
+
+export const DomainOperationTypes = [
+  'Transfer',
+  'Resolve',
+  'NewURI',
+  'Sync',
+  'Set',
+  'ResetRecords',
+  'SetReverse',
+] as const;
+
+export const OperationTypesWithoutNode = [
+  'RemoveReverse',
+  'Approval',
+  'ApprovalForAll',
+] as const;
+
+export const ContractManagementTypes = [
+  'NewURIPrefix',
+  'Upgraded',
+  'AdminChanged',
+] as const;
+
+export const EventTypes = [
+  ...DomainOperationTypes,
+  ...OperationTypesWithoutNode,
+  ...ContractManagementTypes,
+] as const;
+
+export type EventType = typeof EventTypes[any];

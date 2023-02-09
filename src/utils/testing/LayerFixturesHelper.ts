@@ -5,11 +5,11 @@ import { getEthConfig } from '../../contracts';
 import { EthUpdaterConfig } from '../../env';
 import { WorkerStatus } from '../../models';
 import { Blockchain } from '../../types/common';
-import { EthUpdater } from '../../workers/eth/EthUpdater';
+import { EthUpdater } from '../../workers/eth/test/integration/EthUpdater';
 import {
   GetProviderForConfig,
   StaticJsonRpcProvider,
-} from '../../workers/EthereumProvider';
+} from '../../workers/eth/EthereumProvider';
 import { eip137Namehash } from '../namehash';
 import { EthereumNetworkHelper } from './EthereumTestsHelper';
 

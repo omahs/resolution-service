@@ -17,10 +17,10 @@ import punycode from 'punycode';
 import DomainsResolution from './DomainsResolution';
 import { Blockchain } from '../types/common';
 import { queryNewURIEvent } from '../utils/ethersUtils';
-import CnsRegistryEvent from './CnsRegistryEvent';
 import { logger } from '../logger';
 import DomainsReverseResolution from './DomainsReverseResolution';
 import { env } from '../env';
+import { tokenIdToNode } from '../utils/domain';
 
 const ON_CHAIN_LOG_PREFIX = 'On Chain Data Lookup';
 
@@ -204,7 +204,7 @@ export default class Domain extends Model {
       );
 
       const expectedNode = eip137Namehash(uri);
-      const producedNode = CnsRegistryEvent.tokenIdToNode(tokenId);
+      const producedNode = tokenIdToNode(tokenId);
 
       if (expectedNode !== producedNode) {
         return undefined;
@@ -304,14 +304,6 @@ export default class Domain extends Model {
       (res) => !(res.blockchain == blockchain && res.networkId == networkId),
     );
     return removed;
-  }
-
-  static normalizeResolver(resolver: string | null | undefined): string | null {
-    if (!resolver) {
-      return null;
-    }
-    resolver = resolver.toLowerCase();
-    return resolver === Domain.NullAddress ? null : resolver;
   }
 
   static async findOrCreateByName(

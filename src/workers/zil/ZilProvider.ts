@@ -87,6 +87,21 @@ export default class ZilProvider {
     return this.request<ZnsTransactionResponse[]>(url).then(this.preparseTx);
   }
 
+  async getLastAtxuid(from: number): Promise<number> {
+    const params = {
+      network: this.network,
+      events: true,
+      atxuidFrom: from,
+      atxuidTo: from + 24, // max page size of viewblock
+    };
+    const query = qs.stringify(params);
+    const url = `${this.viewBlockUrl}/addresses/${this.zilliqaRegistryAddress}/txs?${query}`;
+    const txes = await this.request<ZnsTransactionResponse[]>(url).then(
+      this.preparseTx,
+    );
+    return txes?.pop()?.atxuid || 0;
+  }
+
   async requestZilliqaResolutionFor(
     resolverAddress: string,
   ): Promise<Record<string, string>> {
