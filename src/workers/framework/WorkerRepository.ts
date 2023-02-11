@@ -278,7 +278,7 @@ export class WorkerRepository implements IWorkerRepository {
             node: e.node,
           },
           this.context.eventRepository,
-        );
+        ).toObject();
       });
     await Promise.all([
       this.context.eventRepository.save(cnsEvents),

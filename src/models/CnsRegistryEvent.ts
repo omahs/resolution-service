@@ -149,6 +149,21 @@ export default class CnsRegistryEvent extends Model {
     return !inconsistentEvent;
   }
 
+  toObject(): Partial<CnsRegistryEvent> {
+    return {
+      blockNumber: this.blockNumber,
+      blockHash: this.blockHash,
+      logIndex: this.logIndex,
+      transactionHash: this.transactionHash,
+      returnValues: this.returnValues,
+      node: this.node,
+      contractAddress: this.contractAddress,
+      type: this.type,
+      blockchain: this.blockchain,
+      networkId: this.networkId,
+    };
+  }
+
   static async latestEventBlocks(
     count: number,
     blockchain: Blockchain,
