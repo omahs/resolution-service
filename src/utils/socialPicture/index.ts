@@ -10,6 +10,7 @@ import { env } from '../../env';
 import { Storage } from '@google-cloud/storage';
 import { logger } from '../../logger';
 import { MetadataService } from '../../services/MetadataService';
+import { PROFILE_FETCH_TIMEOUT_MS } from '../common';
 
 export type SocialPictureOptions = {
   chainId: string;
@@ -299,7 +300,9 @@ export const getOffChainProfileImage = async (
   let response;
 
   try {
-    response = await (await nodeFetch(url, { timeout: 200 })).json();
+    response = await (
+      await nodeFetch(url, { timeout: PROFILE_FETCH_TIMEOUT_MS })
+    ).json();
   } catch (error) {
     logger.error(`Failed to fetch offchain profile for: ${url}`);
     logger.error(`Profile Fetching error: ${error}`);
@@ -355,7 +358,9 @@ export const getOnChainProfileImage = async (
     imagePathFromDomain.endsWith('.svg')
   ) {
     try {
-      const ret = await nodeFetch(imagePathFromDomain, { timeout: 200 });
+      const ret = await nodeFetch(imagePathFromDomain, {
+        timeout: PROFILE_FETCH_TIMEOUT_MS,
+      });
       profileImageSVG = await ret.text();
     } catch (error) {
       logger.error(

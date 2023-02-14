@@ -8,6 +8,7 @@ import {
   CustomImageDomains,
   DomainAttributeTrait,
 } from '../metadata';
+import { PROFILE_FETCH_TIMEOUT_MS } from '../common';
 
 export type OpenSeaMetadataAttribute =
   | { trait_type?: DomainAttributeTrait; value: string | number }
@@ -58,7 +59,7 @@ export default class AnimalDomainHelper {
   async getAnimalImageData(domainName: string): Promise<string | undefined> {
     const imageUrl = this.getAnimalImageUrl(domainName);
     if (imageUrl) {
-      const ret = await fetch(imageUrl, { timeout: 200 });
+      const ret = await fetch(imageUrl, { timeout: PROFILE_FETCH_TIMEOUT_MS });
       return ret.text();
     }
   }
