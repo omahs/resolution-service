@@ -58,7 +58,7 @@ export default class AnimalDomainHelper {
   async getAnimalImageData(domainName: string): Promise<string | undefined> {
     const imageUrl = this.getAnimalImageUrl(domainName);
     if (imageUrl) {
-      const ret = await fetch(imageUrl);
+      const ret = await fetch(imageUrl, { timeout: 200 });
       return ret.text();
     }
   }
