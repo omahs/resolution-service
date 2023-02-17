@@ -1,4 +1,5 @@
 import { Domain } from '../../models';
+import * as DomainUtils from '../../utils/domain';
 interface SvgFields {
   background_color: string;
   background_image: string;
@@ -123,7 +124,7 @@ export default function svgTemplate({
   fontSize,
   mimeType,
 }: SvgFields): string {
-  const [label, extension] = domain.split('.');
+  const { label, extension } = DomainUtils.splitDomain(domain);
   const shortLabel = determineShortLabel(label);
 
   return `
@@ -140,7 +141,7 @@ export default function svgTemplate({
         ${shadowyFilterDefinition}
       </defs>
       ${backgroundImageWithShadowFilter}
-      ${createOverlayText(fontSize, shortLabel || label, extension)}
+      ${createOverlayText(fontSize, shortLabel || label, extension as string)}
     </svg>
   `;
 }
