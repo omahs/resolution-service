@@ -69,17 +69,28 @@ export class StatusController {
     const latestMirroredBlock = await WorkerStatus.latestMirroredBlockForWorker(
       blockchain,
     );
-    const status: BlockchainStatus = {
-      latestMirroredBlock,
-      latestNetworkBlock: await latestBlockCallback(latestMirroredBlock),
-      networkId: config.NETWORK_ID,
-      acceptableDelayInBlocks: config.ACCEPTABLE_DELAY_IN_BLOCKS,
-      isUpToDate: false,
-    };
-    status.isUpToDate =
-      status.latestNetworkBlock - status.latestMirroredBlock <=
-      status.acceptableDelayInBlocks + config.CONFIRMATION_BLOCKS;
-    return status;
+
+    try {
+      const status: BlockchainStatus = {
+        latestMirroredBlock,
+        latestNetworkBlock: await latestBlockCallback(latestMirroredBlock),
+        networkId: config.NETWORK_ID,
+        acceptableDelayInBlocks: config.ACCEPTABLE_DELAY_IN_BLOCKS,
+        isUpToDate: false,
+      };
+      status.isUpToDate =
+        status.latestNetworkBlock - status.latestMirroredBlock <=
+        status.acceptableDelayInBlocks + config.CONFIRMATION_BLOCKS;
+      return status;
+    } catch (e) {
+      return {
+        latestMirroredBlock,
+        latestNetworkBlock: -1,
+        networkId: config.NETWORK_ID,
+        acceptableDelayInBlocks: config.ACCEPTABLE_DELAY_IN_BLOCKS,
+        isUpToDate: false,
+      };
+    }
   }
 
   @Head('/')
