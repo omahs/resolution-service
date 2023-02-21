@@ -272,7 +272,7 @@ class ResolutionAPISimulation extends Simulation {
     )
       .feed(randomBulkAddressesFeed)
       .exec(
-        http("2 /reverse/query randomBulkAddresses")
+        http("2c /reverse/query randomBulkAddresses")
           .post("/reverse/query")
           .headers(authPostHeaders)
           .header("randomBulkAddresses", "${randomBulkAddresses}")
@@ -295,7 +295,7 @@ class ResolutionAPISimulation extends Simulation {
     )
       .feed(randomTld)
       .exec(
-        http("2 /domains?tlds=randomTld ")
+        http("2b /domains?tlds=randomTld ")
           .get("/domains?${randomTld}")
           .headers(authHeaders)
           .header("randomTld$", "${randomTld}")
