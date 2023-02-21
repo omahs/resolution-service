@@ -11,9 +11,9 @@ import java.util.function.Supplier;
 import scala.util.Random
 
 class ResolutionAPISimulation extends Simulation {
-  val threads = Integer.getInteger("threads", 200)
-  val rampup = java.lang.Long.getLong("rampup", 180L)
-  val duration = java.lang.Long.getLong("duration", 1800L)
+  val threads = Integer.getInteger("threads", 1)
+  val rampup = java.lang.Long.getLong("rampup", 0L)
+  val duration = java.lang.Long.getLong("duration", 30L)
 
   val AUTH_HEADER = System.getProperty("AUTH_HEADER").toString
   val X_PROXY_APIKEY = System.getProperty("X_PROXY_APIKEY").toString
@@ -146,15 +146,15 @@ class ResolutionAPISimulation extends Simulation {
   )
 
   val tld = List(
-    ".crypto",
-    ".nft",
-    ".wallet",
-    ".blockchain",
-    ".x",
-    ".bitcoin",
-    ".dao",
-    ".888",
-    ".zil"
+    "crypto",
+    "nft",
+    "wallet",
+    "blockchain",
+    "x",
+    "bitcoin",
+    "dao",
+    "888",
+    "zil"
   )
 
   var knownValidDomains = List(
@@ -177,7 +177,13 @@ class ResolutionAPISimulation extends Simulation {
     "0xc2cc046e7f4f7a3e9715a853fc54907c12364b6b", // udtestdev-bogdan-goerli-test.crypto
     "0x8c7FcEd0041f5620e3Bc914a8cc79531e9D977CD", // unknown
     "0x44ff48128ffb31a9865b2d8737110e1dae247304", // unknown
-    "0X4C863E316CE7A19BA23FDF801A369E1F3CC835AA" // unknown
+    "0x4C863E316CE7A19BA23FDF801A369E1F3CC835AA", // unknown
+    "0x22f88f4b4f7fdc46abb52fc5e43410520924f08d", // nick.blockchain
+    "0xdfe0818ffc6af42c0a73952914246ad71e81e79c", // udtestdev-999.nft
+    "0x537e2eb956aec859c99b3e5e28d8e45200c4fa52", // one.x
+    "0x91aa2cce6b22ec9ecd8a56c830566e67187fe07e", // test-d-ud-xnliw.dao
+    "0x00493aa44bcfd6f0c2ecc7f8b154e4fb352d1c81", // osa.crypto
+    "0x0b8c171d43035e42ce82d813d917c3c8478a41ae" // guardian-02.wallet
 
   )
 
@@ -188,6 +194,7 @@ class ResolutionAPISimulation extends Simulation {
         .concat(
           adj(Random.nextInt(adj.length)).toString
             .concat(verb(Random.nextInt(verb.length)).toString)
+            .concat(".")
             .concat(tld(Random.nextInt(tld.length)).toString)
         )
         .toLowerCase()
@@ -200,6 +207,7 @@ class ResolutionAPISimulation extends Simulation {
         .concat(
           adj(Random.nextInt(adj.length)).toString
             .concat(verb(Random.nextInt(verb.length)).toString)
+            .concat(".")
             .concat(tld(Random.nextInt(tld.length)).toString)
         )
         .toLowerCase()
@@ -227,26 +235,85 @@ class ResolutionAPISimulation extends Simulation {
     )
   }
 
+  val randomTld = Iterator.continually {
+    Map(
+      "randomTld" -> s""
+        .concat(tld(Random.nextInt(tld.length)).toString)
+        .toLowerCase()
+    )
+  }
+
+  val randomBulkAddressesFeed = Iterator.continually {
+    val a = for (n <- 1 to Random.nextInt(250)) yield {
+      val s =
+        s"\"0x${Random.alphanumeric.filter(hexChars.contains(_)).take(40).mkString}\""
+      s
+    }
+
+    // have to be careful with too many known addresses, as each address in the list must be unique
+    val b = for (n <- 1 to Random.nextInt(3)) yield {
+      val s2 =
+        s"\"${knownValidEthAddresses(Random.nextInt(knownValidEthAddresses.length)).toString}\""
+      s2
+    }
+
+    val newArray = a ++ b
+    // println(newArray)
+    Map(
+      "randomBulkAddresses" -> newArray.mkString(", ")
+    )
+  }
+
+  val bulkReverseResolution = exitBlockOnFail(
+    exec(
+      http("1c /status public no headers")
+        .get("/status")
+        .headers(authHeaders)
+    )
+      .feed(randomBulkAddressesFeed)
+      .exec(
+        http("2 /reverse/query randomBulkAddresses")
+          .post("/reverse/query")
+          .headers(authPostHeaders)
+          .header("randomBulkAddresses", "${randomBulkAddresses}")
+          .body(
+            StringBody(
+              """
+          |{
+          | "addresses": [ ${randomBulkAddresses} ]
+          |}""".stripMargin
+            )
+          )
+      )
+  )
+
+  val domainTlds = exitBlockOnFail(
+    exec(
+      http("1b /status public no headers")
+        .get("/status")
+        .headers(authHeaders)
+    )
+      .feed(randomTld)
+      .exec(
+        http("2 /domains?tlds=randomTld ")
+          .get("/domains?${randomTld}")
+          .headers(authHeaders)
+          .header("randomTld$", "${randomTld}")
+      )
+  )
+
   val resolutionGetRequests = exitBlockOnFail(
     exec(
       http("1 /status public no headers")
         .get("/status")
         .headers(authHeaders)
-      // .check(
-      //   jmesPath("Blockchain.ETH.networkId")
-      //     .ofType[Int]
-      // )
     )
       .feed(domainNameFeeder)
       .exec(
         http("2 /domains/randomDomainName")
           .get("/domains/${randomDomainName}")
           .headers(authHeaders)
-          .header("randomDomainName$", "/domains/${randomDomainName}")
-
-        // .check(
-        //   jmesPath("meta.domain").ofType[String]
-        // )
+          .header("randomDomainName", "/domains/${randomDomainName}")
       )
       .feed(addressFeeder)
       .exec(
@@ -254,9 +321,6 @@ class ResolutionAPISimulation extends Simulation {
           .get("/reverse/${ownerAddress}")
           .headers(authHeaders)
           .header("randomOwnerAddress", "${ownerAddress}")
-        // .check(
-        //   jmesPath("meta.domain").ofType[String]
-        // )
       )
       .feed(knownValidDomainFeeder)
       .exec(
@@ -264,9 +328,6 @@ class ResolutionAPISimulation extends Simulation {
           .get("/image-src/${knownValidDomain}")
           .headers(authHeaders)
           .header("knownValidDomain", "${knownValidDomain}")
-        // .check(
-        //   jmesPath("meta.domain").ofType[String]
-        // )
       )
       .feed(knownValidEthAddressFeeder)
       .exec(
@@ -278,15 +339,14 @@ class ResolutionAPISimulation extends Simulation {
           )
           .headers(authHeaders)
           .header("knownValidEthAddress", "${knownValidEthAddress}")
-        // .check(
-        //   jmesPath("meta.perpage").ofType[Int]
-        // )
       )
   );
 
   val scn = scenario("resolution get requests")
     .during(duration seconds) {
       exec(resolutionGetRequests)
+        .exec(domainTlds)
+        .exec(bulkReverseResolution)
     }
 
   // if (THROTTLE_PER_SEC != null) {
