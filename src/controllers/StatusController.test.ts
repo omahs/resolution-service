@@ -310,6 +310,45 @@ describe('StatusController', () => {
     expect(res.body.blockchain.ZIL.isUpToDate).to.be.true;
   });
 
+  it('should return isUpToDate = false if fetching status from provider failed', async () => {
+    const latestNetworkBlock = 300;
+    const latestMirroredBlock = 220;
+    const viewBlockInterceptor = createViewBlockInterceptor(
+      latestMirroredBlock,
+      latestMirroredBlock,
+      true,
+    );
+    const jsonRpcInterceptor = createEthereumInterceptor(latestNetworkBlock);
+    const maticRpcInterceptor = createMaticInterceptor(latestNetworkBlock);
+    await WorkerStatus.saveWorkerStatus(
+      Blockchain.ETH,
+      latestMirroredBlock,
+      undefined,
+      undefined,
+    );
+    await WorkerStatus.saveWorkerStatus(
+      Blockchain.MATIC,
+      latestMirroredBlock - 100,
+      undefined,
+      undefined,
+    );
+    await WorkerStatus.saveWorkerStatus(
+      Blockchain.ZIL,
+      latestMirroredBlock,
+      undefined,
+      undefined,
+    );
+    const res = await supertest(api).get('/status').send();
+    viewBlockInterceptor.done();
+    jsonRpcInterceptor.done();
+    maticRpcInterceptor.done();
+    expect(res.status).eq(200);
+    expect(res.body.blockchain.ETH.isUpToDate).to.be.true;
+    expect(res.body.blockchain.MATIC.isUpToDate).to.be.false;
+    expect(res.body.blockchain.ZIL.isUpToDate).to.be.false;
+    expect(res.body.blockchain.ZIL.latestNetworkBlock).to.be.eq(-1);
+  });
+
   it('should return ok for /liveness_check and /readiness_check endpoints', async () => {
     const expectedResponse = { status: 'ok' };
     const livenessCheck = await supertest(api).get('/liveness_check').send();
@@ -342,6 +381,7 @@ describe('StatusController', () => {
 function createViewBlockInterceptor(
   mirroredBlockNumber: number,
   networkBlockNumber: number,
+  shouldRespondError = false,
 ) {
   return nock('https://api.viewblock.io')
     .get(
@@ -353,7 +393,10 @@ function createViewBlockInterceptor(
       atxuidFrom: mirroredBlockNumber,
       atxuidTo: mirroredBlockNumber + 24,
     })
-    .reply(200, generateViewBlockResponse(networkBlockNumber));
+    .reply(
+      shouldRespondError ? 400 : 200,
+      generateViewBlockResponse(networkBlockNumber),
+    );
 }
 
 function createEthereumInterceptor(networkBlockNumber: number) {
