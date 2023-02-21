@@ -12,8 +12,8 @@ import scala.util.Random
 
 class ResolutionAPISimulation extends Simulation {
   val threads = Integer.getInteger("threads", 1)
-  val rampup = java.lang.Long.getLong("rampup", 0L)
-  val duration = java.lang.Long.getLong("duration", 30L)
+  val rampup = java.lang.Long.getLong("rampup", 30L)
+  val duration = java.lang.Long.getLong("duration", 300L)
 
   val AUTH_HEADER = System.getProperty("AUTH_HEADER").toString
   val X_PROXY_APIKEY = System.getProperty("X_PROXY_APIKEY").toString
@@ -342,20 +342,13 @@ class ResolutionAPISimulation extends Simulation {
       )
   );
 
-  val scn = scenario("resolution get requests")
+  val scn = scenario("resolution tests")
     .during(duration seconds) {
       exec(resolutionGetRequests)
         .exec(domainTlds)
         .exec(bulkReverseResolution)
     }
 
-  // if (THROTTLE_PER_SEC != null) {
-  //   println("THROTTLE_PER_SEC != NULL")
-  //   setUp(scn.inject(rampUsers(threads) during (rampup seconds)))
-  //     .protocols(httpConf)
-  //     .throttle(reachRps(THROTTLE_PER_SEC.toInt) in (duration seconds))
-  // } else {
   setUp(scn.inject(rampUsers(threads) during (rampup seconds)))
     .protocols(httpConf)
-  // }
 }
