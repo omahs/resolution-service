@@ -192,10 +192,32 @@ export const cacheSocialPictureInCDN = async (options: {
       null,
       null,
     ).fetchTokenMetadata(resolution);
-    const [imageData, mimeType] = await getNFTSocialPicture(image).catch(() => [
-      '',
-      null,
-    ]);
+
+    const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
+      async (e) => {
+        try {
+          if (!shouldOverrideOverlayImage) {
+            return ['', null];
+          }
+          const metadata = await bucket.file(fileName).getMetadata();
+          const mimeType = metadata[0]?.contentType;
+
+          const data = await bucket.file(fileName).download();
+          const imageData = btoa(
+            encodeURIComponent(data.toString()).replace(
+              /%([0-9A-F]{2})/g,
+              function (match, p1) {
+                return String.fromCharCode(parseInt(p1, 16));
+              },
+            ),
+          );
+
+          return [imageData, mimeType];
+        } catch (e) {
+          return ['', null];
+        }
+      },
+    );
 
     // upload images to bucket
     if (imageData) {

@@ -1,9 +1,10 @@
-import { MigrationInterface, QueryRunner, SelectQueryBuilder } from 'typeorm';
-import { Domain } from '../../models';
-import * as SocialPictureUtils from '../../utils/socialPicture';
-import { logger } from '../../logger';
-import { splitDomain } from '../../utils/domain';
-import { getDomainResolution } from '../../services/Resolution';
+import { SelectQueryBuilder } from 'typeorm';
+import { Domain } from '../models';
+import * as SocialPictureUtils from '../utils/socialPicture';
+import { logger } from '../logger';
+import { splitDomain } from '../utils/domain';
+import { getDomainResolution } from '../services/Resolution';
+import connect from '../database/connect';
 
 const LOG_PREFIX = 'FixSubdomainImageStorage1676740501083';
 
@@ -17,9 +18,6 @@ const fixImageOverlayInCloudStorage = async (subdomains: Array<Domain>) => {
       const socialPictureValue = resolution.resolution['social.picture.value'];
 
       if (!socialPictureValue) {
-        logger.info(
-          `${LOG_PREFIX} - skip for no social picture ${subdomain.name}`,
-        );
         continue;
       }
 
@@ -36,7 +34,7 @@ const fixImageOverlayInCloudStorage = async (subdomains: Array<Domain>) => {
         continue;
       }
 
-      if (storedImage.includes(label)) {
+      if (storedImage.includes(label + '\n')) {
         // skip if image is already correct
         logger.info(
           `${LOG_PREFIX} - skip for already correct picture ${subdomain.name}`,
@@ -89,7 +87,7 @@ const withLimitIlterator = (
           }
 
           return Promise.resolve({
-            value: results.slice(0, 10),
+            value: results,
             done,
           });
         },
@@ -98,30 +96,25 @@ const withLimitIlterator = (
   };
 };
 
-export class FixSubdomainImageStorage1676740501083
-  implements MigrationInterface
-{
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    try {
-      const queryBuilder = Domain.createQueryBuilder('domain')
-        .where(
-          `array_length(regexp_split_to_array(domain.name, E'\\\\.'), 1) > 2`,
-        )
-        .leftJoinAndSelect('domain.resolutions', 'resolution');
+const run = async () => {
+  try {
+    await connect();
+    const queryBuilder = Domain.createQueryBuilder('domain')
+      .where(
+        `array_length(regexp_split_to_array(domain.name, E'\\\\.'), 1) > 2`,
+      )
+      .leftJoinAndSelect('domain.resolutions', 'resolution');
 
-      const queryIterator = withLimitIlterator(queryBuilder, {
-        limit: 10,
-      });
+    const queryIterator = withLimitIlterator(queryBuilder, {
+      limit: 50,
+    });
 
-      for await (const subdomains of queryIterator) {
-        await fixImageOverlayInCloudStorage(subdomains);
-      }
-    } catch (e) {
-      logger.error(`${LOG_PREFIX} - Failed to execute complete`, e);
+    for await (const subdomains of queryIterator) {
+      await fixImageOverlayInCloudStorage(subdomains);
     }
+  } catch (e) {
+    logger.error(`${LOG_PREFIX} - Failed to execute complete`, e);
   }
+};
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    // not applicable
-  }
-}
+void run();
