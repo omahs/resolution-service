@@ -8,6 +8,7 @@ import { ReverseController } from './controllers/ReverseController';
 import { StatusController } from './controllers/StatusController';
 import { MetaDataController } from './controllers/MetaDataController';
 import { EnrollmentController } from './controllers/EnrollmentController';
+import { RpcProxyController } from './controllers/RpcProxyController';
 import swaggerUI from 'swagger-ui-express';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import { routingControllersToSpec } from 'routing-controllers-openapi';
@@ -30,6 +31,7 @@ if (
   enabledControllers.push(ReverseController);
   enabledControllers.push(StatusController);
   enabledControllers.push(EnrollmentController);
+  enabledControllers.push(RpcProxyController);
 }
 
 if (
