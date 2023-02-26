@@ -29,12 +29,16 @@ const handleRpcForward = async (
 @UseBefore(ApiKeyAuthMiddleware)
 export class RpcProxyController {
   @Post('/rpcproxy/l1')
-  async proxyEth(@Body() body: { [key: string]: any }): Promise<any> {
+  async proxyEth(
+    @Body({ options: { limit: '1mb' } }) body: { [key: string]: any },
+  ): Promise<any> {
     return handleRpcForward(RpcNetwork.Ethereum, body);
   }
 
   @Post('/rpcproxy/l2')
-  async proxyPol(@Body() body: { [key: string]: any }): Promise<any> {
+  async proxyPol(
+    @Body({ options: { limit: '1mb' } }) body: { [key: string]: any },
+  ): Promise<any> {
     return handleRpcForward(RpcNetwork.Polygon, body);
   }
 }
