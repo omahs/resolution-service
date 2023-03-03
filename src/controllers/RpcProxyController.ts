@@ -15,7 +15,7 @@ export class RpcProxyController {
     this.rpcService = new RpcService(1000);
   }
 
-  @Post('/rpcproxy/l1')
+  @Post('/chains/eth/rpc')
   async proxyEth(
     @Body({ options: { limit: MAX_PAYLOAD_SIZE } }) body: RpcPayload,
   ): Promise<RpcPayload> {
@@ -27,7 +27,7 @@ export class RpcProxyController {
     }
   }
 
-  @Post('/rpcproxy/l2')
+  @Post('/chains/matic/rpc')
   async proxyPol(
     @Body({ options: { limit: MAX_PAYLOAD_SIZE } }) body: RpcPayload,
   ): Promise<RpcPayload> {

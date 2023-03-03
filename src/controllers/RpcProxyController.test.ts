@@ -60,16 +60,16 @@ describe('RpcProxyController', () => {
     });
   }
 
-  describe('POST /rpcproxy/l1', () => {
+  describe('POST /chains/eth/rpc', () => {
     proxyTestSuit({
-      path: '/rpcproxy/l1',
+      path: '/chains/eth/rpc',
       blockchain: Blockchain.ETH,
     });
   });
 
-  describe('POST /rpcproxy/l2', () => {
+  describe('POST /chains/matic/rpc', () => {
     proxyTestSuit({
-      path: '/rpcproxy/l2',
+      path: '/chains/matic/rpc',
       blockchain: Blockchain.MATIC,
     });
   });
