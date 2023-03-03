@@ -1,44 +1,41 @@
-import nodeFetch from 'node-fetch';
 import { JsonController, Post, Body, UseBefore } from 'routing-controllers';
-import { env } from '../env';
 import { ApiKeyAuthMiddleware } from '../middleware/ApiKeyAuthMiddleware';
+import { RpcProviderError } from '../errors/HttpErrors';
+import { RpcService, RpcPayload } from '../services/RpcService';
+import { Blockchain } from '../types/common';
+import RateLimiter from '../middleware/RateLimiter';
 
-enum RpcNetwork {
-  Polygon = 'matic',
-  Ethereum = 'ethereum',
-}
-const handleRpcForward = async (
-  network: RpcNetwork,
-  body: { [key: string]: any },
-): Promise<any> => {
-  const providerUrl =
-    network === RpcNetwork.Ethereum
-      ? env.APPLICATION.ETHEREUM.JSON_RPC_API_URL
-      : env.APPLICATION.POLYGON.JSON_RPC_API_URL;
-
-  const response = await nodeFetch(providerUrl, {
-    method: 'post',
-    body: JSON.stringify(body),
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  return response.json();
-};
-
+const MAX_PAYLOAD_SIZE = '1mb';
 @JsonController()
-@UseBefore(ApiKeyAuthMiddleware)
+@UseBefore(RateLimiter(), ApiKeyAuthMiddleware)
 export class RpcProxyController {
+  private rpcService: RpcService;
+
+  constructor() {
+    this.rpcService = new RpcService(1000);
+  }
+
   @Post('/rpcproxy/l1')
   async proxyEth(
-    @Body({ options: { limit: '1mb' } }) body: { [key: string]: any },
-  ): Promise<any> {
-    return handleRpcForward(RpcNetwork.Ethereum, body);
+    @Body({ options: { limit: MAX_PAYLOAD_SIZE } }) body: RpcPayload,
+  ): Promise<RpcPayload> {
+    try {
+      const data = await this.rpcService.post(Blockchain.ETH, body);
+      return data;
+    } catch (e: any) {
+      throw new RpcProviderError(e.message, 400);
+    }
   }
 
   @Post('/rpcproxy/l2')
   async proxyPol(
-    @Body({ options: { limit: '1mb' } }) body: { [key: string]: any },
-  ): Promise<any> {
-    return handleRpcForward(RpcNetwork.Polygon, body);
+    @Body({ options: { limit: MAX_PAYLOAD_SIZE } }) body: RpcPayload,
+  ): Promise<RpcPayload> {
+    try {
+      const data = await this.rpcService.post(Blockchain.MATIC, body);
+      return data;
+    } catch (e: any) {
+      throw new RpcProviderError(e.message, 400);
+    }
   }
 }

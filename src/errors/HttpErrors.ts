@@ -8,3 +8,12 @@ export class InvalidInputError extends HttpError {
     this.message = message;
   }
 }
+
+export class RpcProviderError extends HttpError {
+  name: string;
+  constructor(message: string, httpCode: number) {
+    super(httpCode);
+    this.name = 'RpcProviderError';
+    this.message = message;
+  }
+}
