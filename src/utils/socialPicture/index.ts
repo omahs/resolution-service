@@ -155,12 +155,14 @@ export const cacheSocialPictureInCDN = async (options: {
   domain: Domain;
   resolution: DomainsResolution;
   shouldOverrideOverlayImage?: boolean;
+  withTimeout: boolean;
 }): Promise<void> => {
   const {
     socialPicture,
     domain,
     resolution,
     shouldOverrideOverlayImage = false,
+    withTimeout,
   } = options;
 
   if (!isNotEmpty(socialPicture)) {
@@ -191,7 +193,7 @@ export const cacheSocialPictureInCDN = async (options: {
     const { fetchedMetadata, image } = await new MetadataService(
       null,
       null,
-    ).fetchTokenMetadata(resolution);
+    ).fetchTokenMetadata(resolution, { withTimeout });
 
     const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
       async (e) => {

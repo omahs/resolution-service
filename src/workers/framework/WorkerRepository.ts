@@ -140,6 +140,7 @@ export class WorkerRepository implements IWorkerRepository {
               socialPicture: resolution.resolution?.['social.picture.value'],
               domain,
               resolution: dbResolution,
+              withTimeout: false,
             });
           } catch (error) {
             this.logger.error(

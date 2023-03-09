@@ -47,6 +47,7 @@ const fixImageOverlayInCloudStorage = async (subdomains: Array<Domain>) => {
         domain: subdomain,
         resolution,
         shouldOverrideOverlayImage: true,
+        withTimeout: false,
       });
 
       logger.info(`${LOG_PREFIX} - fixed image of subdomain ${subdomain.name}`);

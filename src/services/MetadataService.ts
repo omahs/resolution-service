@@ -34,6 +34,7 @@ import {
   CustomImageDomains,
 } from '../utils/metadata';
 import { DefaultImageData } from '../utils/generalImage';
+import { withPromiseTimeout } from '../utils/promiseUtils';
 
 const BASE_IMAGE_URL = `${env.APPLICATION.ERC721_METADATA.GOOGLE_CLOUD_STORAGE_BASE_URL}/images`;
 
@@ -70,6 +71,9 @@ export class MetadataService {
 
   async fetchTokenMetadata(
     resolution: DomainsResolution,
+    config?: {
+      withTimeout: boolean;
+    },
   ): Promise<TokenMetadata> {
     let chainId = '';
     let contractAddress = '';
@@ -108,11 +112,18 @@ export class MetadataService {
           );
           image = fetchedMetadata.image;
         } else {
-          tokenIdMetadata = await this.fetchMoralisMetadata(options);
+          if (!config?.withTimeout) {
+            tokenIdMetadata = await this.fetchMoralisMetadata(options);
+          } else {
+            tokenIdMetadata = await withPromiseTimeout(
+              this.fetchMoralisMetadata(options),
+              500,
+            );
+          }
         }
       } catch (error: any) {
         logger.error(`Unable to fetch image metadata: ${error}`);
-        if (!error.message.includes('No metadata found')) {
+        if (!error.message?.includes('No metadata found')) {
           logger.error(error);
         }
       }
@@ -246,6 +257,7 @@ export class MetadataService {
         socialPicture,
         domain,
         resolution,
+        withTimeout: true,
       });
       // This is not optimal, should return image instead of 2nd call
       // TODO: improve PFP NFT fetching after caching in CDN
