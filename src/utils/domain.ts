@@ -34,7 +34,7 @@ export const normalizeDomainName = (domainName: string): string => {
 };
 
 export const getDomainNameTld = (domainName: string): string => {
-  return domainName.split('.').pop() ?? '';
+  return domainName.split('.').pop()?.toLowerCase() ?? '';
 };
 
 export const getDomainNameLabel = (domainName: string): string => {
@@ -67,7 +67,7 @@ export const splitDomain = (
   domain: string,
 ): { label: string; extension: AllDomainTlds } => {
   const splitted = domain.split('.');
-  const extension = splitted.pop()!;
+  const extension = splitted.pop()!.toLowerCase();
 
   const label = splitted.join('.');
   return { label, extension: extension as AllDomainTlds };

@@ -1,6 +1,11 @@
 import { expect } from 'chai';
 import { UnstoppableDomainTlds } from '../types/common';
-import { belongsToTld, normalizeDomainOrToken, splitDomain } from './domain';
+import {
+  belongsToTld,
+  isSupportedTLD,
+  normalizeDomainOrToken,
+  splitDomain,
+} from './domain';
 import { eip137Namehash } from './namehash';
 
 describe('utils/domain', () => {
@@ -66,6 +71,8 @@ describe('utils/domain', () => {
     it('returns true', () => {
       expect(belongsToTld('foo.crypto', UnstoppableDomainTlds.Crypto)).to.be
         .true;
+      expect(belongsToTld('foo.CrYpTo', UnstoppableDomainTlds.Crypto)).to.be
+        .true;
       expect(belongsToTld('foo.zil', UnstoppableDomainTlds.Zil)).to.be.true;
     });
 
@@ -74,6 +81,21 @@ describe('utils/domain', () => {
       expect(belongsToTld('', UnstoppableDomainTlds.Zil)).to.be.false;
       expect(belongsToTld('', UnstoppableDomainTlds.Crypto)).to.be.false;
       expect(belongsToTld('foo.zil', UnstoppableDomainTlds.Crypto)).to.be.false;
+    });
+  });
+
+  describe('isSupportedTLD', () => {
+    it('returns true', () => {
+      expect(isSupportedTLD('foo.crypto')).to.be.true;
+      expect(isSupportedTLD('foo.NFT')).to.be.true;
+      expect(isSupportedTLD('foo.CrYpTo')).to.be.true;
+      expect(isSupportedTLD('foo.zil')).to.be.true;
+    });
+
+    it('returns false', () => {
+      expect(isSupportedTLD('whatever')).to.be.false;
+      expect(isSupportedTLD('foo.invalid')).to.be.false;
+      expect(isSupportedTLD('')).to.be.false;
     });
   });
 });
