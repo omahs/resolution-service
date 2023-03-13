@@ -371,10 +371,15 @@ describe('StatusController', () => {
         'zil',
         'klever',
         'hi',
+        'kresus',
+        'polygon',
       ],
     };
     const response = await supertest(api).get('/supported_tlds').send();
+    // check the response data schema
     expect(response.body).containSubset(expectedResponse);
+    // check if it's missing any expected tlds
+    expect(response.body.tlds).to.have.members(expectedResponse.tlds);
   });
 });
 
