@@ -41,7 +41,7 @@ export default class ZnsTransaction extends Model {
   @IsNumber()
   @Min(0)
   @Column({ type: 'int', nullable: true })
-  @ValidateWith<ZnsTransaction>('atxuidIncreasesSequentially')
+  // @ValidateWith<ZnsTransaction>('atxuidIncreasesSequentially')
   atxuid: number | null = null;
 
   @IsOptional()
@@ -98,6 +98,7 @@ export default class ZnsTransaction extends Model {
     if (this.id || !this.atxuid || this.atxuid === 0) {
       return true;
     }
+
     return (
       !!(await ZnsTransaction.findOne({ atxuid: this.atxuid - 1 })) ||
       !(await ZnsTransaction.findOne())

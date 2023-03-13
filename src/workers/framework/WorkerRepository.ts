@@ -281,6 +281,8 @@ export class WorkerRepository implements IWorkerRepository {
           this.context.eventRepository,
         ).toObject();
       });
+
+    await this.validateZnsEvents(znsEvents);
     await Promise.all([
       this.context.eventRepository.save(cnsEvents),
       this.context.znsTransactionRepository.save(znsEvents),
@@ -455,6 +457,51 @@ export class WorkerRepository implements IWorkerRepository {
     } finally {
       await context?.manager.release();
       WorkerRepository.txContexts[blockchain] = undefined;
+    }
+  }
+
+  private async validateZnsEvents(events: ZnsTransaction[]) {
+    if (!events.length) {
+      return;
+    }
+
+    let currentEvent = events[0];
+
+    if (currentEvent.atxuid) {
+      const hasPreviousAtxuidTransaction =
+        !!(await this.context.znsTransactionRepository.findOne({
+          atxuid: currentEvent.atxuid - 1,
+        }));
+
+      if (!hasPreviousAtxuidTransaction) {
+        const hasZnsTransaction =
+          !!(await this.context.znsTransactionRepository.findOne({}));
+
+        // if there's no zns with atxuid -1 but there's a znstransaction exist
+        if (hasZnsTransaction) {
+          throw new Error(
+            `atxuidIncreasesSequentially error for event ${JSON.stringify(
+              currentEvent,
+            )}`,
+          );
+        }
+      }
+    }
+
+    for (let index = 1; index < events.length; index++) {
+      if (events[index].atxuid === null) {
+        continue;
+      }
+
+      if ((events[index].atxuid as number) - 1 !== currentEvent.atxuid) {
+        throw new Error(
+          `atxuidIncreasesSequentially error for event ${JSON.stringify(
+            events,
+          )}`,
+        );
+      }
+
+      currentEvent = events[index];
     }
   }
 }
