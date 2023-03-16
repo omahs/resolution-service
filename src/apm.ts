@@ -11,6 +11,7 @@ if (env.APPLICATION.DATADOG_APM_ENABLE) {
     reportHostname: true,
     runtimeMetrics: false, // requires UDP on port 8125
     startupLogs: true,
+    plugins: true,
   };
 
   tracer.init(options);
