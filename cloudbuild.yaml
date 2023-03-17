@@ -244,7 +244,7 @@ substitutions:
   _SERVICE_NAME: resolution-staging
   _RESOLUTION_SERVICE_POSTGRES_HOST: TBD
   _SKIP_DEPLOY_WORKER: "true"
-  _MIN_INSTANCES": "1"
+  _MIN_INSTANCES: "1"
 tags:
   - gcp-cloud-build-deploy-cloud-run
   - resolution-service
