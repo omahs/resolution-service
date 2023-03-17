@@ -34,7 +34,7 @@ steps:
       - "--allow-unauthenticated"
       - "--cpu=2000m"
       - "--memory=1024Mi"
-      - "--min-instances=5"
+      - "--min-instances=$_MIN_INSTANCES"
       - "--max-instances=80"
       - "--port=3000"
       #- "--vpc-connector=projects/unstoppable-domains-staging/locations/us-central1/connectors/vpc-serverless"
@@ -95,7 +95,7 @@ steps:
       - "--allow-unauthenticated"
       - "--cpu=2000m"
       - "--memory=1024Mi"
-      - "--min-instances=5"
+      - "--min-instances=$_MIN_INSTANCES"
       - "--max-instances=80"
       - "--port=3000"
       - "--vpc-connector=$_VPC_SERVERLESS"
@@ -244,6 +244,7 @@ substitutions:
   _SERVICE_NAME: resolution-staging
   _RESOLUTION_SERVICE_POSTGRES_HOST: TBD
   _SKIP_DEPLOY_WORKER: "true"
+  _MIN_INSTANCES": "1"
 tags:
   - gcp-cloud-build-deploy-cloud-run
   - resolution-service
