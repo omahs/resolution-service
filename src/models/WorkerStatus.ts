@@ -102,7 +102,8 @@ export default class WorkerStatus extends Model {
       `LOCK TABLE resolution_worker_status IN ROW EXCLUSIVE MODE`,
     );
     await manager.query(
-      `SELECT * FROM resolution_worker_status WHERE location = '${location}' FOR UPDATE NOWAIT`,
+      `SELECT * FROM resolution_worker_status WHERE location = $1 FOR UPDATE NOWAIT`,
+      [location],
     );
   }
 }

@@ -30,7 +30,9 @@ export default class ErrorHandler implements ExpressErrorMiddlewareInterface {
       responseObject.stack = error.stack;
     }
     responseObject.message = error.message ? error.message : '';
-    responseObject.errors = error.errors ? error.errors : [error];
+    if (error.name !== 'QueryFailedError') {
+      responseObject.errors = error.errors ? error.errors : [error];
+    }
 
     logger.error(error);
     res.json(responseObject);

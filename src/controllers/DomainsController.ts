@@ -148,7 +148,12 @@ export class DomainsController {
       for (let i = 0; i < resolutionKeys.length; i++) {
         const key = Object.keys(query.resolution)[i];
         where.push({
-          query: `"resolution"."resolution"@>'{"${key}":"${query.resolution[key]}"}'::jsonb`,
+          query: `"resolution"."resolution"@>:resolution_key_value_${i}::jsonb`,
+          parameters: {
+            [`resolution_key_value_${i}`]: JSON.stringify({
+              [key]: query.resolution[key],
+            }),
+          },
         });
       }
     }
@@ -204,11 +209,10 @@ export class DomainsController {
     qb.where(`1 = 1`);
 
     // Filter domains with dead address owners from response
-    const deadAddresses = DeadAdresses.map(
-      (addr) => "'" + addr + "'",
-    ).toString();
     if (!query.owners) {
-      qb.where(`resolution.owner_address not in (${deadAddresses})`);
+      qb.where(`resolution.owner_address not in (:...deadAddresses)`, {
+        deadAddresses: DeadAdresses,
+      });
     }
 
     for (const q of where) {
@@ -310,7 +314,7 @@ export class DomainsController {
     }
 
     const tokenId = eip137Namehash(query.domainName);
-    const domainEvents = await CnsRegistryEvent.createQueryBuilder();
+    const domainEvents = CnsRegistryEvent.createQueryBuilder();
     domainEvents.select();
     domainEvents.distinctOn(['blockchain']);
     domainEvents.where({
