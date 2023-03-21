@@ -106,9 +106,10 @@ const swaggerSpec = routingControllersToSpec(
 // But it's easier to just hard-code it for now
 swaggerSpec.paths['/domains'].get.parameters[0].style = 'deepObject';
 
-const options = {
+const options: swaggerUI.SwaggerUiOptions = {
   swaggerOptions: {
-    url: '/api-docs/swagger.json',
+    // provide an explicit list of allows URLs to prevent injection via the ?url= query string
+    urls: [{ url: '/api-docs/swagger.json' }],
   },
 };
 
