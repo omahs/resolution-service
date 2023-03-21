@@ -9,7 +9,6 @@ import { StatusController } from './controllers/StatusController';
 import { MetaDataController } from './controllers/MetaDataController';
 import { EnrollmentController } from './controllers/EnrollmentController';
 import { RpcProxyController } from './controllers/RpcProxyController';
-import swaggerUI from 'swagger-ui-express';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import Bugsnag from '@bugsnag/js';
@@ -106,13 +105,6 @@ const swaggerSpec = routingControllersToSpec(
 // But it's easier to just hard-code it for now
 swaggerSpec.paths['/domains'].get.parameters[0].style = 'deepObject';
 
-const options: swaggerUI.SwaggerUiOptions = {
-  swaggerOptions: {
-    // provide an explicit list of allows URLs to prevent injection via the ?url= query string
-    urls: [{ url: '/api-docs/swagger.json' }],
-  },
-};
-
 api.get('/_status', (_: Request, res: Response) => {
   res.json({
     typeOrmCacheStats: InMemoryCache.getStatistics(),
@@ -122,8 +114,7 @@ api.get('/_status', (_: Request, res: Response) => {
 api.get('/api-docs/swagger.json', (_req: Request, res: Response) =>
   res.json(swaggerSpec),
 );
-api.use(
-  '/api-docs',
-  swaggerUI.serveFiles(undefined, options),
-  swaggerUI.setup(undefined, options),
-);
+
+api.get('/api-docs', (_req: Request, res: Response) => {
+  res.redirect('https://docs.unstoppabledomains.com/openapi/resolution/');
+});
