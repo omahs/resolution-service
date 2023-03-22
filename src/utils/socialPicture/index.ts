@@ -333,7 +333,7 @@ export const getOffChainProfileImage = async (
   domain: Domain,
   overlay: boolean,
 ): Promise<string | null> => {
-  const url = `${env.PROFILE_API_URL}/${domain.name}`;
+  const url = `${env.PROFILE_API_URL}/${domain.name}?fields=profile`;
   let response;
 
   try {
