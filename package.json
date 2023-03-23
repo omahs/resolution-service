@@ -76,7 +76,6 @@
     "newrelic": "latest",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.1",
-    "opensea-js": "1.2.8",
     "path-that-svg": "^1.2.4",
     "pg": "^8.6.0",
     "punycode": "^2.1.1",
