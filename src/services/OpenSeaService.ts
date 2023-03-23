@@ -8,11 +8,6 @@ export type OpenSeaAssetData = {
   owner_of: string | undefined;
 };
 
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
 export class OpenSeaService {
   private async logFailure(msg: string, res: Response): Promise<void> {
     const content = await res
