@@ -1,4 +1,3 @@
-import { Network, OpenSeaPort } from 'opensea-js';
 import {
   NetworkId,
   OpenSeaMetadata,
@@ -15,7 +14,6 @@ import {
   getOffChainProfileImage,
   getOnChainProfileImage,
 } from '../utils/socialPicture';
-import { EthereumProvider } from '../workers/eth/EthereumProvider';
 import Moralis from 'moralis/node';
 import { logger } from '../logger';
 import fetch from 'node-fetch';
@@ -35,26 +33,21 @@ import {
 } from '../utils/metadata';
 import { DefaultImageData } from '../utils/generalImage';
 import { withPromiseTimeout } from '../utils/promiseUtils';
+import { OpenSeaService } from './OpenSeaService';
 
 const BASE_IMAGE_URL = `${env.APPLICATION.ERC721_METADATA.GOOGLE_CLOUD_STORAGE_BASE_URL}/images`;
 
 export class MetadataService {
-  private openSeaPort: OpenSeaPort;
   private moralisApi: Moralis;
-  private animalHelper: AnimalDomainHelper;
+  private readonly animalHelper: AnimalDomainHelper;
+  private readonly openSeaService: OpenSeaService;
 
   constructor(
-    private _openSeaPort: OpenSeaPort | any,
-    private _animalHelper: AnimalDomainHelper | any,
+    openSeaService?: OpenSeaService,
+    animalHelper?: AnimalDomainHelper,
   ) {
-    this.openSeaPort =
-      _openSeaPort ??
-      new OpenSeaPort(EthereumProvider, {
-        networkName: Network.Main,
-        apiKey: env.OPENSEA.API_KEY,
-      });
-
-    this.animalHelper = _animalHelper ?? new AnimalDomainHelper();
+    this.openSeaService = openSeaService ?? new OpenSeaService();
+    this.animalHelper = animalHelper ?? new AnimalDomainHelper();
   }
 
   async moralis(): Promise<Moralis> {
@@ -106,11 +99,11 @@ export class MetadataService {
     if (options.address && options.token_id) {
       try {
         if (options.chain === 'eth') {
-          fetchedMetadata = await this.fetchOpenSeaMetadata(
+          fetchedMetadata = await this.openSeaService.getAsset(
             contractAddress,
             tokenId,
           );
-          image = fetchedMetadata.image;
+          image = fetchedMetadata.image ?? image;
         } else {
           if (!config?.withTimeout) {
             tokenIdMetadata = await this.fetchMoralisMetadata(options);
@@ -395,20 +388,6 @@ export class MetadataService {
       return `\nhttps://gateway.pinata.cloud/ipfs/${ipfsHash}`;
     }
     return '';
-  }
-
-  private async fetchOpenSeaMetadata(contractAddress: string, tokenId: string) {
-    const response = await this.openSeaPort.api.getAsset({
-      tokenAddress: contractAddress,
-      tokenId: tokenId,
-    });
-    return {
-      image: response.imageUrl.endsWith('=s250')
-        ? response.imageUrl.split('=s250')[0]
-        : response.imageUrl,
-      background_color: response.backgroundColor,
-      owner_of: response.owner?.address,
-    };
   }
 
   private async fetchMoralisMetadata(options: {

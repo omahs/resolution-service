@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
+import sinon, { SinonStubbedInstance } from 'sinon';
 import Moralis from 'moralis/node';
 import { DomainsResolution } from '../models';
 import AnimalDomainHelper from '../utils/AnimalDomainHelper/AnimalDomainHelper';
@@ -7,29 +7,26 @@ import { MetadataService } from './MetadataService';
 import * as socialPictureUtility from '../utils/socialPicture';
 import * as fetchModule from 'node-fetch';
 import { Response } from 'node-fetch';
+import { OpenSeaAssetData, OpenSeaService } from './OpenSeaService';
 
 describe('Metadata service', () => {
   let uut: MetadataService;
   let animalHelperStub: AnimalDomainHelper;
-  let openSeaPortStub: any;
+  let openSeaServiceStub: SinonStubbedInstance<OpenSeaService>;
 
   beforeEach(async () => {
     animalHelperStub = sinon.createStubInstance(AnimalDomainHelper);
-    openSeaPortStub = {
-      api: {},
+    openSeaServiceStub = sinon.createStubInstance(OpenSeaService);
+
+    const fakeAsset: OpenSeaAssetData = {
+      image: 'image url',
+      background_color: '0xFAE243',
+      owner_of: '0x10000000000000001',
     };
 
-    const fakeAsset = {
-      imageUrl: 'image url',
-      backgroundColor: '0xFAE243',
-      owner: {
-        address: '0x10000000000000001',
-      },
-    };
+    openSeaServiceStub.getAsset.resolves(fakeAsset);
 
-    openSeaPortStub.api.getAsset = sinon.fake.returns(fakeAsset);
-
-    uut = new MetadataService(openSeaPortStub, animalHelperStub);
+    uut = new MetadataService(openSeaServiceStub, animalHelperStub);
   });
 
   describe('moralis', async () => {

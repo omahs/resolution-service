@@ -297,7 +297,13 @@ export const env = {
     APP_ID: process.env.MORALIS_APP_ID,
   },
   OPENSEA: {
+    IS_TESTNET: process.env.OPENSEA_API_NETWORK?.toLowerCase() === 'testnet',
     API_KEY: process.env.OPENSEA_API_KEY,
+    BASE_URL: `https://${
+      process.env.OPENSEA_API_NETWORK?.toLowerCase() === 'testnet'
+        ? 'testnets-'
+        : ''
+    }api.opensea.io/api/v1`,
   },
   CLOUD_STORAGE: {
     CLIENT_ASSETS: {

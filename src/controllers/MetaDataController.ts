@@ -14,7 +14,6 @@ import {
 } from '../utils/generalImage';
 import { UnstoppableDomainTlds } from '../types/common';
 import { pathThatSvg } from 'path-that-svg';
-
 import { env } from '../env';
 import { checkNftPfpImageExistFromCDN } from '../utils/socialPicture';
 import {
@@ -23,7 +22,6 @@ import {
 } from '../services/Resolution';
 import { MetadataService } from '../services/MetadataService';
 import { ImageResponse, OpenSeaMetadata } from './dto/Metadata';
-
 import { belongsToTld, isDeprecatedTLD } from '../utils/domain';
 import { findDomainByNameOrToken } from '../services/DomainService';
 import { ValidateAndTransformOnDomainNameOrToken } from '../middleware/inputValidators';
@@ -40,8 +38,7 @@ export class MetaDataController {
   private metadataService: MetadataService;
 
   constructor() {
-    // TODO: Implement DI once its ready
-    this.metadataService = new MetadataService(null, null);
+    this.metadataService = new MetadataService();
   }
 
   @Get('/deaddata/:domainOrToken')

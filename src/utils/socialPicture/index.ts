@@ -190,10 +190,10 @@ export const cacheSocialPictureInCDN = async (options: {
     // (1) Why are there function declarations inside of function declarations?
     // (2) In the meantime, just instantiate a service as a stop gap
     // (3) Are there no tests around these methods?
-    const { fetchedMetadata, image } = await new MetadataService(
-      null,
-      null,
-    ).fetchTokenMetadata(resolution, { withTimeout });
+    const { fetchedMetadata, image } =
+      await new MetadataService().fetchTokenMetadata(resolution, {
+        withTimeout,
+      });
 
     const [imageData, mimeType] = await getNFTSocialPicture(image).catch(
       async (e) => {
@@ -333,7 +333,7 @@ export const getOffChainProfileImage = async (
   domain: Domain,
   overlay: boolean,
 ): Promise<string | null> => {
-  const url = `${env.PROFILE_API_URL}/${domain.name}`;
+  const url = `${env.PROFILE_API_URL}/${domain.name}?fields=profile`;
   let response;
 
   try {
