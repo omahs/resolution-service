@@ -24,7 +24,7 @@ describe('Metadata service', () => {
       owner_of: '0x10000000000000001',
     };
 
-    openSeaServiceStub.getAsset.resolves(fakeAsset);
+    openSeaServiceStub.fetchOpenSeaMetadata.resolves(fakeAsset);
 
     uut = new MetadataService(openSeaServiceStub, animalHelperStub);
   });

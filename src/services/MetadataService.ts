@@ -99,7 +99,7 @@ export class MetadataService {
     if (options.address && options.token_id) {
       try {
         if (options.chain === 'eth') {
-          fetchedMetadata = await this.openSeaService.getAsset(
+          fetchedMetadata = await this.openSeaService.fetchOpenSeaMetadata(
             contractAddress,
             tokenId,
           );
