@@ -146,13 +146,13 @@ export class DomainsController {
     if (query.resolution) {
       const resolutionKeys = Object.keys(query.resolution);
       for (let i = 0; i < resolutionKeys.length; i++) {
-        // key is validated within DomainsListQuery validation to be one of the expected resolver keys
-        // the value is validated to be a string
         const key = resolutionKeys[i];
         where.push({
-          query: `LOWER("resolution"."resolution"->>'${key}') = :resolution_key_value_${i}`,
+          query: `"resolution"."resolution"@>:resolution_key_value_${i}::jsonb`,
           parameters: {
-            [`resolution_key_value_${i}`]: query.resolution[key].toLowerCase(),
+            [`resolution_key_value_${i}`]: JSON.stringify({
+              [key]: query.resolution[key],
+            }),
           },
         });
       }
