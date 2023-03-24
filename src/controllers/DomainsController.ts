@@ -152,6 +152,7 @@ export class DomainsController {
           parameters: {
             [`resolution_key_value_${i}`]: JSON.stringify({
               [key]: query.resolution[key],
+            }),
           },
         });
       }
