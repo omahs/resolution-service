@@ -6,7 +6,7 @@ import { logger } from '../logger';
 
 export type OpenSeaAssetData = {
   image: string | undefined;
-  background_color: string | undefined;
+  background_color: string | undefined | null;
   owner_of: string | undefined;
 };
 
@@ -25,7 +25,10 @@ export class OpenSeaService {
     logger.warn(`${msg}: ${res.status} | ${content}`);
   }
 
-  async fetchOpenSeaMetadata(contractAddress: string, tokenId: string) {
+  async fetchOpenSeaMetadata(
+    contractAddress: string,
+    tokenId: string,
+  ): Promise<OpenSeaAssetData> {
     const response = await this.openSeaPort.api.getAsset({
       tokenAddress: contractAddress,
       tokenId: tokenId,
