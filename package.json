@@ -90,8 +90,7 @@
     "uns": "https://github.com/unstoppabledomains/uns.git#70db4bba1ddd57b70beae186a84daffbc08301d6",
     "uuid": "^8.3.2",
     "winston": "^3.3.3",
-    "winston-3-bugsnag-transport": "^1.0.2",
-    "yarn": "^1.22.19"
+    "winston-3-bugsnag-transport": "^1.0.2"
   },
   "devDependencies": {
     "@tsconfig/node14": "^1.0.0",
