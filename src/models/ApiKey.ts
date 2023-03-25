@@ -3,6 +3,7 @@ import { IsString } from 'class-validator';
 import { Model } from '.';
 import { Attributes } from '../types/common';
 import { v4 as uuidv4 } from 'uuid';
+import { env } from '../env';
 
 @Entity({ name: 'api_keys' })
 export default class ApiKey extends Model {
@@ -23,7 +24,10 @@ export default class ApiKey extends Model {
     apiKey: string,
     repository: Repository<ApiKey> = this.getRepository(),
   ): Promise<ApiKey | undefined> {
-    return repository.findOne({ apiKey });
+    return repository.findOne(
+      { apiKey },
+      { cache: env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME },
+    );
   }
 
   static async createApiKey(

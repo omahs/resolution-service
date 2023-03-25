@@ -210,7 +210,7 @@ export default class Domain extends Model {
         return undefined;
       }
 
-      const domain = await Domain.findOrBuildByNode(producedNode);
+      const domain = new Domain({ node: producedNode });
       domain.name = uri;
       // we are not saving the domain on the db to make sure there is no race conditions between api and workers
       // domain will be parsed and stored by workers eventually

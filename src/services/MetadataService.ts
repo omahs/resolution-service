@@ -292,7 +292,7 @@ export class MetadataService {
       },
       {
         trait_type: DomainAttributeTrait.Subdomains,
-        value: await Domain.getSubdomainCountByParentName(domain.name),
+        value: domain.children ? domain.children.length : 0,
       },
       {
         trait_type: DomainAttributeTrait.Type,
