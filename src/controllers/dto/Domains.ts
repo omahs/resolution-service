@@ -14,7 +14,7 @@ import {
   ArrayMaxSize,
 } from 'class-validator';
 import { Domain } from '../../models';
-import { Blockchain } from '../../types/common';
+import { Blockchain, SupportedTlds } from '../../types/common';
 import { toNumber } from 'lodash';
 import NetworkConfig from 'uns/uns-config.json';
 import ValidateWith from '../../services/ValidateWith';
@@ -170,15 +170,12 @@ export class DomainsListQuery {
     if (!this.tlds || this.tlds.length == 0) {
       return true;
     }
-    let val = true;
     for (const tld of this.tlds) {
-      const parent = await Domain.findOne({
-        where: { name: tld },
-        relations: ['parent'],
-      });
-      val = val && parent !== undefined && parent.parent === null;
+      if (!SupportedTlds.find((t) => t === tld)) {
+        return false;
+      }
     }
-    return val;
+    return true;
   }
 
   verifyRecords(): boolean {
