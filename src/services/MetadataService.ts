@@ -272,12 +272,12 @@ export class MetadataService {
     return Boolean(CustomImageDomains[name]);
   }
 
-  async getAttributeType(
+  getAttributeType(
     domain: Domain,
     meta?: {
       verifiedNftPicture?: boolean;
     },
-  ): Promise<OpenSeaMetadataAttribute[]> {
+  ): OpenSeaMetadataAttribute[] {
     const attributes: OpenSeaMetadataAttribute[] = [
       {
         trait_type: DomainAttributeTrait.Ending,

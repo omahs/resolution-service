@@ -1,5 +1,5 @@
 import { Domain } from '../models';
-import { eip137Namehash, znsNamehash } from '../utils/namehash';
+import { znsNamehash } from '../utils/namehash';
 import {
   normalizeDomainOrToken,
   normalizeDomainName,

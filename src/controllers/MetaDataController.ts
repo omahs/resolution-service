@@ -15,7 +15,6 @@ import {
 import { UnstoppableDomainTlds } from '../types/common';
 import { pathThatSvg } from 'path-that-svg';
 import { env } from '../env';
-import { checkNftPfpImageExistFromCDN } from '../utils/socialPicture';
 import {
   getDomainResolution,
   getTokenIdFromHash,
@@ -62,10 +61,7 @@ export class MetaDataController {
   @Head('/metadata/:domainOrToken')
   @Header('Surrogate-Control', 'max-age=1800')
   @ResponseSchema(OpenSeaMetadata)
-  async headMetaData(
-    @Param('domainOrToken') domainOrToken: string,
-    @QueryParam('withOverlay') withOverlay = true,
-  ) {
+  async headMetaData(@Param('domainOrToken') domainOrToken: string) {
     return {};
   }
 
@@ -75,7 +71,6 @@ export class MetaDataController {
   @ResponseSchema(OpenSeaMetadata)
   async getMetaData(
     @Param('domainOrToken') domainOrToken: string,
-    @QueryParam('withOverlay') withOverlay = true,
   ): Promise<OpenSeaMetadata> {
     const domain = await findDomainByNameOrToken(domainOrToken);
     if (!domain) {
@@ -87,24 +82,13 @@ export class MetaDataController {
       ? ''
       : resolution.resolution['social.picture.value'];
 
-    // we consider that NFT picture is verified if the picture is present in our CDN cache.
-    // It means it was verified before caching.
-    const isSocialPictureVerified =
-      Boolean(socialPictureValue) &&
-      (await checkNftPfpImageExistFromCDN(
-        socialPictureValue,
-        withOverlay ? domain.name : undefined,
-      ));
     const description = this.metadataService.getDomainDescription(
       domain,
       resolution.resolution,
     );
-    const DomainAttributeTrait = await this.metadataService.getAttributeType(
-      domain,
-      {
-        verifiedNftPicture: isSocialPictureVerified,
-      },
-    );
+    const DomainAttributeTrait = this.metadataService.getAttributeType(domain, {
+      verifiedNftPicture: Boolean(socialPictureValue),
+    });
     const imageUrl = this.metadataService.createDefaultImageUrl(domain.name);
     const metadata: OpenSeaMetadata = {
       name: domain.name,

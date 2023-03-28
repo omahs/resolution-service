@@ -271,25 +271,6 @@ export const cacheSocialPictureInCDN = async (options: {
 };
 
 /**
- * Check if the social picture is cached in CDN
- */
-export const checkNftPfpImageExistFromCDN = async (
-  socialPicTokenURI: string,
-  withOverlayDomain?: string,
-): Promise<boolean> => {
-  if (!isNotEmpty(socialPicTokenURI)) {
-    return false;
-  }
-  const fileName = getNFTFilenameInCDN(socialPicTokenURI, withOverlayDomain);
-  const bucketName = env.CLOUD_STORAGE.CLIENT_ASSETS.BUCKET_ID;
-  const bucket = storage.bucket(bucketName);
-
-  const [fileExists] = await bucket.file(fileName).exists();
-
-  return fileExists;
-};
-
-/**
  * Returns a social picture data string cached in CDN or null if image is not found in CDN cache.
  */
 export const getNftPfpImageFromCDN = async (
