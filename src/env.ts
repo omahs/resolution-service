@@ -63,7 +63,7 @@ export type EthUpdaterConfig = {
   RECORDS_PER_PAGE: number;
   FETCH_INTERVAL: number;
   MAX_REORG_SIZE: number;
-  ACCEPTABLE_DELAY_IN_BLOCKS: number;
+  ACCEPTABLE_DELAY_TIME_MS: number;
   RESYNC_FROM: number | undefined;
 };
 
@@ -129,9 +129,9 @@ export const env = {
         process.env.ETHEREUM_MAX_REORG_SIZE,
         200,
       ),
-      ACCEPTABLE_DELAY_IN_BLOCKS: parseNumberFromEnv(
-        process.env.ETHEREUM_ACCEPTABLE_DELAY_IN_BLOCKS,
-        100,
+      ACCEPTABLE_DELAY_TIME_MS: parseNumberFromEnv(
+        process.env.ETHEREUM_ACCEPTABLE_DELAY_TIME_MS,
+        300000,
       ),
       RESYNC_FROM: !isNaN(Number(process.env.ETHEREUM_RESYNC_FROM))
         ? Number(process.env.ETHEREUM_RESYNC_FROM)
@@ -172,9 +172,9 @@ export const env = {
         process.env.POLYGON_MAX_REORG_SIZE,
         200,
       ),
-      ACCEPTABLE_DELAY_IN_BLOCKS: parseNumberFromEnv(
-        process.env.POLYGON_ACCEPTABLE_DELAY_IN_BLOCKS,
-        100,
+      ACCEPTABLE_DELAY_TIME_MS: parseNumberFromEnv(
+        process.env.POLYGON_ACCEPTABLE_DELAY_TIME_MS,
+        300000,
       ),
       RESYNC_FROM: !isNaN(Number(process.env.POLYGON_RESYNC_FROM))
         ? Number(process.env.POLYGON_RESYNC_FROM)
@@ -194,9 +194,9 @@ export const env = {
       VIEWBLOCK_API_KEY: process.env.VIEWBLOCK_API_KEY,
       VIEWBLOCK_API_URL: 'https://api.viewblock.io/v1/zilliqa',
       FETCH_INTERVAL: parseNumberFromEnv(process.env.ZNS_FETCH_INTERVAL, 5000),
-      ACCEPTABLE_DELAY_IN_BLOCKS: parseNumberFromEnv(
-        process.env.ZILLIQA_ACCEPTABLE_DELAY_IN_BLOCKS,
-        20,
+      ACCEPTABLE_DELAY_TIME_MS: parseNumberFromEnv(
+        process.env.ZILLIQA_ACCEPTABLE_DELAY_TIME_MS,
+        300000,
       ),
       CONFIRMATION_BLOCKS: parseNumberFromEnv(
         process.env.ZILLIQA_CONFIRMATION_BLOCKS,

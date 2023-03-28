@@ -9,13 +9,7 @@ import 'reflect-metadata';
 import { ResponseSchema } from 'routing-controllers-openapi';
 import { IsBoolean, IsNumber, ValidateNested } from 'class-validator';
 import { Domain, WorkerStatus } from '../models';
-import ZilProvider from '../workers/zil/ZilProvider';
 import { env } from '../env';
-import * as ethersUtils from '../utils/ethersUtils';
-import {
-  EthereumProvider,
-  MaticProvider,
-} from '../workers/eth/EthereumProvider';
 import { Blockchain, SupportedTld, SupportedTlds } from '../types/common';
 import RateLimiter from '../middleware/RateLimiter';
 
@@ -24,16 +18,13 @@ class BlockchainStatus {
   isUpToDate: boolean;
 
   @IsNumber()
-  latestNetworkBlock = 0;
+  lastUpdated = 0;
 
   @IsNumber()
   latestMirroredBlock = 0;
 
   @IsNumber()
   networkId: number;
-
-  @IsNumber()
-  acceptableDelayInBlocks: number;
 }
 
 class Blockchains {
@@ -55,42 +46,29 @@ class StatusResponse {
 @JsonController()
 @UseBefore(RateLimiter())
 export class StatusController {
-  private zilProvider = new ZilProvider();
-
   private static async blockchainStatusForNetwork(
     blockchain: Blockchain,
     config: {
       NETWORK_ID: number;
-      ACCEPTABLE_DELAY_IN_BLOCKS: number;
-      CONFIRMATION_BLOCKS: number;
+      ACCEPTABLE_DELAY_TIME_MS: number;
     },
-    latestBlockCallback: (from: number) => Promise<number>,
   ): Promise<BlockchainStatus> {
     const latestMirroredBlock = await WorkerStatus.latestMirroredBlockForWorker(
       blockchain,
     );
+    const workerStatus = await WorkerStatus.findOne({ location: blockchain });
+    const lastUpdated = workerStatus?.updatedAt?.getTime() || 0;
+    const currentTime = new Date().getTime();
 
-    try {
-      const status: BlockchainStatus = {
-        latestMirroredBlock,
-        latestNetworkBlock: await latestBlockCallback(latestMirroredBlock),
-        networkId: config.NETWORK_ID,
-        acceptableDelayInBlocks: config.ACCEPTABLE_DELAY_IN_BLOCKS,
-        isUpToDate: false,
-      };
-      status.isUpToDate =
-        status.latestNetworkBlock - status.latestMirroredBlock <=
-        status.acceptableDelayInBlocks + config.CONFIRMATION_BLOCKS;
-      return status;
-    } catch (e) {
-      return {
-        latestMirroredBlock,
-        latestNetworkBlock: -1,
-        networkId: config.NETWORK_ID,
-        acceptableDelayInBlocks: config.ACCEPTABLE_DELAY_IN_BLOCKS,
-        isUpToDate: false,
-      };
-    }
+    const status: BlockchainStatus = {
+      latestMirroredBlock,
+      lastUpdated,
+      networkId: config.NETWORK_ID,
+      isUpToDate: false,
+    };
+    status.isUpToDate =
+      currentTime - status.lastUpdated <= config.ACCEPTABLE_DELAY_TIME_MS;
+    return status;
   }
 
   @Head('/')
@@ -112,23 +90,14 @@ export class StatusController {
     blockchain.ETH = await StatusController.blockchainStatusForNetwork(
       Blockchain.ETH,
       env.APPLICATION.ETHEREUM,
-      () => {
-        return ethersUtils.getLatestNetworkBlock(EthereumProvider);
-      },
     );
     blockchain.MATIC = await StatusController.blockchainStatusForNetwork(
       Blockchain.MATIC,
       env.APPLICATION.POLYGON,
-      () => {
-        return ethersUtils.getLatestNetworkBlock(MaticProvider);
-      },
     );
     blockchain.ZIL = await StatusController.blockchainStatusForNetwork(
       Blockchain.ZIL,
       env.APPLICATION.ZILLIQA,
-      (from: number) => {
-        return this.zilProvider.getLastAtxuid(from);
-      },
     );
 
     statusResponse.blockchain = blockchain;
