@@ -98,6 +98,7 @@ export default class AnimalDomainHelper {
         if (AnimalsDictionary.ethDenverAnimals.includes(animal)) {
           return ImagesEndpoint + `/ethdenver/${animal}.svg`;
         }
+
         if (AnimalsDictionary.defaultAnimals.includes(animal)) {
           return ImagesEndpoint + `/animals/${animal}.svg`;
         }

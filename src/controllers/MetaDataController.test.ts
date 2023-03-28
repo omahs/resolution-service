@@ -404,7 +404,7 @@ describe('MetaDataController', () => {
         'https://unstoppabledomains.com/search?searchTerm=unstoppablelemming.crypto',
       );
       expect(response.image).to.eq(
-        'https://storage.googleapis.com/dot-crypto-metadata-api/images/animals/lemming.svg',
+        `https://metadata.unstoppabledomains.com/image-src/${animalDomain.name}.svg`,
       );
 
       const correctAttributes = [
@@ -447,8 +447,7 @@ describe('MetaDataController', () => {
         name: 'trustbear.crypto',
         node: '0x329b868d34359c1961358088be9bfbd21e65eb8ab95e90b21e50d99c02b34c72',
       });
-      const expectedImageUrl =
-        'https://storage.googleapis.com/dot-crypto-metadata-api/images/trust/bear.svg';
+      const expectedImageUrl = `https://metadata.unstoppabledomains.com/image-src/${animalDomain.name}.svg`;
       const response = await supertest(api)
         .get(`/metadata/${animalDomain.name}`)
         .send()
@@ -612,7 +611,7 @@ describe('MetaDataController', () => {
           `https://unstoppabledomains.com/search?searchTerm=${domain.name}`,
         );
         expect(response.image).to.eq(
-          `${CUSTOM_IMAGE_URL}/${domainsWithCustomImage[domain.name]}`,
+          `https://metadata.unstoppabledomains.com/image-src/${domain.name}.svg`,
         );
         const correctAttributes = [
           { trait_type: DomainAttributeTrait.Ending, value: 'crypto' },

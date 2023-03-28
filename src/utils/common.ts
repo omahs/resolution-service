@@ -3,4 +3,4 @@ export function convertToArray<T>(val: T | T[]): T[] {
 }
 
 // adding a timeout to help mitigate against long-running external dependencies
-export const PROFILE_FETCH_TIMEOUT_MS = 200;
+export const PROFILE_FETCH_TIMEOUT_MS = 500;

@@ -105,7 +105,7 @@ export class MetaDataController {
         verifiedNftPicture: isSocialPictureVerified,
       },
     );
-    const imageUrl = this.metadataService.generateDomainImageUrl(domain.name);
+    const imageUrl = this.metadataService.createDefaultImageUrl(domain.name);
     const metadata: OpenSeaMetadata = {
       name: domain.name,
       tokenId: getTokenIdFromHash(domain.node),

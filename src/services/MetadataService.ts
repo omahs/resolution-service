@@ -212,11 +212,6 @@ export class MetadataService {
       return '';
     }
 
-    const animalImage = await this.animalHelper.getAnimalImageData(name);
-    if (animalImage) {
-      return animalImage;
-    }
-
     const onChainProfileImage = await getOnChainProfileImage(
       resolution['social.image.value'],
     );
@@ -232,6 +227,11 @@ export class MetadataService {
       return offChainProfileImage;
     }
 
+    const animalImage = await this.animalHelper.getAnimalImageData(name);
+    if (animalImage) {
+      return animalImage;
+    }
+
     return defaultImage;
   }
 
@@ -245,6 +245,7 @@ export class MetadataService {
       socialPicture,
       withOverlay ? domain.name : undefined,
     );
+
     if (!cachedPfpNFT) {
       await cacheSocialPictureInCDN({
         socialPicture,
@@ -358,6 +359,7 @@ export class MetadataService {
     }
 
     const animalImageUrl = this.animalHelper.getAnimalImageUrl(name);
+
     if (animalImageUrl) {
       return animalImageUrl;
     }
