@@ -85,3 +85,36 @@ export const tokenIdToNode = (tokenId: BigNumber): string => {
   const node = tokenId.toHexString().replace(/^(0x)?/, '');
   return '0x' + node.padStart(64, '0');
 };
+
+export const determineDomainNameFromHex = (qname: Uint8Array): string => {
+  const domainName: string[] = [];
+  let labelSize = 0;
+  let currentLabel = '';
+
+  for (let index = 0; index < qname.length - 1; index++) {
+    // The qname should ALWAYS end with a 0 to declare it is the end of the domain name.
+    if (qname[index + 1] === 0) {
+      currentLabel = currentLabel + String.fromCharCode(qname[index]);
+      domainName.push(currentLabel);
+      return domainName.join('.');
+    }
+
+    // set the new label size when the sizing isnt declared yet
+    if (!labelSize) {
+      labelSize = qname[index];
+
+      // end of label for domain name push label to end of domain name.
+      if (index > 0) {
+        domainName.push(currentLabel);
+        currentLabel = '';
+      }
+
+      continue;
+    }
+
+    currentLabel = currentLabel + String.fromCharCode(qname[index]);
+    labelSize--;
+  }
+
+  return domainName.join('.');
+};

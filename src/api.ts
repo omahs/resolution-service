@@ -4,6 +4,7 @@ import {
   getMetadataArgsStorage,
 } from 'routing-controllers';
 import { DomainsController } from './controllers/DomainsController';
+import { DnsController } from './controllers/DnsController';
 import { ReverseController } from './controllers/ReverseController';
 import { StatusController } from './controllers/StatusController';
 import { MetaDataController } from './controllers/MetaDataController';
@@ -31,6 +32,7 @@ if (
   enabledControllers.push(StatusController);
   enabledControllers.push(EnrollmentController);
   enabledControllers.push(RpcProxyController);
+  enabledControllers.push(DnsController);
 }
 
 if (
