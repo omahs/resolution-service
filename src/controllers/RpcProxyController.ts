@@ -6,6 +6,8 @@ import { RpcProviderError } from '../errors/HttpErrors';
 import { RpcService, RpcPayload } from '../services/RpcService';
 import { Blockchain } from '../types/common';
 import RateLimiter from '../middleware/RateLimiter';
+import { AttachHeapTrackingMiddleware } from '../middleware/SendHeapEvent';
+import { HeapEvents } from '../types/heap';
 import { RpcResponse } from './dto/Rpc';
 
 const MAX_PAYLOAD_SIZE = '1mb';
@@ -14,6 +16,12 @@ const MAX_PAYLOAD_SIZE = '1mb';
 })
 @JsonController()
 @UseBefore(RateLimiter(), ApiKeyAuthMiddleware)
+@UseBefore(
+  AttachHeapTrackingMiddleware({
+    heapEventName: HeapEvents.POST_RPC_PROXY,
+    trackingRequestHeaders: ['x-lib-agent'],
+  }),
+)
 export class RpcProxyController {
   private rpcService: RpcService;
 

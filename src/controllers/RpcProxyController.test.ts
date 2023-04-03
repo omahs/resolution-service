@@ -6,14 +6,20 @@ import { api } from '../api';
 import { ApiKey } from '../models';
 import { Blockchain } from '../types/common';
 import { RpcService } from '../services/RpcService';
+import * as heap from '../utils/heap';
+import { HeapEvents } from '../types/heap';
+
+const SUPERTEST_TESTING_IP = '::ffff:127.0.0.1';
 
 describe('RpcProxyController', () => {
   let postStub: sinon.SinonStub;
   let testApiKey: ApiKey;
+  let trackStub: sinon.SinonStub;
 
   beforeEach(async () => {
     postStub = sinon.stub(RpcService.prototype, 'post');
     testApiKey = await ApiKey.createApiKey('testing key');
+    trackStub = sinon.stub(heap, 'track').resolves();
   });
 
   afterEach(() => {
@@ -30,6 +36,7 @@ describe('RpcProxyController', () => {
       const res = await supertest(api)
         .post(path)
         .auth(testApiKey.apiKey, { type: 'bearer' })
+        .set('X-Lib-Agent', 'some value')
         .send({
           key: 'value',
         });
@@ -38,6 +45,16 @@ describe('RpcProxyController', () => {
         key: 'value',
       });
 
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.POST_RPC_PROXY,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          'x-lib-agent': 'some value',
+          uri: path,
+          responseCode: 200,
+        },
+      });
       expect(res.body).to.eql({ response: 'value' });
     });
 
@@ -50,6 +67,16 @@ describe('RpcProxyController', () => {
         .send({
           key: 'value',
         });
+
+      expect(trackStub).to.be.calledWith({
+        identity: SUPERTEST_TESTING_IP,
+        eventName: HeapEvents.POST_RPC_PROXY,
+        properties: {
+          apiKey: testApiKey.apiKey,
+          uri: path,
+          responseCode: 400,
+        },
+      });
 
       expect(postStub).to.have.been.calledOnceWithExactly(blockchain, {
         key: 'value',

@@ -7,6 +7,7 @@ export enum HeapEvents {
   GET_DOMAIN_RECORDS = 'rsbe - get - domain records',
   GET_REVERSE = 'rsbe - get - reverse resolution',
   POST_BULK_REVERSE = 'rsbe - get - reverse resolution list',
+  POST_RPC_PROXY = 'rsbe - post - onchain rpc proxy',
 }
 
 export interface HeapEventsProperties {

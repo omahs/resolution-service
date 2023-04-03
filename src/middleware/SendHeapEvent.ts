@@ -19,6 +19,7 @@ const trackRequest = (
     originalQuery: any;
     trackingQueryParams: string[];
     trackingRequestBody: string[];
+    trackingRequestHeaders: string[];
   },
 ) => {
   const {
@@ -26,6 +27,7 @@ const trackRequest = (
     originalQuery,
     trackingQueryParams,
     trackingRequestBody,
+    trackingRequestHeaders,
   } = originalRequestInfo;
 
   const requestBodyProperties: { [key: string]: string } = {};
@@ -51,6 +53,14 @@ const trackRequest = (
           }
         }
 
+        const trackingHeaders: ParsedQs = {};
+
+        for (const header of trackingRequestHeaders) {
+          if (Object.prototype.hasOwnProperty.call(req.headers, header)) {
+            trackingHeaders[header] = req.headers[header];
+          }
+        }
+
         void track({
           identity: req.ip,
           eventName: res.locals.heapEventName,
@@ -58,6 +68,7 @@ const trackRequest = (
             ...(res.locals.trackedResponseProperties
               ? normalizeHeapProperties(res.locals.trackedResponseProperties)
               : undefined),
+            ...trackingHeaders,
             ...normalizeHeapProperties(requestBodyProperties),
             ...parseQueryParams(trackingQueries),
             ...originalParams,
@@ -80,11 +91,13 @@ export function AttachHeapTrackingMiddleware(options: {
   heapEventName: HeapEvents;
   trackingQueryParams?: string[];
   trackingRequestBody?: string[];
+  trackingRequestHeaders?: string[];
 }): (request: Request, response: Response, next: NextFunction) => void {
   const {
     heapEventName,
     trackingQueryParams = [],
     trackingRequestBody = [],
+    trackingRequestHeaders = [],
   } = options;
 
   return (req: Request, res: Response, next: NextFunction) => {
@@ -97,6 +110,7 @@ export function AttachHeapTrackingMiddleware(options: {
         originalQuery,
         trackingQueryParams,
         trackingRequestBody,
+        trackingRequestHeaders,
       }),
     );
     next();
