@@ -287,7 +287,7 @@ yarn start:dev
 Unit tests can be run using `yarn test`. This command will run the tests with
 ENV variables set in `./local.test.env` file. You should copy
 `./local.test.env.sample` to `./local.test.env` and redefine any env variable in
-yours local environment if needed, for example:
+your local environment if needed, for example:
 `export RESOLUTION_POSTGRES_PASSWORD=password`. Testing command will take this
 variable first instead of using variable from `./local.test.env` file.
 
