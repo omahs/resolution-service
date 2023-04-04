@@ -6,21 +6,21 @@ import {
   IsZilDomain,
   isSupportedTLD,
 } from '../utils/domain';
-import { buildBatchLoader } from '../utils/batchLoader';
+import { env } from '../env';
 
-const domainsBatchLoader = buildBatchLoader(
-  (keys: readonly string[]) =>
-    Domain.findAllByNodes(keys as string[], undefined, true, [
-      'resolutions',
-      'reverseResolutions',
-      'parent',
-      'children',
-    ]),
-  (domain) => domain.node,
-  {
-    name: 'DomainServiceBatchLoader',
-  },
-);
+const findByNode = async (node?: string): Promise<Domain | undefined> => {
+  if (!node) {
+    return undefined;
+  }
+  // use `find` instead of `findOne` to produce one SQL query instead of two:
+  // https://github.com/typeorm/typeorm/issues/5694
+  const domains = await Domain.find({
+    where: { node },
+    relations: ['resolutions', 'reverseResolutions', 'parent', 'children'],
+    cache: env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME,
+  });
+  return domains.length > 0 ? domains[0] : undefined;
+};
 
 export const findDomainByNameOrToken = async (
   domainOrToken: string,
@@ -28,21 +28,17 @@ export const findDomainByNameOrToken = async (
   const tokenName = normalizeDomainOrToken(domainOrToken);
   const domainName = normalizeDomainName(domainOrToken);
 
-  const [domain, znsDomain] = await domainsBatchLoader.loadMany([
-    tokenName,
-    ...(IsZilDomain(domainName) ? [znsNamehash(domainName)] : []),
-  ]);
-  const finalDomain =
-    domain instanceof Domain
-      ? domain
-      : znsDomain instanceof Domain
-      ? znsDomain
-      : undefined;
+  let domain =
+    (await findByNode(tokenName)) ||
+    (await Domain.findOnChainNoSafe(tokenName));
 
-  const supportedTLD = finalDomain ? isSupportedTLD(finalDomain.name) : false;
+  if (!domain && IsZilDomain(domainName)) {
+    domain = await findByNode(znsNamehash(domainName));
+  }
+  const supportedTLD = domain ? isSupportedTLD(domain.name) : false;
   if (!supportedTLD) {
     return undefined;
   }
 
-  return finalDomain;
+  return domain;
 };

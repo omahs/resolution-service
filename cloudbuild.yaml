@@ -122,7 +122,7 @@ steps:
       - "--update-env-vars=POLYGON_CONFIRMATION_BLOCKS=2"
       - "--update-secrets=POLYGON_JSON_RPC_API_URL=POLYGON_JSON_RPC_API_URL:latest"
       - "--update-secrets=POLYGON_NETWORK_ID=POLYGON_NETWORK_ID:latest"
-      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=METADATA_API"
+      - "--update-env-vars=^##^RESOLUTION_RUNNING_MODE=API"
       - "--update-secrets=VIEWBLOCK_API_KEY=VIEWBLOCK_API_KEY:latest"
       - "--update-secrets=ZNS_NETWORK=ZNS_NETWORK:latest"
       - "--update-secrets=CLOUD_STORAGE_BUCKET_ID=CLOUD_STORAGE_BUCKET_ID:latest"

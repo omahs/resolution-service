@@ -515,6 +515,45 @@ describe('MetaDataController', () => {
       });
     });
 
+    it('should query the newURI event on the fly to return a freshly minted domain', async () => {
+      const uns = getNSConfig('wallet');
+      const owner = L2Fixture.networkHelper.owner().address;
+      await L2Fixture.prepareService(owner, uns);
+
+      const token = uns.node.toHexString();
+      const responseWithNode = await supertest(api)
+        .get(`/metadata/${token}`)
+        .send()
+        .then((r) => r.body);
+      expect(responseWithNode).containSubset({
+        name: uns.name,
+        description:
+          'A CNS or UNS blockchain domain. Use it to resolve your cryptocurrency addresses and decentralized websites.',
+        external_url: `https://unstoppabledomains.com/search?searchTerm=${uns.name}`,
+        image: `https://metadata.unstoppabledomains.com/image-src/${uns.name}.svg`,
+        image_url: `https://metadata.unstoppabledomains.com/image-src/${uns.name}.svg`,
+        background_color: '4C47F7',
+        attributes: [
+          { trait_type: DomainAttributeTrait.Ending, value: 'wallet' },
+          { trait_type: DomainAttributeTrait.Level, value: 2 },
+          { trait_type: DomainAttributeTrait.Length, value: uns.label.length },
+          { trait_type: DomainAttributeTrait.Subdomains, value: 0 },
+          {
+            trait_type: DomainAttributeTrait.Type,
+            value: AttributeType.Standard,
+          },
+          {
+            trait_type: DomainAttributeTrait.AttributeCharacterSet,
+            value: AttributeCharacterSet.Alphanumeric,
+          },
+        ],
+      });
+
+      // domain should not be saved during this call
+      const domain = await Domain.findByNode(uns.node.toHexString());
+      expect(domain).to.be.undefined;
+    });
+
     it('should work with special domains', async () => {
       const CUSTOM_IMAGE_URL =
         'https://storage.googleapis.com/dot-crypto-metadata-api/images/custom' as const;
@@ -700,6 +739,36 @@ describe('MetaDataController', () => {
           .then((r) => r.body);
         expect(responseWithNode).to.deep.eq({
           image_data: '',
+        });
+      });
+
+      it('should query the newURI event and return image data for default domain if such exists', async () => {
+        const uns = getNSConfig('nft');
+        const owner = L2Fixture.networkHelper.owner().address;
+        await L2Fixture.prepareService(owner, uns);
+
+        const response = await supertest(api)
+          .get(`/image/${uns.node.toHexString()}`)
+          .send()
+          .then((r) => r.body);
+
+        const domain = new Domain({ name: uns.name });
+        expect(response).to.deep.eq({
+          image_data: DefaultImageData({
+            domain,
+            fontSize: 16,
+          }),
+        });
+
+        const responseWithName = await supertest(api)
+          .get(`/image/${uns.name}`)
+          .send()
+          .then((r) => r.body);
+        expect(responseWithName).to.deep.eq({
+          image_data: DefaultImageData({
+            domain,
+            fontSize: 16,
+          }),
         });
       });
     });

@@ -40,7 +40,6 @@ import { HeapEvents } from '../types/heap';
 import { env } from '../env';
 import { getTokenIdFromHash } from '../services/Resolution';
 import { ValidateAndTransformOnDomainName } from '../middleware/inputValidators';
-import { findDomainByNameOrToken } from '../services/DomainService';
 
 @OpenAPI({
   security: [{ apiKeyAuth: [] }],
@@ -66,7 +65,11 @@ export class DomainsController {
     }
 
     domainName = domainName.toLowerCase();
-    const domain = await findDomainByNameOrToken(domainName);
+    const domain = await Domain.findOne({
+      where: { name: domainName },
+      relations: ['resolutions', 'reverseResolutions'],
+      cache: env.CACHE.IN_MEMORY_CACHE_EXPIRATION_TIME,
+    });
 
     if (domain) {
       const resolution = getDomainResolution(domain);

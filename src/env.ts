@@ -74,8 +74,7 @@ type RunningMode =
   | 'METADATA_API'
   | 'ETH_WORKER'
   | 'MATIC_WORKER'
-  | 'ZIL_WORKER'
-  | 'API_SPEC';
+  | 'ZIL_WORKER';
 
 export const blockchainRunningModes: Record<Blockchain, RunningMode> = {
   [Blockchain.ETH]: 'ETH_WORKER',
@@ -243,26 +242,6 @@ export const env = {
       APP_ID: process.env.HEAP_APP_ID,
       PUBLIC_IDENTITY: 'public',
       PROP_MAX_CHARACTER_LIMIT: 1024,
-    },
-    BATCHING: {
-      ENABLED: parseBooleanFromEnv(process.env.QUERY_BATCHING_ENABLED, true),
-      MAX_BATCH_SIZE: parseNumberFromEnv(
-        process.env.QUERY_BATCHING_MAX_BATCH_SIZE,
-        200,
-      ),
-      TIMEOUT_MS:
-        // always disable batch timeout for unit tests
-        process.env.NODE_ENV === 'test'
-          ? 0
-          : parseNumberFromEnv(process.env.QUERY_BATCHING_TIMEOUT_MS, 100),
-      // always disable batch caching for unit tests
-      CACHING_ENABLED:
-        process.env.NODE_ENV === 'test'
-          ? false
-          : parseBooleanFromEnv(
-              process.env.QUERY_BATCHING_CACHING_ENABLED,
-              true,
-            ),
     },
   },
   TYPEORM: {

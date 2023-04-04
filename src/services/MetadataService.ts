@@ -293,7 +293,7 @@ export class MetadataService {
       },
       {
         trait_type: DomainAttributeTrait.Subdomains,
-        value: domain.children?.length || 0,
+        value: domain.children ? domain.children.length : 0,
       },
       {
         trait_type: DomainAttributeTrait.Type,
